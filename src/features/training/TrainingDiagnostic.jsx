@@ -127,7 +127,7 @@ function TrainingDiagnostic({ diagnostic, seedScore }) {
         <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
           <div
             className="h-1.5 rounded-full bg-lab-primary transition-all duration-300"
-            style={{ width: `${((step) / questions.length) * 100}%` }}
+            style={{ width: `${((step + 1) / questions.length) * 100}%` }}
           />
         </div>
 

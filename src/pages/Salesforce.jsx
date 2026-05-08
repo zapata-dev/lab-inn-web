@@ -176,7 +176,7 @@ function Salesforce() {
             <Badge variant="success">{user?.name}</Badge>
             <Badge variant="info">{user?.roleLabel}</Badge>
             {scopeMode === 'branch' && <Badge>{user?.branchName}</Badge>}
-            <Badge variant="demo">Sprint 4 Dia 2</Badge>
+            <Badge variant="demo">Sprint 5</Badge>
           </div>
         </div>
 
@@ -198,39 +198,41 @@ function Salesforce() {
         </nav>
       </Card>
 
-      {activeTab === 'tablero' && (
-        <SalesforceDashboard
-          leads={leads}
-          opportunities={opportunities}
-          simulatedOpps={simulatedOpps}
-          orders={orders}
-          invoices={invoices}
-          leadsById={leadsById}
-          inventoryById={inventoryById}
-        />
-      )}
+      <div key={activeTab} className="animate-fade-in">
+        {activeTab === 'tablero' && (
+          <SalesforceDashboard
+            leads={leads}
+            opportunities={opportunities}
+            simulatedOpps={simulatedOpps}
+            orders={orders}
+            invoices={invoices}
+            leadsById={leadsById}
+            inventoryById={inventoryById}
+          />
+        )}
 
-      {activeTab === 'leads' && (
-        <SalesforceLeadsTable leads={leads} onRowClick={openLeadDrawer} />
-      )}
+        {activeTab === 'leads' && (
+          <SalesforceLeadsTable leads={leads} onRowClick={openLeadDrawer} />
+        )}
 
-      {activeTab === 'oportunidades' && (
-        <SalesforceOpportunitiesTable
-          opportunities={opportunities}
-          simulatedOpps={simulatedOpps}
-          leadsById={leadsById}
-          inventoryById={inventoryById}
-          onRowClick={openOppDrawer}
-        />
-      )}
+        {activeTab === 'oportunidades' && (
+          <SalesforceOpportunitiesTable
+            opportunities={opportunities}
+            simulatedOpps={simulatedOpps}
+            leadsById={leadsById}
+            inventoryById={inventoryById}
+            onRowClick={openOppDrawer}
+          />
+        )}
 
-      {activeTab === 'pedidos' && (
-        <SalesforceOrdersTable orders={orders} branchesById={branchesById} />
-      )}
+        {activeTab === 'pedidos' && (
+          <SalesforceOrdersTable orders={orders} branchesById={branchesById} />
+        )}
 
-      {activeTab === 'facturas' && (
-        <SalesforceInvoicesTable invoices={invoices} branchesById={branchesById} />
-      )}
+        {activeTab === 'facturas' && (
+          <SalesforceInvoicesTable invoices={invoices} branchesById={branchesById} />
+        )}
+      </div>
 
       <SalesforceDrawer
         open={drawerOpen}

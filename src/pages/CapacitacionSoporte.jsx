@@ -155,7 +155,7 @@ function CapacitacionSoporte() {
             <Badge variant="success">{user?.name}</Badge>
             <Badge variant="info">{user?.roleLabel}</Badge>
             {scopeMode === 'branch' && <Badge>{user?.branchName}</Badge>}
-            <Badge variant="demo">Sprint 4 Dia 4</Badge>
+            <Badge variant="demo">Sprint 5</Badge>
           </div>
         </div>
 
@@ -177,57 +177,59 @@ function CapacitacionSoporte() {
         </nav>
       </Card>
 
-      {activeTab === 'rutas' && (
-        <div className="space-y-4">
-          {routes.length === 0 ? (
-            <EmptyState title="Sin rutas" description="No hay rutas de capacitacion disponibles." />
+      <div key={activeTab} className="animate-fade-in">
+        {activeTab === 'rutas' && (
+          <div className="space-y-4">
+            {routes.length === 0 ? (
+              <EmptyState title="Sin rutas" description="No hay rutas de capacitacion disponibles." />
+            ) : (
+              routes.map((route) => (
+                <TrainingRouteCard
+                  key={route.id}
+                  route={route}
+                  videos={videos}
+                  seedCompleted={seedCompleted}
+                  watchedVideos={watchedVideos}
+                  onMarkWatched={handleMarkWatched}
+                />
+              ))
+            )}
+          </div>
+        )}
+
+        {activeTab === 'diagnostico' && (
+          diagnostic ? (
+            <TrainingDiagnostic
+              diagnostic={diagnostic}
+              seedScore={userProgress?.lastDiagnosticScore ?? null}
+            />
           ) : (
-            routes.map((route) => (
-              <TrainingRouteCard
-                key={route.id}
-                route={route}
-                videos={videos}
-                seedCompleted={seedCompleted}
-                watchedVideos={watchedVideos}
-                onMarkWatched={handleMarkWatched}
-              />
-            ))
-          )}
-        </div>
-      )}
+            <EmptyState title="Sin diagnostico" description="No hay diagnostico disponible por el momento." />
+          )
+        )}
 
-      {activeTab === 'diagnostico' && (
-        diagnostic ? (
-          <TrainingDiagnostic
-            diagnostic={diagnostic}
-            seedScore={userProgress?.lastDiagnosticScore ?? null}
+        {activeTab === 'progreso' && (
+          <TrainingProgress
+            userProgress={userProgress}
+            watchedVideos={watchedVideos}
+            videos={videos}
           />
-        ) : (
-          <EmptyState title="Sin diagnostico" description="No hay diagnostico disponible por el momento." />
-        )
-      )}
+        )}
 
-      {activeTab === 'progreso' && (
-        <TrainingProgress
-          userProgress={userProgress}
-          watchedVideos={watchedVideos}
-          videos={videos}
-        />
-      )}
+        {activeTab === 'tickets' && (
+          <SupportTicketsTable
+            tickets={tickets}
+            usersById={usersById}
+            branchesById={branchesById}
+            ticketUpdates={ticketUpdates}
+            onUpdateStatus={handleUpdateTicketStatus}
+          />
+        )}
 
-      {activeTab === 'tickets' && (
-        <SupportTicketsTable
-          tickets={tickets}
-          usersById={usersById}
-          branchesById={branchesById}
-          ticketUpdates={ticketUpdates}
-          onUpdateStatus={handleUpdateTicketStatus}
-        />
-      )}
-
-      {activeTab === 'faq' && (
-        <SupportFaqList faqs={faqs} />
-      )}
+        {activeTab === 'faq' && (
+          <SupportFaqList faqs={faqs} />
+        )}
+      </div>
     </section>
   )
 }
