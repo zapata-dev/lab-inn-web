@@ -45,7 +45,9 @@ function Salesforce() {
   const [branches, setBranches] = useState([])
   const [inventory, setInventory] = useState([])
   const [simRefreshKey, setSimRefreshKey] = useState(0)
-  const [drawer, setDrawer] = useState({ open: false, entity: null, entityType: null })
+  const [drawerOpen, setDrawerOpen] = useState(false)
+  const [drawerEntity, setDrawerEntity] = useState(null)
+  const [drawerType, setDrawerType] = useState(null)
   const activeTab = useMemo(() => {
     const tab = searchParams.get('tab')
     return tabs.some((t) => t.key === tab) ? tab : 'tablero'
@@ -109,15 +111,19 @@ function Salesforce() {
   }, [scopeBranchId, simRefreshKey])
 
   const openLeadDrawer = useCallback((lead) => {
-    setDrawer({ open: true, entity: lead, entityType: 'lead' })
+    setDrawerEntity(lead)
+    setDrawerType('lead')
+    setDrawerOpen(true)
   }, [])
 
   const openOppDrawer = useCallback((opp) => {
-    setDrawer({ open: true, entity: opp, entityType: 'opp' })
+    setDrawerEntity(opp)
+    setDrawerType('opp')
+    setDrawerOpen(true)
   }, [])
 
   const closeDrawer = useCallback(() => {
-    setDrawer({ open: false, entity: null, entityType: null })
+    setDrawerOpen(false)
   }, [])
 
   const handleDrawerDataChanged = useCallback(() => {
@@ -227,9 +233,9 @@ function Salesforce() {
       )}
 
       <SalesforceDrawer
-        open={drawer.open}
-        entity={drawer.entity}
-        entityType={drawer.entityType}
+        open={drawerOpen}
+        entity={drawerEntity}
+        entityType={drawerType}
         inventoryById={inventoryById}
         branchesById={branchesById}
         onClose={closeDrawer}

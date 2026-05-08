@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { advanceSimulatedOppStage } from '../../services/quotesService'
 import { addTask, getFollowUps, getTasks, markFollowUp } from '../../services/salesforceActionsService'
 import { formatDate, formatUSD } from '../../utils/formatters'
@@ -42,7 +42,6 @@ function SalesforceDrawer({ open, entity, entityType, inventoryById = {}, branch
   const [tasks, setTasks] = useState([])
   const [taskInput, setTaskInput] = useState('')
   const [followUpFlash, setFollowUpFlash] = useState(false)
-  const panelRef = useRef(null)
 
   useEffect(() => {
     if (open && entity) {
@@ -98,7 +97,7 @@ function SalesforceDrawer({ open, entity, entityType, inventoryById = {}, branch
   ].sort((a, b) => new Date(b.at) - new Date(a.at))
 
   const title = isOpp ? (entity.company ?? '-') : (entity.companyName ?? '-')
-  const contact = isOpp ? entity.contactName : entity.contactName
+  const contact = entity.contactName
   const unitLabel = isOpp
     ? entity.unitLabel
     : (() => {
@@ -118,7 +117,6 @@ function SalesforceDrawer({ open, entity, entityType, inventoryById = {}, branch
         onClick={onClose}
       />
       <div
-        ref={panelRef}
         className={`relative flex size-full max-w-md flex-col bg-white shadow-2xl transition-transform duration-200 ${open ? 'translate-x-0' : 'translate-x-full'}`}
       >
         <div className="flex items-start justify-between border-b border-lab-border px-5 py-4">
