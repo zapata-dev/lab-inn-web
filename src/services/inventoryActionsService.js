@@ -1,7 +1,7 @@
 import { getFromStorage, setToStorage } from './storage'
 
 const QUOTE_CONTEXT_KEY = 'cotizadorContext'
-const SIMULATED_OPPORTUNITIES_KEY = 'opportunities_simulated'
+const SIMULATED_OPPORTUNITIES_KEY = 'sfOpportunities'
 
 const createUnitSnapshot = (unit) => ({
   id: unit?.id,

@@ -176,6 +176,7 @@ function QuoteBuilder() {
   }
 
   const handleReset = () => {
+    clearQuoteContext()
     setConfirmedResult(null)
     setStep(1)
     setSelectedUnitId('')
