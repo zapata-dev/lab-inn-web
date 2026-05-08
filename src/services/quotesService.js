@@ -57,6 +57,24 @@ export function getSimulatedOpportunities() {
   return Array.isArray(opportunities) ? opportunities : []
 }
 
+const OPP_STAGE_ORDER = ['prospecto', 'cotizacion', 'negociacion', 'ganada']
+const PROB_BY_STAGE = { prospecto: 20, cotizacion: 45, negociacion: 70, ganada: 95 }
+
+export function advanceSimulatedOppStage(oppId) {
+  const opps = getSimulatedOpportunities()
+  const idx = opps.findIndex((o) => o.id === oppId)
+  if (idx === -1) return null
+  const opp = opps[idx]
+  const currentIdx = OPP_STAGE_ORDER.indexOf(opp.stage)
+  if (currentIdx < 0 || currentIdx >= OPP_STAGE_ORDER.length - 1) return null
+  const nextStage = OPP_STAGE_ORDER[currentIdx + 1]
+  const updated = { ...opp, stage: nextStage, probability: PROB_BY_STAGE[nextStage] }
+  const newOpps = [...opps]
+  newOpps[idx] = updated
+  setToStorage(SF_OPPORTUNITIES_KEY, newOpps)
+  return updated
+}
+
 export function createSimulatedOpportunity({ quote, userId, branchId }) {
   const opportunities = getSimulatedOpportunities()
   const opportunity = {

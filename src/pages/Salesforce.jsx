@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { Badge, Card, EmptyState } from '../components/common'
 import { useAuth } from '../context/AuthContext'
 import SalesforceDashboard from '../features/salesforce/SalesforceDashboard'
+import SalesforceDrawer from '../features/salesforce/SalesforceDrawer'
 import SalesforceInvoicesTable from '../features/salesforce/SalesforceInvoicesTable'
 import SalesforceLeadsTable from '../features/salesforce/SalesforceLeadsTable'
 import SalesforceOpportunitiesTable from '../features/salesforce/SalesforceOpportunitiesTable'
@@ -43,6 +44,8 @@ function Salesforce() {
   const [rawInvoices, setRawInvoices] = useState([])
   const [branches, setBranches] = useState([])
   const [inventory, setInventory] = useState([])
+  const [simRefreshKey, setSimRefreshKey] = useState(0)
+  const [drawer, setDrawer] = useState({ open: false, entity: null, entityType: null })
   const activeTab = useMemo(() => {
     const tab = searchParams.get('tab')
     return tabs.some((t) => t.key === tab) ? tab : 'tablero'
@@ -103,7 +106,23 @@ function Salesforce() {
   const simulatedOpps = useMemo(() => {
     const all = getSimulatedOpportunities()
     return scopeBranchId ? all.filter((o) => o.branchId === scopeBranchId) : all
-  }, [scopeBranchId])
+  }, [scopeBranchId, simRefreshKey])
+
+  const openLeadDrawer = useCallback((lead) => {
+    setDrawer({ open: true, entity: lead, entityType: 'lead' })
+  }, [])
+
+  const openOppDrawer = useCallback((opp) => {
+    setDrawer({ open: true, entity: opp, entityType: 'opp' })
+  }, [])
+
+  const closeDrawer = useCallback(() => {
+    setDrawer({ open: false, entity: null, entityType: null })
+  }, [])
+
+  const handleDrawerDataChanged = useCallback(() => {
+    setSimRefreshKey((k) => k + 1)
+  }, [])
 
   const branchesById = useMemo(
     () => Object.fromEntries(branches.map((b) => [b.id, b])),
@@ -151,7 +170,7 @@ function Salesforce() {
             <Badge variant="success">{user?.name}</Badge>
             <Badge variant="info">{user?.roleLabel}</Badge>
             {scopeMode === 'branch' && <Badge>{user?.branchName}</Badge>}
-            <Badge variant="demo">Sprint 4 Dia 1</Badge>
+            <Badge variant="demo">Sprint 4 Dia 2</Badge>
           </div>
         </div>
 
@@ -186,7 +205,7 @@ function Salesforce() {
       )}
 
       {activeTab === 'leads' && (
-        <SalesforceLeadsTable leads={leads} branchesById={branchesById} />
+        <SalesforceLeadsTable leads={leads} onRowClick={openLeadDrawer} />
       )}
 
       {activeTab === 'oportunidades' && (
@@ -195,6 +214,7 @@ function Salesforce() {
           simulatedOpps={simulatedOpps}
           leadsById={leadsById}
           inventoryById={inventoryById}
+          onRowClick={openOppDrawer}
         />
       )}
 
@@ -205,6 +225,16 @@ function Salesforce() {
       {activeTab === 'facturas' && (
         <SalesforceInvoicesTable invoices={invoices} branchesById={branchesById} />
       )}
+
+      <SalesforceDrawer
+        open={drawer.open}
+        entity={drawer.entity}
+        entityType={drawer.entityType}
+        inventoryById={inventoryById}
+        branchesById={branchesById}
+        onClose={closeDrawer}
+        onDataChanged={handleDrawerDataChanged}
+      />
     </section>
   )
 }

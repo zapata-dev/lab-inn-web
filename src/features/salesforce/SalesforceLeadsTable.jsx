@@ -28,7 +28,7 @@ function Pill({ value, config }) {
 const LEAD_STAGES = ['nuevo', 'contactado', 'calificado', 'descartado']
 const PRIORITIES = ['alta', 'media', 'baja']
 
-function SalesforceLeadsTable({ leads }) {
+function SalesforceLeadsTable({ leads, onRowClick }) {
   const [search, setSearch] = useState('')
   const [stageFilter, setStageFilter] = useState('')
   const [priorityFilter, setPriorityFilter] = useState('')
@@ -113,7 +113,11 @@ function SalesforceLeadsTable({ leads }) {
               </thead>
               <tbody className="divide-y divide-lab-border">
                 {paginated.map((lead) => (
-                  <tr key={lead.id} className="hover:bg-slate-50">
+                  <tr
+                    key={lead.id}
+                    className="cursor-pointer hover:bg-slate-50"
+                    onClick={() => onRowClick?.(lead)}
+                  >
                     <td className="px-4 py-3 font-medium text-lab-text">{lead.companyName}</td>
                     <td className="px-4 py-3 text-lab-muted">{lead.contactName}</td>
                     <td className="px-4 py-3 text-lab-muted">{lead.channel}</td>
