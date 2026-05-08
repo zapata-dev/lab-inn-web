@@ -1,31 +1,47 @@
-# Deploy Checklist MVP LAB
+# Deploy Checklist MVP LAB — Render
 
 ## Pre-deploy
 
 - [x] main limpio
+- [ ] remote GitHub configurado (`git remote add origin <URL>`)
 - [x] npm run lint OK
-- [x] npm run build OK — 356.31 kB / 825ms
+- [x] npm run build OK — 356.31 kB / 790ms
 - [x] dist/ generado
-- [x] React Router rewrite configurado (vercel.json)
-- [x] No variables env requeridas
+- [ ] Render conectado al repo GitHub
+- [ ] Auto-deploy activado para branch `main`
 
-## Hosting (Vercel — opción recomendada)
+## Render Static Site (render.yaml)
 
-- [ ] Subir repo a GitHub
-- [ ] Conectar repo en vercel.com → New Project
-- [ ] Framework Preset: Vite
-- [ ] Build command: `npm run build`
-- [ ] Output directory: `dist`
-- [ ] URL pública generada y verificada
+```yaml
+rootDir: lab-mvp
+buildCommand: npm install && npm run build
+staticPublishPath: dist
+```
 
-## Post-deploy smoke test
+## React Router Rewrite (ya en render.yaml)
 
-- [ ] Login (`/login`)
-- [ ] Dashboard (`/inicio`)
-- [ ] Inventario (`/inventario`)
-- [ ] Cotizador (`/herramientas`)
-- [ ] Salesforce (`/salesforce`)
-- [ ] Capacitación (`/capacitacion`)
-- [ ] Soporte (`/capacitacion?tab=soporte` o similar)
-- [ ] Perfil / Admin (`/perfil`)
+```yaml
+routes:
+  - type: rewrite
+    source: /*
+    destination: /index.html
+```
+
+## Deploy
+
+- [ ] `git push origin main`
+- [ ] Render detecta push automáticamente
+- [ ] Render build pasa (ver logs en Dashboard)
+- [ ] URL pública responde
+
+## Smoke test post-deploy
+
+- [ ] `/login`
+- [ ] `/inicio`
+- [ ] `/inventario`
+- [ ] `/herramientas`
+- [ ] `/salesforce`
+- [ ] `/capacitacion`
+- [ ] `/perfil`
+- [ ] Refrescar en rutas internas no da 404
 - [ ] Demo guiada (botón en Topbar)
