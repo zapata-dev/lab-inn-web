@@ -44,10 +44,11 @@ function normalizeOpp(opp, leadsById, inventoryById, source) {
     closeDate: opp.expectedCloseDate ?? opp.closedAt ?? null,
     source,
     folio: opp.sourceQuoteId ?? null,
+    isSimulated: source !== 'crm',
   }
 }
 
-function SalesforceOpportunitiesTable({ opportunities, simulatedOpps, leadsById, inventoryById }) {
+function SalesforceOpportunitiesTable({ opportunities, simulatedOpps, leadsById, inventoryById, onRowClick }) {
   const [stageFilter, setStageFilter] = useState('')
   const [page, setPage] = useState(1)
 
@@ -115,7 +116,11 @@ function SalesforceOpportunitiesTable({ opportunities, simulatedOpps, leadsById,
               </thead>
               <tbody className="divide-y divide-lab-border">
                 {paginated.map((opp) => (
-                  <tr key={opp.id} className="hover:bg-slate-50">
+                  <tr
+                    key={opp.id}
+                    className="cursor-pointer hover:bg-slate-50"
+                    onClick={() => onRowClick?.(opp)}
+                  >
                     <td className="px-4 py-3">
                       <p className="font-medium text-lab-text">{opp.company}</p>
                       {opp.folio && (
