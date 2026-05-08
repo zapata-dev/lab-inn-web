@@ -2,17 +2,31 @@ import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { Badge, Card, EmptyState } from '../components/common'
 import { useAuth } from '../context/AuthContext'
+import SupportFaqList from '../features/support/SupportFaqList'
+import SupportTicketsTable from '../features/support/SupportTicketsTable'
 import TrainingDiagnostic from '../features/training/TrainingDiagnostic'
 import TrainingProgress from '../features/training/TrainingProgress'
 import TrainingRouteCard from '../features/training/TrainingRouteCard'
 import { dataService } from '../services/dataService'
+import { getTicketUpdates, updateTicketStatus } from '../services/supportService'
 import { getWatchedVideos, markVideoWatched } from '../services/trainingService'
 
 const tabs = [
   { key: 'rutas', label: 'Rutas' },
   { key: 'diagnostico', label: 'Diagnostico' },
   { key: 'progreso', label: 'Progreso' },
+  { key: 'tickets', label: 'Tickets' },
+  { key: 'faq', label: 'FAQ' },
 ]
+
+const scopeModeByRole = {
+  admin: 'global',
+  direccion: 'global',
+  bdcLab: 'global',
+  gerente: 'branch',
+  bdcSucursal: 'branch',
+  ejecutivo: 'branch',
+}
 
 function CapacitacionSoporte() {
   const { user } = useAuth()
@@ -22,7 +36,11 @@ function CapacitacionSoporte() {
   const [error, setError] = useState('')
   const [training, setTraining] = useState(null)
   const [userProgress, setUserProgress] = useState(null)
+  const [support, setSupport] = useState(null)
+  const [allUsers, setAllUsers] = useState([])
+  const [branches, setBranches] = useState([])
   const [watchedVideos, setWatchedVideos] = useState(() => getWatchedVideos())
+  const [ticketUpdates, setTicketUpdates] = useState(() => getTicketUpdates())
 
   const activeTab = useMemo(() => {
     const tab = searchParams.get('tab')
@@ -42,15 +60,21 @@ function CapacitacionSoporte() {
       try {
         setLoading(true)
         setError('')
-        const [trainingData, progressData] = await Promise.all([
+        const [trainingData, progressData, supportData, usersList, branchesList] = await Promise.all([
           dataService.getTraining(),
           dataService.getProgressByUser(user?.id),
+          dataService.getSupport(),
+          dataService.getUsers(),
+          dataService.getBranches(),
         ])
         if (!isActive) return
         setTraining(trainingData)
         setUserProgress(progressData)
+        setSupport(supportData)
+        setAllUsers(Array.isArray(usersList) ? usersList : [])
+        setBranches(Array.isArray(branchesList) ? branchesList : [])
       } catch (err) {
-        if (isActive) setError(err?.message ?? 'No fue posible cargar los datos de capacitacion.')
+        if (isActive) setError(err?.message ?? 'No fue posible cargar los datos.')
       } finally {
         if (isActive) setLoading(false)
       }
@@ -65,21 +89,45 @@ function CapacitacionSoporte() {
     if (added) setWatchedVideos((prev) => ({ ...prev, [videoId]: true }))
   }
 
+  const handleUpdateTicketStatus = (ticketId, newStatus) => {
+    updateTicketStatus(ticketId, newStatus)
+    setTicketUpdates(getTicketUpdates())
+  }
+
   const seedCompleted = useMemo(
     () => new Set(userProgress?.completedVideos ?? []),
     [userProgress]
   )
 
+  const usersById = useMemo(
+    () => Object.fromEntries(allUsers.map((u) => [u.id, u])),
+    [allUsers]
+  )
+
+  const branchesById = useMemo(
+    () => Object.fromEntries(branches.map((b) => [b.id, b])),
+    [branches]
+  )
+
+  const scopeMode = scopeModeByRole[user?.role] ?? 'global'
+  const scopeBranchId = scopeMode === 'branch' ? user?.branchId : null
+
+  const tickets = useMemo(() => {
+    const all = support?.tickets ?? []
+    return scopeBranchId ? all.filter((t) => t.branchId === scopeBranchId) : all
+  }, [support, scopeBranchId])
+
   const videos = training?.videos ?? []
   const routes = training?.routes ?? []
   const diagnostic = training?.diagnostics?.[0] ?? null
+  const faqs = support?.faqs ?? []
 
   if (loading) {
     return (
       <section className="mx-auto w-full max-w-5xl space-y-4">
         <Card className="space-y-2">
-          <h2 className="text-2xl font-bold text-lab-text">Capacitacion</h2>
-          <p className="text-sm text-lab-muted">Cargando rutas y progreso...</p>
+          <h2 className="text-2xl font-bold text-lab-text">Capacitacion y Soporte</h2>
+          <p className="text-sm text-lab-muted">Cargando datos...</p>
         </Card>
       </section>
     )
@@ -88,7 +136,7 @@ function CapacitacionSoporte() {
   if (error) {
     return (
       <section className="mx-auto w-full max-w-5xl">
-        <EmptyState title="No pudimos cargar Capacitacion" description={error} />
+        <EmptyState title="No pudimos cargar el modulo" description={error} />
       </section>
     )
   }
@@ -98,15 +146,16 @@ function CapacitacionSoporte() {
       <Card className="space-y-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="space-y-1">
-            <h2 className="text-2xl font-bold text-lab-text">Capacitacion</h2>
+            <h2 className="text-2xl font-bold text-lab-text">Capacitacion y Soporte</h2>
             <p className="text-sm text-lab-muted">
-              Rutas de aprendizaje, diagnostico mensual y seguimiento de progreso.
+              Rutas de aprendizaje, diagnostico mensual, progreso de equipo y gestion de tickets.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant="success">{user?.name}</Badge>
             <Badge variant="info">{user?.roleLabel}</Badge>
-            <Badge variant="demo">Sprint 4 Dia 3</Badge>
+            {scopeMode === 'branch' && <Badge>{user?.branchName}</Badge>}
+            <Badge variant="demo">Sprint 4 Dia 4</Badge>
           </div>
         </div>
 
@@ -164,6 +213,20 @@ function CapacitacionSoporte() {
           watchedVideos={watchedVideos}
           videos={videos}
         />
+      )}
+
+      {activeTab === 'tickets' && (
+        <SupportTicketsTable
+          tickets={tickets}
+          usersById={usersById}
+          branchesById={branchesById}
+          ticketUpdates={ticketUpdates}
+          onUpdateStatus={handleUpdateTicketStatus}
+        />
+      )}
+
+      {activeTab === 'faq' && (
+        <SupportFaqList faqs={faqs} />
       )}
     </section>
   )

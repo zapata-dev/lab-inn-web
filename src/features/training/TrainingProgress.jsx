@@ -36,16 +36,17 @@ function ScoreBar({ label, value }) {
 }
 
 function TrainingProgress({ userProgress, watchedVideos, videos }) {
+  const completedVideoIds = useMemo(() => {
+    if (!userProgress) return new Set()
+    return new Set([...(userProgress.completedVideos ?? []), ...Object.keys(watchedVideos)])
+  }, [userProgress, watchedVideos])
+
   if (!userProgress) {
     return <EmptyState title="Sin progreso" description="No hay datos de progreso para este usuario." />
   }
 
   const scores = MODULES.map((m) => userProgress[m] ?? 0)
   const avg = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
-
-  const completedVideoIds = useMemo(() => {
-    return new Set([...( userProgress.completedVideos ?? []), ...Object.keys(watchedVideos)])
-  }, [userProgress.completedVideos, watchedVideos])
 
   const completedVideos = videos.filter((v) => completedVideoIds.has(v.id))
 
