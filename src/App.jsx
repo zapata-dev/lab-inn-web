@@ -1,5 +1,6 @@
 import { BrowserRouter } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
+import { DemoProvider } from './context/DemoContext'
 import { ToastProvider } from './context/ToastContext'
 import AppRoutes from './routes/AppRoutes'
 
@@ -8,7 +9,9 @@ function App() {
     <BrowserRouter>
       <AuthProvider>
         <ToastProvider>
-          <AppRoutes />
+          <DemoProvider>
+            <AppRoutes />
+          </DemoProvider>
         </ToastProvider>
       </AuthProvider>
     </BrowserRouter>

@@ -1,7 +1,8 @@
-import { CalendarDays, LogOut, User } from 'lucide-react'
+import { CalendarDays, LogOut, Play, User } from 'lucide-react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Badge } from '../common'
 import { useAuth } from '../../context/AuthContext'
+import { useDemo } from '../../context/DemoContext'
 import useToast from '../../hooks/useToast'
 import UserSwitcher from './UserSwitcher'
 
@@ -19,6 +20,7 @@ function Topbar() {
   const navigate = useNavigate()
   const { user, logout } = useAuth()
   const toast = useToast()
+  const { demoActive, start } = useDemo()
 
   const pageTitle = titleByPath[location.pathname] ?? 'LAB MVP'
   const dateLabel = new Date().toLocaleDateString('es-MX', {
@@ -43,6 +45,16 @@ function Topbar() {
             <CalendarDays className="size-4" aria-hidden="true" />
             {dateLabel}
             <Badge variant="demo">Modo demo</Badge>
+            {!demoActive && (
+              <button
+                type="button"
+                onClick={start}
+                className="inline-flex items-center gap-1 rounded-md border border-lab-primary px-2 py-0.5 text-xs font-semibold text-lab-primary hover:bg-lab-primary/5"
+              >
+                <Play className="size-3" aria-hidden="true" />
+                Demo guiada
+              </button>
+            )}
           </div>
         </div>
 

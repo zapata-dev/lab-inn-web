@@ -1,4 +1,5 @@
 import { Outlet } from 'react-router-dom'
+import DemoPanel from '../demo/DemoPanel'
 import BottomNav from './BottomNav'
 import Sidebar from './Sidebar'
 import Topbar from './Topbar'
@@ -18,6 +19,7 @@ function AppLayout() {
       </div>
 
       <BottomNav />
+      <DemoPanel />
     </div>
   )
 }
