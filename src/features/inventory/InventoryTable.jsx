@@ -14,7 +14,7 @@ const normalizeStatus = (status) => {
   return String(status).replaceAll('_', ' ')
 }
 
-function InventoryTable({ units = [], branchesById = {}, pageSize = 20 }) {
+function InventoryTable({ units = [], branchesById = {}, pageSize = 20, onSelectUnit }) {
   const [page, setPage] = useState(1)
 
   useEffect(() => {
@@ -53,6 +53,7 @@ function InventoryTable({ units = [], branchesById = {}, pageSize = 20 }) {
               <th className="px-4 py-3 font-semibold">Kilometraje</th>
               <th className="px-4 py-3 font-semibold">Precio USD</th>
               <th className="px-4 py-3 font-semibold">Dias inv.</th>
+              <th className="px-4 py-3 font-semibold">Acciones</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 bg-white text-lab-text">
@@ -72,6 +73,15 @@ function InventoryTable({ units = [], branchesById = {}, pageSize = 20 }) {
                 <td className="px-4 py-3">{formatNumber(unit.mileageKm)} km</td>
                 <td className="px-4 py-3 font-semibold">{formatUSD(unit.priceUsd)}</td>
                 <td className="px-4 py-3">{formatNumber(unit.daysInInventory)}</td>
+                <td className="px-4 py-3">
+                  <button
+                    type="button"
+                    onClick={() => onSelectUnit?.(unit)}
+                    className="rounded-lg border border-lab-border px-3 py-1.5 text-xs font-semibold text-lab-text hover:bg-slate-50"
+                  >
+                    Ver detalle
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>

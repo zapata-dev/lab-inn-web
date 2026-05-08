@@ -13,7 +13,7 @@ const normalizeStatus = (status) => {
   return String(status).replaceAll('_', ' ')
 }
 
-function InventoryCardGrid({ units = [], branchesById = {} }) {
+function InventoryCardGrid({ units = [], branchesById = {}, onSelectUnit }) {
   if (!units.length) {
     return (
       <EmptyState
@@ -69,7 +69,16 @@ function InventoryCardGrid({ units = [], branchesById = {} }) {
             <p className="text-lg font-bold text-lab-text">{formatUSD(unit.priceUsd)}</p>
           </div>
 
-          <p className="text-xs text-lab-muted">Detalle y cotizacion en LAB-012.</p>
+          <div className="space-y-2">
+            <button
+              type="button"
+              onClick={() => onSelectUnit?.(unit)}
+              className="w-full rounded-lg border border-lab-border px-3 py-2 text-sm font-semibold text-lab-text hover:bg-slate-50"
+            >
+              Ver detalle
+            </button>
+            <p className="text-xs text-lab-muted">Abrir detalle para cotizar y crear oportunidad simulada.</p>
+          </div>
         </Card>
       ))}
     </section>

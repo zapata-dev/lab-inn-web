@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { LayoutGrid, Table2 } from 'lucide-react'
 import { Badge, Card, EmptyState } from '../components/common'
 import { useAuth } from '../context/AuthContext'
@@ -6,7 +7,13 @@ import InventoryCardGrid from '../features/inventory/InventoryCardGrid'
 import InventoryFilters from '../features/inventory/InventoryFilters'
 import InventoryHeaderKpis from '../features/inventory/InventoryHeaderKpis'
 import InventoryTable from '../features/inventory/InventoryTable'
+import UnitDetailModal from '../features/inventory/UnitDetailModal'
+import useToast from '../hooks/useToast'
 import { dataService } from '../services/dataService'
+import {
+  createSimulatedOpportunityFromUnit,
+  saveQuoteContext,
+} from '../services/inventoryActionsService'
 
 const scopeModeByRole = {
   admin: 'global',
@@ -56,12 +63,17 @@ const applyInventoryFilters = (units, filters) => {
 
 function InventarioNacional() {
   const { user } = useAuth()
+  const navigate = useNavigate()
+  const toast = useToast()
+
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [inventory, setInventory] = useState([])
   const [branches, setBranches] = useState([])
   const [viewMode, setViewMode] = useState('table')
   const [filters, setFilters] = useState(getInitialFilters(user))
+  const [selectedUnit, setSelectedUnit] = useState(null)
+  const [isDetailOpen, setIsDetailOpen] = useState(false)
 
   useEffect(() => {
     setFilters(getInitialFilters(user))
@@ -155,6 +167,42 @@ function InventarioNacional() {
     setFilters(getInitialFilters(user))
   }
 
+  const handleSelectUnit = (unit) => {
+    setSelectedUnit(unit)
+    setIsDetailOpen(true)
+  }
+
+  const handleCloseDetail = () => {
+    setIsDetailOpen(false)
+    setSelectedUnit(null)
+  }
+
+  const handleAddToQuote = (unit) => {
+    const saved = saveQuoteContext(unit, user)
+    if (!saved) {
+      toast.error('No fue posible preparar la cotizacion')
+      return
+    }
+
+    toast.success('Unidad agregada a cotizacion')
+    handleCloseDetail()
+    navigate('/herramientas?tab=cotizador')
+  }
+
+  const handleCreateOpportunity = (unit) => {
+    const created = createSimulatedOpportunityFromUnit(unit, user)
+    if (!created) {
+      toast.error('No fue posible crear la oportunidad simulada')
+      return
+    }
+
+    toast.simulated('Oportunidad Salesforce simulada creada')
+  }
+
+  const handleShareTechnicalSheet = () => {
+    toast.simulated('Ficha tecnica enviada por WhatsApp (simulado)')
+  }
+
   if (loading) {
     return (
       <section className="mx-auto w-full max-w-7xl space-y-4">
@@ -235,10 +283,29 @@ function InventarioNacional() {
       </Card>
 
       {viewMode === 'table' ? (
-        <InventoryTable units={visibleInventory} branchesById={branchesById} pageSize={20} />
+        <InventoryTable
+          units={visibleInventory}
+          branchesById={branchesById}
+          pageSize={20}
+          onSelectUnit={handleSelectUnit}
+        />
       ) : (
-        <InventoryCardGrid units={visibleInventory} branchesById={branchesById} />
+        <InventoryCardGrid
+          units={visibleInventory}
+          branchesById={branchesById}
+          onSelectUnit={handleSelectUnit}
+        />
       )}
+
+      <UnitDetailModal
+        unit={selectedUnit}
+        branch={selectedUnit ? branchesById[selectedUnit.branchId] : null}
+        isOpen={isDetailOpen}
+        onClose={handleCloseDetail}
+        onAddToQuote={handleAddToQuote}
+        onCreateOpportunity={handleCreateOpportunity}
+        onShare={handleShareTechnicalSheet}
+      />
     </section>
   )
 }
