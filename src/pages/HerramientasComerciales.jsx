@@ -35,7 +35,7 @@ function HerramientasComerciales() {
               Estructura base del flujo comercial: cotizador, TCO, benchmark y comparador.
             </p>
           </div>
-          <Badge variant="demo">Sprint 3 Dia 3</Badge>
+          <Badge variant="demo">Sprint 3 Dia 4</Badge>
         </div>
 
         <nav className="flex flex-wrap gap-2">
