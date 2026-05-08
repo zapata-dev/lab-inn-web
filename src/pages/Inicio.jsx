@@ -1,5 +1,8 @@
 import { Badge, Card } from '../components/common'
 import { useAuth } from '../context/AuthContext'
+import BdcDashboardStub from '../features/dashboard/BdcDashboardStub'
+import ExecutiveDashboard from '../features/dashboard/ExecutiveDashboard'
+import ManagerDashboard from '../features/dashboard/ManagerDashboard'
 import SalesDashboard from '../features/dashboard/SalesDashboard'
 import { getDashboardVariant } from '../utils/roleConfig'
 
@@ -10,16 +13,20 @@ function Inicio() {
   if (dashboardVariant === 'sales') {
     return <SalesDashboard />
   }
-
-  let pendingMessage = 'Dashboard de este rol pendiente LAB-010'
-
-  if (dashboardVariant === 'executive') {
-    pendingMessage = 'Dashboard ejecutivo pendiente LAB-010'
-  } else if (dashboardVariant === 'manager') {
-    pendingMessage = 'Dashboard gerente pendiente LAB-010'
-  } else if (dashboardVariant === 'bdcLab' || dashboardVariant === 'bdcSucursal') {
-    pendingMessage = 'Dashboard BDC pendiente LAB-010'
+  if (dashboardVariant === 'manager') {
+    return <ManagerDashboard />
   }
+  if (dashboardVariant === 'executive') {
+    return <ExecutiveDashboard />
+  }
+  if (dashboardVariant === 'bdcLab') {
+    return <BdcDashboardStub variant="lab" />
+  }
+  if (dashboardVariant === 'bdcSucursal') {
+    return <BdcDashboardStub variant="sucursal" />
+  }
+
+  const pendingMessage = 'No encontramos una vista para este rol. Validar configuracion en roleConfig.'
 
   return (
     <section className="mx-auto w-full max-w-5xl space-y-5">
