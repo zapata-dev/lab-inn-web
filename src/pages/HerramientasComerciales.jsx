@@ -1,11 +1,13 @@
 import { useMemo } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { Badge, Card } from '../components/common'
 import QuoteBuilder from '../features/commercialTools/QuoteBuilder'
+import QuoteHistoryPanel from '../features/commercialTools/QuoteHistoryPanel'
 import ToolPlaceholder from '../features/commercialTools/ToolPlaceholder'
-import { useSearchParams } from 'react-router-dom'
 
 const tabs = [
   { key: 'cotizador', label: 'Cotizador' },
+  { key: 'historial', label: 'Historial' },
   { key: 'tco', label: 'TCO' },
   { key: 'benchmark', label: 'Benchmark' },
   { key: 'comparador', label: 'Comparador' },
@@ -35,7 +37,7 @@ function HerramientasComerciales() {
               Estructura base del flujo comercial: cotizador, TCO, benchmark y comparador.
             </p>
           </div>
-          <Badge variant="demo">Sprint 3 Dia 4</Badge>
+          <Badge variant="demo">Sprint 3 Dia 5</Badge>
         </div>
 
         <nav className="flex flex-wrap gap-2">
@@ -57,6 +59,10 @@ function HerramientasComerciales() {
       </Card>
 
       {activeTab === 'cotizador' && <QuoteBuilder />}
+
+      {activeTab === 'historial' && (
+        <QuoteHistoryPanel onGoToCotizador={() => changeTab('cotizador')} />
+      )}
 
       {activeTab === 'tco' && (
         <ToolPlaceholder
