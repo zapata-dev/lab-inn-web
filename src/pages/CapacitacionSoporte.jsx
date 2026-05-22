@@ -1,23 +1,34 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import AccessGrid from '../components/common/AccessGrid'
 import { Badge, Card, EmptyState } from '../components/common'
+import { trainingAccessLinks, supportAccessLinks } from '../data/mockAccessLinks'
 import { useAuth } from '../context/AuthContext'
 import SupportFaqList from '../features/support/SupportFaqList'
 import SupportTicketsTable from '../features/support/SupportTicketsTable'
 import TrainingDiagnostic from '../features/training/TrainingDiagnostic'
 import TrainingProgress from '../features/training/TrainingProgress'
 import TrainingRouteCard from '../features/training/TrainingRouteCard'
+import useToast from '../hooks/useToast'
 import { dataService } from '../services/dataService'
 import { getTicketUpdates, updateTicketStatus } from '../services/supportService'
 import { getWatchedVideos, markVideoWatched } from '../services/trainingService'
 
-const tabs = [
-  { key: 'rutas', label: 'Rutas' },
-  { key: 'diagnostico', label: 'Diagnostico' },
-  { key: 'progreso', label: 'Progreso' },
-  { key: 'tickets', label: 'Tickets' },
-  { key: 'faq', label: 'FAQ' },
+const sectionTabs = [
+  { key: 'capacitacion', label: 'Capacitación' },
+  { key: 'soporte', label: 'Soporte' },
 ]
+
+const detailTabsBySection = {
+  capacitacion: [
+    { key: 'rutas', label: 'Rutas' },
+    { key: 'diagnostico', label: 'Diagnóstico' },
+    { key: 'progreso', label: 'Progreso' },
+  ],
+  soporte: [
+    { key: 'tickets', label: 'Tickets' },
+    { key: 'faq', label: 'FAQ' },
+  ],
+}
 
 const scopeModeByRole = {
   admin: 'global',
@@ -30,7 +41,9 @@ const scopeModeByRole = {
 
 function CapacitacionSoporte() {
   const { user } = useAuth()
-  const [searchParams, setSearchParams] = useSearchParams()
+  const toast = useToast()
+  const [activeSection, setActiveSection] = useState('capacitacion')
+  const [activeDetailTab, setActiveDetailTab] = useState('rutas')
 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -42,16 +55,12 @@ function CapacitacionSoporte() {
   const [watchedVideos, setWatchedVideos] = useState(() => getWatchedVideos())
   const [ticketUpdates, setTicketUpdates] = useState(() => getTicketUpdates())
 
-  const activeTab = useMemo(() => {
-    const tab = searchParams.get('tab')
-    return tabs.some((t) => t.key === tab) ? tab : 'rutas'
-  }, [searchParams])
-
-  const changeTab = (key) => {
-    const next = new URLSearchParams(searchParams)
-    next.set('tab', key)
-    setSearchParams(next)
-  }
+  useEffect(() => {
+    const validTabs = detailTabsBySection[activeSection].map((tab) => tab.key)
+    if (!validTabs.includes(activeDetailTab)) {
+      setActiveDetailTab(validTabs[0])
+    }
+  }, [activeSection, activeDetailTab])
 
   useEffect(() => {
     let isActive = true
@@ -81,7 +90,9 @@ function CapacitacionSoporte() {
     }
 
     load()
-    return () => { isActive = false }
+    return () => {
+      isActive = false
+    }
   }, [user?.id])
 
   const handleMarkWatched = (videoId) => {
@@ -94,39 +105,37 @@ function CapacitacionSoporte() {
     setTicketUpdates(getTicketUpdates())
   }
 
-  const seedCompleted = useMemo(
-    () => new Set(userProgress?.completedVideos ?? []),
-    [userProgress]
-  )
+  const handleSimulatedAccess = (item) => {
+    toast.simulated(
+      `Este acceso abrirá ${item.title} en producción. Por ahora es parte de la simulación LAB.`
+    )
+  }
 
-  const usersById = useMemo(
-    () => Object.fromEntries(allUsers.map((u) => [u.id, u])),
-    [allUsers]
-  )
+  const seedCompleted = useMemo(() => new Set(userProgress?.completedVideos ?? []), [userProgress])
 
-  const branchesById = useMemo(
-    () => Object.fromEntries(branches.map((b) => [b.id, b])),
-    [branches]
-  )
+  const usersById = useMemo(() => Object.fromEntries(allUsers.map((u) => [u.id, u])), [allUsers])
+
+  const branchesById = useMemo(() => Object.fromEntries(branches.map((b) => [b.id, b])), [branches])
 
   const scopeMode = scopeModeByRole[user?.role] ?? 'global'
   const scopeBranchId = scopeMode === 'branch' ? user?.branchId : null
 
   const tickets = useMemo(() => {
     const all = support?.tickets ?? []
-    return scopeBranchId ? all.filter((t) => t.branchId === scopeBranchId) : all
-  }, [support, scopeBranchId])
+    return scopeBranchId ? all.filter((ticket) => ticket.branchId === scopeBranchId) : all
+  }, [scopeBranchId, support])
 
   const videos = training?.videos ?? []
   const routes = training?.routes ?? []
   const diagnostic = training?.diagnostics?.[0] ?? null
   const faqs = support?.faqs ?? []
+  const detailTabs = detailTabsBySection[activeSection]
 
   if (loading) {
     return (
-      <section className="mx-auto w-full max-w-5xl space-y-4">
+      <section className="mx-auto w-full max-w-6xl space-y-4">
         <Card className="space-y-2">
-          <h2 className="text-2xl font-bold text-lab-text">Capacitacion y Soporte</h2>
+          <h2 className="text-2xl font-bold text-lab-text">Capacitación y Soporte</h2>
           <p className="text-sm text-lab-muted">Cargando datos...</p>
         </Card>
       </section>
@@ -135,20 +144,20 @@ function CapacitacionSoporte() {
 
   if (error) {
     return (
-      <section className="mx-auto w-full max-w-5xl">
-        <EmptyState title="No pudimos cargar el modulo" description={error} />
+      <section className="mx-auto w-full max-w-6xl">
+        <EmptyState title="No pudimos cargar el módulo" description={error} />
       </section>
     )
   }
 
   return (
-    <section className="mx-auto w-full max-w-5xl space-y-6">
+    <section className="mx-auto w-full max-w-6xl space-y-6">
       <Card className="space-y-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="space-y-1">
-            <h2 className="text-2xl font-bold text-lab-text">Capacitacion y Soporte</h2>
+            <h2 className="text-2xl font-bold text-lab-text">Capacitación y Soporte</h2>
             <p className="text-sm text-lab-muted">
-              Rutas de aprendizaje, diagnostico mensual, progreso de equipo y gestion de tickets.
+              Aprende, mejora y recibe ayuda sin salir de LAB.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -160,13 +169,13 @@ function CapacitacionSoporte() {
         </div>
 
         <nav className="flex flex-wrap gap-2">
-          {tabs.map((tab) => (
+          {sectionTabs.map((tab) => (
             <button
               key={tab.key}
               type="button"
-              onClick={() => changeTab(tab.key)}
+              onClick={() => setActiveSection(tab.key)}
               className={`rounded-lg border px-3 py-2 text-sm font-semibold transition ${
-                activeTab === tab.key
+                activeSection === tab.key
                   ? 'border-lab-primary bg-lab-primary text-white'
                   : 'border-lab-border bg-white text-lab-muted hover:text-lab-text'
               }`}
@@ -177,11 +186,53 @@ function CapacitacionSoporte() {
         </nav>
       </Card>
 
-      <div key={activeTab} className="animate-fade-in">
-        {activeTab === 'rutas' && (
+      {activeSection === 'capacitacion' ? (
+        <AccessGrid
+          title="Accesos de capacitación"
+          subtitle="Contenidos y recursos para fortalecer operación comercial."
+          items={trainingAccessLinks}
+          onSimulatedAccess={handleSimulatedAccess}
+        />
+      ) : (
+        <AccessGrid
+          title="Accesos de soporte"
+          subtitle="Canales de ayuda para resolver bloqueos operativos."
+          items={supportAccessLinks}
+          onSimulatedAccess={handleSimulatedAccess}
+        />
+      )}
+
+      <Card className="space-y-4">
+        <div className="space-y-1">
+          <h3 className="text-lg font-semibold text-lab-text">Operativa interna LAB</h3>
+          <p className="text-sm text-lab-muted">
+            Seguimiento detallado de capacitación y soporte por rol.
+          </p>
+        </div>
+
+        <nav className="flex flex-wrap gap-2">
+          {detailTabs.map((tab) => (
+            <button
+              key={tab.key}
+              type="button"
+              onClick={() => setActiveDetailTab(tab.key)}
+              className={`rounded-lg border px-3 py-2 text-sm font-semibold transition ${
+                activeDetailTab === tab.key
+                  ? 'border-lab-primary bg-lab-primary text-white'
+                  : 'border-lab-border bg-white text-lab-muted hover:text-lab-text'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </nav>
+      </Card>
+
+      <div key={`${activeSection}-${activeDetailTab}`} className="animate-fade-in">
+        {activeDetailTab === 'rutas' && (
           <div className="space-y-4">
             {routes.length === 0 ? (
-              <EmptyState title="Sin rutas" description="No hay rutas de capacitacion disponibles." />
+              <EmptyState title="Sin rutas" description="No hay rutas de capacitación disponibles." />
             ) : (
               routes.map((route) => (
                 <TrainingRouteCard
@@ -197,26 +248,24 @@ function CapacitacionSoporte() {
           </div>
         )}
 
-        {activeTab === 'diagnostico' && (
-          diagnostic ? (
+        {activeDetailTab === 'diagnostico' &&
+          (diagnostic ? (
             <TrainingDiagnostic
               diagnostic={diagnostic}
               seedScore={userProgress?.lastDiagnosticScore ?? null}
             />
           ) : (
-            <EmptyState title="Sin diagnostico" description="No hay diagnostico disponible por el momento." />
-          )
+            <EmptyState
+              title="Sin diagnóstico"
+              description="No hay diagnóstico disponible por el momento."
+            />
+          ))}
+
+        {activeDetailTab === 'progreso' && (
+          <TrainingProgress userProgress={userProgress} watchedVideos={watchedVideos} videos={videos} />
         )}
 
-        {activeTab === 'progreso' && (
-          <TrainingProgress
-            userProgress={userProgress}
-            watchedVideos={watchedVideos}
-            videos={videos}
-          />
-        )}
-
-        {activeTab === 'tickets' && (
+        {activeDetailTab === 'tickets' && (
           <SupportTicketsTable
             tickets={tickets}
             usersById={usersById}
@@ -226,9 +275,7 @@ function CapacitacionSoporte() {
           />
         )}
 
-        {activeTab === 'faq' && (
-          <SupportFaqList faqs={faqs} />
-        )}
+        {activeDetailTab === 'faq' && <SupportFaqList faqs={faqs} />}
       </div>
     </section>
   )

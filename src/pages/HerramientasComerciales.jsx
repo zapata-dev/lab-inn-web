@@ -1,11 +1,15 @@
 import { useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import AccessGrid from '../components/common/AccessGrid'
 import { Badge, Card } from '../components/common'
+import { commercialAccessLinks } from '../data/mockAccessLinks'
 import QuoteBuilder from '../features/commercialTools/QuoteBuilder'
 import QuoteHistoryPanel from '../features/commercialTools/QuoteHistoryPanel'
 import ToolPlaceholder from '../features/commercialTools/ToolPlaceholder'
+import useToast from '../hooks/useToast'
 
 const tabs = [
+  { key: 'accesos', label: 'Accesos rápidos' },
   { key: 'cotizador', label: 'Cotizador' },
   { key: 'historial', label: 'Historial' },
   { key: 'tco', label: 'TCO' },
@@ -15,16 +19,23 @@ const tabs = [
 
 function HerramientasComerciales() {
   const [searchParams, setSearchParams] = useSearchParams()
+  const toast = useToast()
 
   const activeTab = useMemo(() => {
     const tabParam = searchParams.get('tab')
-    return tabs.some((tab) => tab.key === tabParam) ? tabParam : 'cotizador'
+    return tabs.some((tab) => tab.key === tabParam) ? tabParam : 'accesos'
   }, [searchParams])
 
   const changeTab = (tabKey) => {
     const nextParams = new URLSearchParams(searchParams)
     nextParams.set('tab', tabKey)
     setSearchParams(nextParams)
+  }
+
+  const handleSimulatedAccess = (item) => {
+    toast.simulated(
+      `Este acceso abrirá ${item.title} en producción. Por ahora es parte de la simulación LAB.`
+    )
   }
 
   return (
@@ -34,7 +45,7 @@ function HerramientasComerciales() {
           <div className="space-y-1">
             <h2 className="text-2xl font-bold text-lab-text">Herramientas Comerciales</h2>
             <p className="text-sm text-lab-muted">
-              Estructura base del flujo comercial: cotizador, TCO, benchmark y comparador.
+              Todo lo que necesitas para vender, en un solo lugar.
             </p>
           </div>
           <Badge variant="demo">Sprint 3 Dia 5</Badge>
@@ -57,6 +68,15 @@ function HerramientasComerciales() {
           ))}
         </nav>
       </Card>
+
+      {activeTab === 'accesos' && (
+        <AccessGrid
+          title="Accesos rápidos"
+          subtitle="Herramientas prioritarias para operar la oficina virtual comercial."
+          items={commercialAccessLinks}
+          onSimulatedAccess={handleSimulatedAccess}
+        />
+      )}
 
       {activeTab === 'cotizador' && <QuoteBuilder />}
 
@@ -83,7 +103,7 @@ function HerramientasComerciales() {
       {activeTab === 'comparador' && (
         <ToolPlaceholder
           title="Comparador de unidades"
-          description="Comparativa rapida entre unidades para soportar decision comercial."
+          description="Comparativa rápida entre unidades para soportar decisión comercial."
           badge="Sprint 4"
         />
       )}
