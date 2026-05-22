@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import AccessGrid from '../components/common/AccessGrid'
 import { Badge, Card, EmptyState } from '../components/common'
 import { trainingAccessLinks, supportAccessLinks } from '../data/mockAccessLinks'
@@ -23,11 +24,17 @@ const detailTabsBySection = {
     { key: 'rutas', label: 'Rutas' },
     { key: 'diagnostico', label: 'Diagnóstico' },
     { key: 'progreso', label: 'Progreso' },
+    { key: 'calendario', label: 'Calendario' },
   ],
   soporte: [
     { key: 'tickets', label: 'Tickets' },
     { key: 'faq', label: 'FAQ' },
   ],
+}
+
+const defaultTabBySection = {
+  capacitacion: 'rutas',
+  soporte: 'tickets',
 }
 
 const scopeModeByRole = {
@@ -39,9 +46,16 @@ const scopeModeByRole = {
   ejecutivo: 'branch',
 }
 
+const isValidSection = (section) => section === 'capacitacion' || section === 'soporte'
+
+const isValidTab = (section, tab) =>
+  detailTabsBySection[section].some((candidate) => candidate.key === tab)
+
 function CapacitacionSoporte() {
   const { user } = useAuth()
   const toast = useToast()
+  const [searchParams, setSearchParams] = useSearchParams()
+
   const [activeSection, setActiveSection] = useState('capacitacion')
   const [activeDetailTab, setActiveDetailTab] = useState('rutas')
 
@@ -56,11 +70,16 @@ function CapacitacionSoporte() {
   const [ticketUpdates, setTicketUpdates] = useState(() => getTicketUpdates())
 
   useEffect(() => {
-    const validTabs = detailTabsBySection[activeSection].map((tab) => tab.key)
-    if (!validTabs.includes(activeDetailTab)) {
-      setActiveDetailTab(validTabs[0])
-    }
-  }, [activeSection, activeDetailTab])
+    const incomingSection = searchParams.get('section')
+    const nextSection = isValidSection(incomingSection) ? incomingSection : 'capacitacion'
+    const incomingTab = searchParams.get('tab')
+    const nextTab = isValidTab(nextSection, incomingTab)
+      ? incomingTab
+      : defaultTabBySection[nextSection]
+
+    setActiveSection((previous) => (previous === nextSection ? previous : nextSection))
+    setActiveDetailTab((previous) => (previous === nextTab ? previous : nextTab))
+  }, [searchParams])
 
   useEffect(() => {
     let isActive = true
@@ -95,6 +114,28 @@ function CapacitacionSoporte() {
     }
   }, [user?.id])
 
+  const updateQueryParams = (section, tab) => {
+    const nextParams = new URLSearchParams(searchParams)
+    nextParams.set('section', section)
+    nextParams.set('tab', tab)
+    setSearchParams(nextParams)
+  }
+
+  const handleSectionChange = (section) => {
+    const nextTab = isValidTab(section, activeDetailTab)
+      ? activeDetailTab
+      : defaultTabBySection[section]
+
+    setActiveSection(section)
+    setActiveDetailTab(nextTab)
+    updateQueryParams(section, nextTab)
+  }
+
+  const handleDetailTabChange = (tab) => {
+    setActiveDetailTab(tab)
+    updateQueryParams(activeSection, tab)
+  }
+
   const handleMarkWatched = (videoId) => {
     const added = markVideoWatched(videoId)
     if (added) setWatchedVideos((prev) => ({ ...prev, [videoId]: true }))
@@ -112,9 +153,7 @@ function CapacitacionSoporte() {
   }
 
   const seedCompleted = useMemo(() => new Set(userProgress?.completedVideos ?? []), [userProgress])
-
   const usersById = useMemo(() => Object.fromEntries(allUsers.map((u) => [u.id, u])), [allUsers])
-
   const branchesById = useMemo(() => Object.fromEntries(branches.map((b) => [b.id, b])), [branches])
 
   const scopeMode = scopeModeByRole[user?.role] ?? 'global'
@@ -173,7 +212,7 @@ function CapacitacionSoporte() {
             <button
               key={tab.key}
               type="button"
-              onClick={() => setActiveSection(tab.key)}
+              onClick={() => handleSectionChange(tab.key)}
               className={`rounded-lg border px-3 py-2 text-sm font-semibold transition ${
                 activeSection === tab.key
                   ? 'border-lab-primary bg-lab-primary text-white'
@@ -215,7 +254,7 @@ function CapacitacionSoporte() {
             <button
               key={tab.key}
               type="button"
-              onClick={() => setActiveDetailTab(tab.key)}
+              onClick={() => handleDetailTabChange(tab.key)}
               className={`rounded-lg border px-3 py-2 text-sm font-semibold transition ${
                 activeDetailTab === tab.key
                   ? 'border-lab-primary bg-lab-primary text-white'
@@ -263,6 +302,13 @@ function CapacitacionSoporte() {
 
         {activeDetailTab === 'progreso' && (
           <TrainingProgress userProgress={userProgress} watchedVideos={watchedVideos} videos={videos} />
+        )}
+
+        {activeDetailTab === 'calendario' && (
+          <EmptyState
+            title="Calendario de próximos eventos"
+            description="Aquí se concentrarán capacitaciones, sesiones comerciales y eventos próximos."
+          />
         )}
 
         {activeDetailTab === 'tickets' && (

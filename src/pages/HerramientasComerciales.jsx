@@ -11,6 +11,9 @@ import useToast from '../hooks/useToast'
 const tabs = [
   { key: 'accesos', label: 'Accesos rápidos' },
   { key: 'cotizador', label: 'Cotizador' },
+  { key: 'promociones', label: 'Promociones' },
+  { key: 'portadas', label: 'Portadas' },
+  { key: 'directorio', label: 'Directorio' },
   { key: 'historial', label: 'Historial' },
   { key: 'tco', label: 'TCO' },
   { key: 'benchmark', label: 'Benchmark' },
@@ -79,6 +82,30 @@ function HerramientasComerciales() {
       )}
 
       {activeTab === 'cotizador' && <QuoteBuilder />}
+
+      {activeTab === 'promociones' && (
+        <ToolPlaceholder
+          title="Catálogo de promociones"
+          description="Consulta promociones vigentes por marca, segmento y condiciones comerciales."
+          badge="Demo LAB"
+        />
+      )}
+
+      {activeTab === 'portadas' && (
+        <ToolPlaceholder
+          title="Generador de portadas"
+          description="Próximamente crearás portadas comerciales para propuestas y presentaciones."
+          badge="Demo LAB"
+        />
+      )}
+
+      {activeTab === 'directorio' && (
+        <ToolPlaceholder
+          title="Directorio de agencias de seminuevos"
+          description="Aquí encontrarás agencias y contactos para operación de seminuevos."
+          badge="Demo LAB"
+        />
+      )}
 
       {activeTab === 'historial' && (
         <QuoteHistoryPanel onGoToCotizador={() => changeTab('cotizador')} />

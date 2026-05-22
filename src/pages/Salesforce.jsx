@@ -12,7 +12,7 @@ import { dataService } from '../services/dataService'
 import { getSimulatedOpportunities } from '../services/quotesService'
 
 const tabs = [
-  { key: 'tablero', label: 'Tablero' },
+  { key: 'resumen', label: 'Resumen' },
   { key: 'leads', label: 'Leads' },
   { key: 'oportunidades', label: 'Oportunidades' },
   { key: 'pedidos', label: 'Pedidos' },
@@ -50,7 +50,8 @@ function Salesforce() {
   const [drawerType, setDrawerType] = useState(null)
   const activeTab = useMemo(() => {
     const tab = searchParams.get('tab')
-    return tabs.some((t) => t.key === tab) ? tab : 'tablero'
+    if (tab === 'tablero') return 'resumen'
+    return tabs.some((t) => t.key === tab) ? tab : 'resumen'
   }, [searchParams])
 
   const changeTab = (key) => {
@@ -199,7 +200,7 @@ function Salesforce() {
       </Card>
 
       <div key={activeTab} className="animate-fade-in">
-        {activeTab === 'tablero' && (
+        {activeTab === 'resumen' && (
           <SalesforceDashboard
             leads={leads}
             opportunities={opportunities}

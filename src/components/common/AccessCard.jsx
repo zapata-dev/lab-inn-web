@@ -51,7 +51,7 @@ function AccessCard({ title, description, icon, href, type, status, onClick }) {
   const isExternal = type === 'external'
 
   const handleOpen = () => {
-    if (isPending || !hasHref) {
+    if (!hasHref) {
       onClick?.()
       return
     }
@@ -90,7 +90,7 @@ function AccessCard({ title, description, icon, href, type, status, onClick }) {
         </div>
 
         <span className="mt-1 inline-flex shrink-0 items-center text-lab-muted">
-          {isExternal && !isPending ? (
+          {isExternal ? (
             <ArrowUpRight className="size-4" aria-hidden="true" />
           ) : (
             <ChevronRight className="size-4" aria-hidden="true" />
