@@ -1,3 +1,5 @@
+import { buildInventoryPdfHtml } from './inventoryPdfTemplate'
+
 function formatCurrency(value) {
   if (!Number.isFinite(value) || value <= 0) return 'Precio por confirmar'
 
@@ -36,6 +38,20 @@ function DetailSection({ title, children }) {
 
 function InventoryDetailModal({ unit, onClose, onCopy }) {
   if (!unit) return null
+
+  const handleExportPdf = () => {
+    const printWindow = window.open('', '_blank')
+    if (!printWindow) return
+
+    printWindow.document.open()
+    printWindow.document.write(buildInventoryPdfHtml(unit))
+    printWindow.document.close()
+
+    printWindow.addEventListener('load', () => {
+      printWindow.focus()
+      printWindow.print()
+    })
+  }
 
   return (
     <div
@@ -116,7 +132,11 @@ function InventoryDetailModal({ unit, onClose, onCopy }) {
                   alt={`${unit.marca || 'Unidad'} portada`}
                   className="h-56 w-full rounded-xl object-cover"
                 />
-              ) : null}
+              ) : (
+                <div className="flex h-56 w-full items-center justify-center rounded-xl bg-slate-100 text-sm font-medium text-slate-500">
+                  Sin foto
+                </div>
+              )}
 
               {Array.isArray(unit.imagenesCompletas) && unit.imagenesCompletas.length > 0 ? (
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -137,6 +157,13 @@ function InventoryDetailModal({ unit, onClose, onCopy }) {
         </div>
 
         <div className="flex flex-wrap gap-3 border-t border-lab-border bg-white p-5">
+          <button
+            type="button"
+            onClick={handleExportPdf}
+            className="rounded-xl border border-lab-primary/30 bg-lab-primary/5 px-4 py-2 text-sm font-semibold text-lab-primary transition-colors hover:bg-lab-primary hover:text-white"
+          >
+            Exportar PDF
+          </button>
           <button
             type="button"
             onClick={() => onCopy(unit)}

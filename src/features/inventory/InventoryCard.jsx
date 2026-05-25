@@ -1,6 +1,3 @@
-const PLACEHOLDER_IMAGE =
-  'https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?auto=format&fit=crop&w=1200&q=80'
-
 function formatCurrency(value) {
   if (!Number.isFinite(value) || value <= 0) return 'Precio por confirmar'
 
@@ -28,18 +25,26 @@ function getStatusStyle(status) {
 }
 
 function InventoryCard({ unit, onViewDetail }) {
+  const hasImage = Boolean(unit.imagenPortada)
+
   return (
     <article className="group overflow-hidden rounded-2xl border border-lab-border bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lab">
       <div className="relative aspect-[16/10] w-full overflow-hidden bg-lab-bg">
-        <img
-          src={unit.imagenPortada || PLACEHOLDER_IMAGE}
-          alt={`${unit.marca || 'Unidad'} ${unit.modelo || ''}`}
-          className="size-full object-cover transition-transform duration-500 group-hover:scale-105"
-          loading="lazy"
-          onError={(event) => {
-            event.currentTarget.src = PLACEHOLDER_IMAGE
-          }}
-        />
+        {hasImage ? (
+          <img
+            src={unit.imagenPortada}
+            alt={`${unit.marca || 'Unidad'} ${unit.modelo || ''}`}
+            className="size-full object-cover transition-transform duration-500 group-hover:scale-105"
+            loading="lazy"
+            onError={(event) => {
+              event.currentTarget.style.display = 'none'
+            }}
+          />
+        ) : (
+          <div className="flex size-full items-center justify-center bg-slate-100 text-sm font-medium text-slate-500">
+            Sin foto
+          </div>
+        )}
         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-900/70 to-transparent p-3">
           <p className="text-sm font-semibold text-white">
             {unit.marca || 'Sin marca'} {unit.modelo || 'Sin modelo'}
