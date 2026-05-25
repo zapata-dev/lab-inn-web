@@ -15,22 +15,26 @@ function Home() {
           </div>
 
           <div className="space-y-2">
-            <h1 className="text-3xl font-bold text-lab-text sm:text-4xl">Access Hub</h1>
+            <h1 className="text-3xl font-bold text-lab-text sm:text-4xl">Mi Oficina Virtual</h1>
             <p className="mx-auto max-w-2xl text-sm text-lab-muted sm:text-base">
               Centro de accesos y herramientas comerciales
             </p>
           </div>
         </header>
 
-        <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {accessLinks.map((access) => (
+        <section className="grid grid-cols-3 gap-3 sm:grid-cols-3 md:grid-cols-2 md:gap-4 lg:grid-cols-3">
+          {accessLinks.map((access, index) => (
             <QuickAccessCard
               key={access.id}
               title={access.title}
               description={access.description}
               icon={access.icon}
+              logoUrl={access.logoUrl}
+              logoAlt={access.logoAlt}
+              brandColor={access.brandColor}
               url={access.url}
               to={access.to}
+              index={index}
               disabled={access.disabled}
             />
           ))}
