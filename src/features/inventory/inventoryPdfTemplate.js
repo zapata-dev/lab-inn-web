@@ -153,6 +153,8 @@ export function buildInventoryPdfHtml(unit, now = new Date()) {
     { label: 'Paso', value: toText(unit.paso) },
     { label: 'Rodada', value: toText(unit.rodada) },
   ]
+  const isCompactGallery = gallery.length >= 6
+  const galleryGridClass = isCompactGallery ? 'gallery-grid gallery-grid-compact' : 'gallery-grid'
 
   const specs = [
     specRow('Color exterior', unit.color),
@@ -169,7 +171,8 @@ export function buildInventoryPdfHtml(unit, now = new Date()) {
 
   const galleryHtml = gallery
     .map((imageUrl, index) => {
-      const classes = index === 0 ? 'gallery-tile gallery-tile-main' : 'gallery-tile'
+      const classes =
+        !isCompactGallery && index === 0 ? 'gallery-tile gallery-tile-main' : 'gallery-tile'
       return `
         <figure class="${classes}">
           <img src="${escapeHtml(imageUrl)}" alt="Vista ${index + 1} de la unidad" class="gallery-image" loading="lazy" />
@@ -453,12 +456,16 @@ export function buildInventoryPdfHtml(unit, now = new Date()) {
         display: grid;
         grid-template-columns: 66% 34%;
         gap: 9px;
+        break-inside: avoid;
+        page-break-inside: avoid;
       }
 
       .gallery-grid {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 8px;
+        break-inside: avoid;
+        page-break-inside: avoid;
       }
 
       .gallery-tile {
@@ -466,12 +473,23 @@ export function buildInventoryPdfHtml(unit, now = new Date()) {
         border-radius: 12px;
         overflow: hidden;
         border: 1px solid var(--line);
-        min-height: 180px;
+        min-height: 132px;
+        break-inside: avoid;
+        page-break-inside: avoid;
       }
 
       .gallery-tile-main {
         grid-column: span 2;
-        min-height: 282px;
+        min-height: 236px;
+      }
+
+      .gallery-grid-compact .gallery-tile {
+        min-height: 106px;
+      }
+
+      .gallery-grid-compact .gallery-tile-main {
+        grid-column: auto;
+        min-height: 106px;
       }
 
       .gallery-image {
@@ -657,7 +675,7 @@ export function buildInventoryPdfHtml(unit, now = new Date()) {
         <section class="page-two-layout">
           ${
             galleryHtml
-              ? `<div class="gallery-grid">${galleryHtml}</div>`
+              ? `<div class="${galleryGridClass}">${galleryHtml}</div>`
               : '<div class="gallery-empty">No hay imagenes disponibles para esta unidad.</div>'
           }
           <aside class="spec-card">${specs}</aside>
