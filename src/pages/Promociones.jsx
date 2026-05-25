@@ -1,5 +1,5 @@
-import { ArrowLeft, RefreshCw, Search } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { ArrowLeft, ChevronLeft, ChevronRight, RefreshCw, Search } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import InventoryDetailModal from '../features/inventory/InventoryDetailModal'
 import InventoryFilters from '../features/inventory/InventoryFilters'
@@ -19,6 +19,8 @@ const FILTER_LABELS = PROMOTION_FILTER_FIELDS.reduce((accumulator, field) => {
   accumulator[field.key] = field.label
   return accumulator
 }, {})
+const DESKTOP_PAGE_SIZE = 12
+const MOBILE_PAGE_SIZE = 6
 
 function normalizeText(value) {
   return String(value ?? '')
@@ -191,6 +193,78 @@ function PromotionSkeleton() {
   )
 }
 
+function buildVisiblePageNumbers(currentPage, totalPages) {
+  if (totalPages <= 7) {
+    return Array.from({ length: totalPages }, (_, index) => index + 1)
+  }
+
+  const pages = new Set([1, totalPages, currentPage, currentPage - 1, currentPage + 1])
+  const bounded = [...pages].filter((page) => page >= 1 && page <= totalPages).sort((a, b) => a - b)
+
+  if (bounded[1] > 2) bounded.splice(1, 0, -1)
+  if (bounded[bounded.length - 2] < totalPages - 1) bounded.splice(bounded.length - 1, 0, -1)
+
+  return bounded
+}
+
+function Pagination({ currentPage, totalPages, onChange }) {
+  const visiblePages = buildVisiblePageNumbers(currentPage, totalPages)
+
+  return (
+    <nav
+      className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-lab-border bg-white px-4 py-3 shadow-sm"
+      aria-label="Paginacion de promociones"
+    >
+      <p className="text-sm font-medium text-lab-muted">
+        Pagina {currentPage} de {totalPages}
+      </p>
+
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          onClick={() => onChange(currentPage - 1)}
+          disabled={currentPage === 1}
+          className="inline-flex items-center gap-1 rounded-lg border border-lab-border px-3 py-1.5 text-sm font-semibold text-lab-text transition-colors hover:border-lab-primary/40 hover:text-lab-primary disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <ChevronLeft className="size-4" aria-hidden="true" />
+          Anterior
+        </button>
+
+        {visiblePages.map((pageNumber, index) =>
+          pageNumber === -1 ? (
+            <span key={`ellipsis-${index}`} className="px-1 text-lab-muted">
+              ...
+            </span>
+          ) : (
+            <button
+              key={pageNumber}
+              type="button"
+              onClick={() => onChange(pageNumber)}
+              className={`rounded-lg px-3 py-1.5 text-sm font-semibold transition-colors ${
+                pageNumber === currentPage
+                  ? 'bg-lab-primary text-white'
+                  : 'border border-lab-border text-lab-text hover:border-lab-primary/40 hover:text-lab-primary'
+              }`}
+            >
+              {pageNumber}
+            </button>
+          )
+        )}
+
+        <button
+          type="button"
+          onClick={() => onChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          className="inline-flex items-center gap-1 rounded-lg border border-lab-border px-3 py-1.5 text-sm font-semibold text-lab-text transition-colors hover:border-lab-primary/40 hover:text-lab-primary disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          Siguiente
+          <ChevronRight className="size-4" aria-hidden="true" />
+        </button>
+      </div>
+    </nav>
+  )
+}
+
 function Promociones() {
   const [inventory, setInventory] = useState([])
   const [filters, setFilters] = useState({})
@@ -199,6 +273,9 @@ function Promociones() {
   const [lastUpdated, setLastUpdated] = useState(null)
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState({ type: '', text: '' })
+  const [pageSize, setPageSize] = useState(DESKTOP_PAGE_SIZE)
+  const [currentPage, setCurrentPage] = useState(1)
+  const hasPaginatedOnce = useRef(false)
 
   const promotionUnits = useMemo(() => inventory.filter(hasPromotion), [inventory])
   const availableFilterDefinitions = useMemo(() => detectAvailableFilters(promotionUnits), [promotionUnits])
@@ -211,6 +288,23 @@ function Promociones() {
     [promotionUnits, filters, search, availableFilterDefinitions]
   )
   const activeChips = useMemo(() => getActiveChips(search, filters), [search, filters])
+  const totalPages = useMemo(
+    () => Math.max(1, Math.ceil(filteredPromotions.length / pageSize)),
+    [filteredPromotions.length, pageSize]
+  )
+  const pageUnits = useMemo(() => {
+    const start = (currentPage - 1) * pageSize
+    return filteredPromotions.slice(start, start + pageSize)
+  }, [filteredPromotions, currentPage, pageSize])
+
+  useEffect(() => {
+    const media = window.matchMedia('(max-width: 767px)')
+    const syncPageSize = () => setPageSize(media.matches ? MOBILE_PAGE_SIZE : DESKTOP_PAGE_SIZE)
+    syncPageSize()
+
+    media.addEventListener('change', syncPageSize)
+    return () => media.removeEventListener('change', syncPageSize)
+  }, [])
 
   useEffect(() => {
     setFilters((previous) => {
@@ -254,6 +348,23 @@ function Promociones() {
       return changed ? next : previous
     })
   }, [availableFilterDefinitions, optionsByKey])
+
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [search, filters])
+
+  useEffect(() => {
+    setCurrentPage((previous) => Math.min(previous, totalPages))
+  }, [totalPages])
+
+  useEffect(() => {
+    if (!hasPaginatedOnce.current) {
+      hasPaginatedOnce.current = true
+      return
+    }
+
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }, [currentPage])
 
   const refreshPromotions = async (showSuccessMessage = false) => {
     setLoading(true)
@@ -366,6 +477,9 @@ function Promociones() {
               {filteredPromotions.length} promociones vigentes
             </span>
             <span className="rounded-full bg-lab-bg px-3 py-1">Total con promocion: {promotionUnits.length}</span>
+            <span className="rounded-full bg-lab-bg px-3 py-1">
+              Mostrando {pageUnits.length} de {filteredPromotions.length} en esta pagina
+            </span>
           </div>
         </header>
 
@@ -384,13 +498,14 @@ function Promociones() {
             onReset={() => {
               setSearch('')
               setFilters({})
+              setCurrentPage(1)
             }}
             activeChips={activeChips}
             onRemoveChip={handleRemoveChip}
             resultCount={filteredPromotions.length}
           />
 
-          <div>
+          <div className="space-y-4">
             {loading && promotionUnits.length === 0 ? (
               <PromotionSkeleton />
             ) : promotionUnits.length === 0 ? (
@@ -407,11 +522,15 @@ function Promociones() {
               </div>
             ) : (
               <section className="grid items-stretch gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                {filteredPromotions.map((unit) => (
+                {pageUnits.map((unit) => (
                   <PromotionCard key={unit.id} unit={unit} onViewDetail={setSelectedUnit} />
                 ))}
               </section>
             )}
+
+            {filteredPromotions.length > 0 ? (
+              <Pagination currentPage={currentPage} totalPages={totalPages} onChange={setCurrentPage} />
+            ) : null}
           </div>
         </section>
       </div>
