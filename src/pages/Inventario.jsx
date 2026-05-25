@@ -11,10 +11,10 @@ import {
   saveInventoryCache,
 } from '../services/inventoryService'
 
-const SEARCHABLE_KEYS = ['brand', 'model', 'vin', 'plates', 'motor', 'unitType', 'description']
-const FILTER_LABELS = INVENTORY_FILTER_FIELDS.reduce((acc, field) => {
-  acc[field.key] = field.label
-  return acc
+const SEARCHABLE_KEYS = ['marca', 'modelo', 'vin', 'vinCompleto', 'motor', 'tipoUnidad', 'descripcion', 'placas']
+const FILTER_LABELS = INVENTORY_FILTER_FIELDS.reduce((accumulator, field) => {
+  accumulator[field.key] = field.label
+  return accumulator
 }, {})
 
 function normalizeText(value) {
@@ -26,32 +26,40 @@ function normalizeText(value) {
 }
 
 function uniqueSorted(values) {
-  return [...new Set(values.filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es'))
+  return [...new Set(values.filter(Boolean))].sort((first, second) => first.localeCompare(second, 'es'))
 }
 
 function parseNumber(value) {
   const cleaned = String(value ?? '').replace(/[^0-9.,-]/g, '')
   if (!cleaned) return null
 
-  const normalized = cleaned.includes(',') && cleaned.includes('.')
-    ? cleaned.replace(/,/g, '')
-    : cleaned.replace(/,/g, '.')
+  let normalized = cleaned
+
+  if (cleaned.includes('.') && cleaned.includes(',')) {
+    normalized = cleaned.replace(/,/g, '')
+  } else if (cleaned.includes(',')) {
+    const commaCount = (cleaned.match(/,/g) || []).length
+    const [left = '', right = ''] = cleaned.split(',')
+    const isThousandsSeparator = commaCount > 1 || (right.length === 3 && left.length >= 1)
+    normalized = isThousandsSeparator ? cleaned.replace(/,/g, '') : cleaned.replace(',', '.')
+  }
+
   const parsed = Number(normalized)
 
   return Number.isFinite(parsed) ? parsed : null
 }
 
 function getNumericFieldValue(unit, key) {
-  if (key === 'price') return unit.price
-  if (key === 'mileage') return unit.mileageValue ?? parseNumber(unit.mileage)
+  if (key === 'precio') return unit.precio
+  if (key === 'kilometros') return unit.kilometros
 
   return parseNumber(unit[key])
 }
 
 function hasValue(unit, key, type) {
   if (type === 'numberRange') {
-    const numeric = getNumericFieldValue(unit, key)
-    return Number.isFinite(numeric)
+    const numericValue = getNumericFieldValue(unit, key)
+    return Number.isFinite(numericValue)
   }
 
   return String(unit[key] ?? '').trim().length > 0
@@ -155,21 +163,18 @@ function formatLastUpdated(dateString) {
 }
 
 function buildCopyText(unit) {
-  const details = [
-    `Marca: ${unit.brand}`,
-    `Modelo: ${unit.model}`,
-    `Ano: ${unit.year || 'No especificado'}`,
-    `Precio: ${unit.price || 0}`,
-    `Ubicacion: ${unit.location}`,
-    `Status: ${unit.status}`,
+  return [
+    `Marca: ${unit.marca || 'No especificado'}`,
+    `Modelo: ${unit.modelo || 'No especificado'}`,
+    `Ano: ${unit.anio || 'No especificado'}`,
+    `Precio: ${unit.precio ?? 'No especificado'}`,
+    `Kilometros: ${unit.kilometros ?? 'No especificado'}`,
     `Motor: ${unit.motor || 'No especificado'}`,
-    `Transmision: ${unit.transmission || 'No especificada'}`,
+    `Transmision: ${unit.transmision || 'No especificado'}`,
+    `Ubicacion: ${unit.ubicacion || 'No especificado'}`,
+    `VIN completo: ${unit.vinCompleto || 'No especificado'}`,
     `VIN: ${unit.vin || 'No especificado'}`,
-    `Placas: ${unit.plates || 'No especificado'}`,
-  ]
-
-  const specs = Object.entries(unit.specs || {}).map(([key, value]) => `${key}: ${value}`)
-  return [...details, ...specs].join('\n')
+  ].join('\n')
 }
 
 function Inventario() {
@@ -181,10 +186,7 @@ function Inventario() {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState({ type: '', text: '' })
 
-  const availableFilterDefinitions = useMemo(
-    () => detectAvailableFilters(inventory),
-    [inventory]
-  )
+  const availableFilterDefinitions = useMemo(() => detectAvailableFilters(inventory), [inventory])
   const filterOptions = useMemo(
     () => buildFilterOptions(inventory, availableFilterDefinitions),
     [inventory, availableFilterDefinitions]

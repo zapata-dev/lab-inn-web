@@ -103,7 +103,7 @@ function InventoryFilters({
               onClick={() => onRemoveChip(chip.key)}
               className="rounded-full border border-lab-primary/20 bg-lab-primary/5 px-3 py-1 text-xs font-medium text-lab-primary transition-colors hover:bg-lab-primary hover:text-white"
             >
-              {chip.label}: {chip.value} ×
+              {chip.label}: {chip.value} x
             </button>
           ))}
         </div>

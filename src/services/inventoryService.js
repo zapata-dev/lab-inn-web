@@ -4,69 +4,76 @@ export const INVENTORY_CACHE_KEY = 'lab:v1:inventory_cache'
 export const INVENTORY_LAST_UPDATED_KEY = 'lab:v1:inventory_last_updated'
 
 export const INVENTORY_FILTER_FIELDS = [
-  { key: 'brand', label: 'Marca', type: 'select' },
-  { key: 'model', label: 'Modelo', type: 'select' },
-  { key: 'year', label: 'Ano', type: 'select' },
-  { key: 'price', label: 'Precio', type: 'numberRange' },
-  { key: 'location', label: 'Ubicacion / sucursal', type: 'select' },
+  { key: 'marca', label: 'Marca', type: 'select' },
+  { key: 'modelo', label: 'Modelo', type: 'select' },
+  { key: 'anio', label: 'Ano', type: 'select' },
+  { key: 'precio', label: 'Precio', type: 'numberRange' },
+  { key: 'ubicacion', label: 'Ubicacion / sucursal', type: 'select' },
   { key: 'status', label: 'Status', type: 'select' },
   { key: 'paso', label: 'Paso', type: 'select' },
   { key: 'rodada', label: 'Rodada', type: 'select' },
   { key: 'motor', label: 'Motor', type: 'select' },
-  { key: 'transmission', label: 'Transmision', type: 'select' },
+  { key: 'transmision', label: 'Transmision', type: 'select' },
+  { key: 'kilometros', label: 'Kilometraje', type: 'numberRange' },
   { key: 'cabina', label: 'Cabina', type: 'select' },
-  { key: 'configuration', label: 'Configuracion', type: 'select' },
-  { key: 'mileage', label: 'Kilometraje', type: 'numberRange' },
-  { key: 'unitType', label: 'Tipo de unidad', type: 'select' },
+  { key: 'configuracion', label: 'Configuracion', type: 'select' },
+  { key: 'tipoUnidad', label: 'Tipo de unidad', type: 'select' },
   { key: 'suspension', label: 'Suspension', type: 'select' },
-  { key: 'horsepower', label: 'Potencia HP', type: 'select' },
+  { key: 'potenciaHp', label: 'Potencia HP', type: 'select' },
   { key: 'torque', label: 'Torque', type: 'select' },
-  { key: 'axles', label: 'Numero de ejes', type: 'select' },
-  { key: 'fuelType', label: 'Tipo de combustible', type: 'select' },
-  { key: 'traction', label: 'Traccion', type: 'select' },
-  { key: 'payload', label: 'Capacidad de carga', type: 'select' },
-  { key: 'sleeper', label: 'Sleeper / daycab', type: 'select' },
+  { key: 'numeroEjes', label: 'Numero de ejes', type: 'select' },
+  { key: 'tipoCombustible', label: 'Tipo de combustible', type: 'select' },
+  { key: 'traccion', label: 'Traccion', type: 'select' },
+  { key: 'capacidadCarga', label: 'Capacidad de carga', type: 'select' },
+  { key: 'sleeperDaycab', label: 'Sleeper / daycab', type: 'select' },
   { key: 'color', label: 'Color', type: 'select' },
   { key: 'vin', label: 'VIN', type: 'text' },
-  { key: 'plates', label: 'Placas', type: 'text' },
-  { key: 'boxTrailer', label: 'Caja / remolque', type: 'select' },
+  { key: 'placas', label: 'Placas', type: 'text' },
+  { key: 'cajaRemolque', label: 'Caja / remolque', type: 'select' },
+  { key: 'promocion', label: 'Promocion', type: 'select' },
 ]
 
-const FIELD_ALIASES = {
-  brand: ['marca', 'brand'],
-  model: ['modelo', 'model'],
-  year: ['ano', 'anio', 'year'],
-  price: ['precio sug. de venta', 'precio', 'price', 'valor'],
-  location: ['ubicacion fisica', 'ubicacion', 'sucursal', 'centro', 'location'],
-  status: ['status', 'estado', 'disponibilidad', 'promocion'],
-  mileage: ['kilometraje', 'kilometros', 'km', 'kms', 'mileage'],
-  paso: ['paso'],
-  rodada: ['rodada'],
-  motor: ['motor'],
-  transmission: ['transmision', 'transmission', 'caja'],
+const BASE_HEADER_MAP = {
+  vinCompleto: 'vinCompleto',
+  vin: 'vin',
+  centro: 'centro',
+  ubicacionFisica: 'ubicacionFisica',
+  marca: 'marca',
+  modelo: 'modelo',
+  cilindros: 'cilindros',
+  color: 'color',
+  colorInterior: 'colorInterior',
+  ano: 'anio',
+  precioSugDeVenta: 'precioRaw',
+  kilometros: 'kilometrosRaw',
+  motor: 'motor',
+  transmision: 'transmision',
+  paso: 'paso',
+  rodada: 'rodada',
+  ejeDelantera: 'ejeDelantero',
+  ejeTrasera: 'ejeTrasero',
+  dormitorio: 'dormitorio',
+  subempresa: 'subempresa',
+  promocion: 'promocion',
+  imagenPortada: 'imagenPortadaRaw',
+  imagenesCompletas: 'imagenesCompletasRaw',
+}
+
+const OPTIONAL_COLUMN_ALIASES = {
   cabina: ['cabina'],
-  configuration: ['configuracion'],
-  unitType: ['tipo de unidad', 'tipo unidad', 'tipo'],
+  configuracion: ['configuracion'],
+  tipoUnidad: ['tipoUnidad', 'tipoDeUnidad', 'tipo'],
   suspension: ['suspension'],
-  horsepower: ['potencia hp', 'hp', 'horsepower'],
+  potenciaHp: ['potenciaHp', 'hp', 'horsepower'],
   torque: ['torque'],
-  axles: ['numero de ejes', 'ejes', 'axles'],
-  fuelType: ['combustible', 'tipo de combustible', 'fuel'],
-  traction: ['traccion', 'traction'],
-  payload: ['capacidad de carga', 'payload'],
-  sleeper: ['sleeper', 'daycab', 'dormitorio'],
-  color: ['color'],
-  vin: ['vin completo', 'vin'],
-  plates: ['placas', 'placa'],
-  boxTrailer: ['caja', 'remolque', 'caja / remolque'],
-  description: ['descripcion', 'descripcion comercial'],
-  image: ['imagen portada', 'foto', 'imagen', 'image', 'photo', 'url imagen', 'image url'],
-  gallery: ['imagenes completas', 'galeria'],
-  engineCylinders: ['cilindros'],
-  interiorColor: ['color interior'],
-  frontAxle: ['eje delantera'],
-  rearAxle: ['eje trasera'],
-  company: ['subempresa'],
+  numeroEjes: ['numeroDeEjes', 'ejes'],
+  tipoCombustible: ['tipoDeCombustible', 'combustible'],
+  traccion: ['traccion'],
+  capacidadCarga: ['capacidadDeCarga', 'payload'],
+  sleeperDaycab: ['sleeper', 'daycab'],
+  placas: ['placas', 'placa'],
+  cajaRemolque: ['caja', 'remolque', 'cajaRemolque'],
+  descripcion: ['descripcion', 'descripcionComercial'],
 }
 
 function normalizeText(value) {
@@ -77,168 +84,189 @@ function normalizeText(value) {
     .replace(/[\u0300-\u036f]/g, '')
 }
 
-function parseCsvLine(line) {
-  const cells = []
-  let current = ''
-  let inQuotes = false
+export function normalizeHeader(header) {
+  const cleaned = normalizeText(header).replace(/[^a-z0-9]+/g, ' ').trim()
+  if (!cleaned) return ''
 
-  for (let index = 0; index < line.length; index += 1) {
-    const char = line[index]
-    const nextChar = line[index + 1]
-
-    if (char === '"' && inQuotes && nextChar === '"') {
-      current += '"'
-      index += 1
-      continue
-    }
-
-    if (char === '"') {
-      inQuotes = !inQuotes
-      continue
-    }
-
-    if (char === ',' && !inQuotes) {
-      cells.push(current.trim())
-      current = ''
-      continue
-    }
-
-    current += char
-  }
-
-  cells.push(current.trim())
-  return cells
+  const words = cleaned.split(/\s+/)
+  return words
+    .map((word, index) => (index === 0 ? word : `${word.charAt(0).toUpperCase()}${word.slice(1)}`))
+    .join('')
 }
 
 function parseCsv(csvText) {
-  const lines = String(csvText ?? '')
-    .split(/\r?\n/)
-    .filter((line) => line.trim().length > 0)
+  const rows = []
+  let row = []
+  let cell = ''
+  let inQuotes = false
 
-  if (lines.length === 0) return []
+  for (let index = 0; index < csvText.length; index += 1) {
+    const character = csvText[index]
+    const nextCharacter = csvText[index + 1]
 
-  const headers = parseCsvLine(lines[0])
-  const records = []
+    if (character === '"') {
+      if (inQuotes && nextCharacter === '"') {
+        cell += '"'
+        index += 1
+      } else {
+        inQuotes = !inQuotes
+      }
 
-  for (let index = 1; index < lines.length; index += 1) {
-    const values = parseCsvLine(lines[index])
-    const row = {}
+      continue
+    }
 
-    headers.forEach((header, columnIndex) => {
-      row[header] = values[columnIndex] ?? ''
-    })
+    if (character === ',' && !inQuotes) {
+      row.push(cell.trim())
+      cell = ''
+      continue
+    }
 
-    records.push(row)
+    if ((character === '\n' || character === '\r') && !inQuotes) {
+      if (character === '\r' && nextCharacter === '\n') {
+        index += 1
+      }
+
+      row.push(cell.trim())
+      rows.push(row)
+      row = []
+      cell = ''
+      continue
+    }
+
+    cell += character
   }
 
-  return records
+  if (cell.length > 0 || row.length > 0) {
+    row.push(cell.trim())
+    rows.push(row)
+  }
+
+  return rows.filter((parsedRow) => parsedRow.some((value) => String(value).trim().length > 0))
 }
 
 function parseNumber(value) {
   const cleaned = String(value ?? '').replace(/[^0-9.,-]/g, '')
   if (!cleaned) return null
 
-  const normalized = cleaned.includes(',') && cleaned.includes('.')
-    ? cleaned.replace(/,/g, '')
-    : cleaned.replace(/,/g, '.')
+  let normalized = cleaned
+
+  if (cleaned.includes('.') && cleaned.includes(',')) {
+    normalized = cleaned.replace(/,/g, '')
+  } else if (cleaned.includes(',')) {
+    const commaCount = (cleaned.match(/,/g) || []).length
+    const [left = '', right = ''] = cleaned.split(',')
+    const isThousandsSeparator = commaCount > 1 || (right.length === 3 && left.length >= 1)
+    normalized = isThousandsSeparator ? cleaned.replace(/,/g, '') : cleaned.replace(',', '.')
+  }
+
   const parsed = Number(normalized)
 
   return Number.isFinite(parsed) ? parsed : null
 }
 
-function getFirstUrl(value) {
+function normalizeIntegerLike(value) {
   const text = String(value ?? '').trim()
   if (!text) return ''
 
-  const matchedUrl = text.match(/https?:\/\/[^\s,]+/i)
-  return matchedUrl ? matchedUrl[0] : text
+  if (/^-?\d+\.0+$/.test(text)) {
+    return text.split('.')[0]
+  }
+
+  return text
 }
 
-function findField(row, aliases) {
-  const normalizedAliases = aliases.map(normalizeText)
-
-  for (const [key, value] of Object.entries(row)) {
-    if (!normalizedAliases.includes(normalizeText(key))) continue
-
-    const formattedValue = String(value ?? '').trim()
-    if (!formattedValue) continue
-
-    return formattedValue
+function getFirstNotEmpty(row, keys) {
+  for (const key of keys) {
+    const value = String(row[key] ?? '').trim()
+    if (value) return value
   }
 
   return ''
 }
 
-function cleanSelectValue(value) {
-  return String(value ?? '').trim()
+function splitImageUrls(value) {
+  const text = String(value ?? '').trim()
+  if (!text) return []
+
+  const urls = text.match(/https?:\/\/[^\s,"]+/g)
+  if (!urls) return []
+
+  return [...new Set(urls)]
 }
 
-function buildSpecs(row, usedKeys) {
-  const specs = {}
+function mapRowToUnit(rawRow, index) {
+  const precioNumber = parseNumber(rawRow.precioRaw)
+  const kilometrosNumber = parseNumber(rawRow.kilometrosRaw)
+  const imagenesCompletas = splitImageUrls(rawRow.imagenesCompletasRaw)
+  const imagenPortada = splitImageUrls(rawRow.imagenPortadaRaw)[0] || imagenesCompletas[0] || ''
+  const optionalFields = {}
 
-  Object.entries(row).forEach(([key, value]) => {
-    const normalizedKey = normalizeText(key)
-    if (usedKeys.has(normalizedKey)) return
-
-    const cleaned = String(value ?? '').trim()
-    if (!cleaned) return
-
-    specs[key] = cleaned
+  Object.entries(OPTIONAL_COLUMN_ALIASES).forEach(([targetKey, aliases]) => {
+    const value = getFirstNotEmpty(rawRow, aliases)
+    if (value) optionalFields[targetKey] = value
   })
 
-  return specs
-}
-
-function normalizeInventoryRow(row, index) {
-  const usedKeys = new Set()
-  const valueMap = {}
-
-  Object.entries(FIELD_ALIASES).forEach(([fieldKey, aliases]) => {
-    const value = findField(row, aliases)
-    valueMap[fieldKey] = value
-    aliases.forEach((alias) => usedKeys.add(normalizeText(alias)))
-  })
-
-  const rawPrice = parseNumber(valueMap.price)
-  const rawMileage = parseNumber(valueMap.mileage)
-  const image = getFirstUrl(valueMap.image || valueMap.gallery)
-
-  const unitType =
-    valueMap.unitType || valueMap.configuration || valueMap.company || (valueMap.paso ? 'Tractocamion' : '')
+  const marca = String(rawRow.marca ?? '').trim()
+  const modelo = normalizeIntegerLike(rawRow.modelo)
+  const anio = normalizeIntegerLike(rawRow.anio)
+  const cilindros = normalizeIntegerLike(rawRow.cilindros)
+  const vinCompleto = String(rawRow.vinCompleto ?? '').trim()
+  const vin = String(rawRow.vin ?? '').trim()
 
   return {
-    id: `unit-${index + 1}`,
-    brand: cleanSelectValue(valueMap.brand) || 'Sin marca',
-    model: cleanSelectValue(valueMap.model) || 'Sin modelo',
-    year: cleanSelectValue(valueMap.year),
-    price: rawPrice ?? 0,
-    location: cleanSelectValue(valueMap.location) || 'Sin ubicacion',
-    status: cleanSelectValue(valueMap.status) || 'Disponible',
-    mileage: cleanSelectValue(valueMap.mileage),
-    mileageValue: rawMileage,
-    paso: cleanSelectValue(valueMap.paso),
-    rodada: cleanSelectValue(valueMap.rodada),
-    motor: cleanSelectValue(valueMap.motor),
-    transmission: cleanSelectValue(valueMap.transmission),
-    cabina: cleanSelectValue(valueMap.cabina),
-    configuration: cleanSelectValue(valueMap.configuration),
-    unitType: cleanSelectValue(unitType),
-    suspension: cleanSelectValue(valueMap.suspension),
-    horsepower: cleanSelectValue(valueMap.horsepower),
-    torque: cleanSelectValue(valueMap.torque),
-    axles: cleanSelectValue(valueMap.axles),
-    fuelType: cleanSelectValue(valueMap.fuelType),
-    traction: cleanSelectValue(valueMap.traction),
-    payload: cleanSelectValue(valueMap.payload),
-    sleeper: cleanSelectValue(valueMap.sleeper),
-    color: cleanSelectValue(valueMap.color),
-    vin: cleanSelectValue(valueMap.vin),
-    plates: cleanSelectValue(valueMap.plates),
-    boxTrailer: cleanSelectValue(valueMap.boxTrailer),
-    description: cleanSelectValue(valueMap.description),
-    image,
-    specs: buildSpecs(row, usedKeys),
+    id: vinCompleto || vin || `unit-${index + 1}`,
+    vinCompleto,
+    vin,
+    marca,
+    modelo,
+    anio,
+    precio: precioNumber,
+    kilometros: kilometrosNumber,
+    motor: String(rawRow.motor ?? '').trim(),
+    transmision: String(rawRow.transmision ?? '').trim(),
+    paso: String(rawRow.paso ?? '').trim(),
+    rodada: String(rawRow.rodada ?? '').trim(),
+    ejeDelantero: String(rawRow.ejeDelantero ?? '').trim(),
+    ejeTrasero: String(rawRow.ejeTrasero ?? '').trim(),
+    dormitorio: String(rawRow.dormitorio ?? '').trim(),
+    color: String(rawRow.color ?? '').trim(),
+    colorInterior: String(rawRow.colorInterior ?? '').trim(),
+    cilindros,
+    subempresa: String(rawRow.subempresa ?? '').trim(),
+    promocion: String(rawRow.promocion ?? '').trim(),
+    ubicacion: String(rawRow.ubicacionFisica ?? '').trim() || String(rawRow.centro ?? '').trim(),
+    centro: String(rawRow.centro ?? '').trim(),
+    status: 'Disponible',
+    imagenPortada,
+    imagenesCompletas,
+    raw: rawRow,
+    ...optionalFields,
   }
+}
+
+function normalizeRows(parsedRows) {
+  if (!parsedRows.length) return []
+
+  const headerRow = parsedRows[0]
+  const normalizedHeaders = headerRow.map((header) => normalizeHeader(header))
+
+  console.info('[LAB INVENTORY] Headers detectados:', normalizedHeaders)
+
+  const normalizedUnits = parsedRows.slice(1).map((row, rowIndex) => {
+    const normalizedRow = {}
+
+    normalizedHeaders.forEach((normalizedHeader, columnIndex) => {
+      const mappedKey = BASE_HEADER_MAP[normalizedHeader] ?? normalizedHeader
+      normalizedRow[mappedKey] = String(row[columnIndex] ?? '').trim()
+    })
+
+    return mapRowToUnit(normalizedRow, rowIndex)
+  })
+
+  console.info('[LAB INVENTORY] Filas parseadas:', normalizedUnits.length)
+  console.info('[LAB INVENTORY] Primer registro normalizado:', normalizedUnits[0] ?? null)
+
+  return normalizedUnits
 }
 
 export async function fetchInventoryFromCsv(csvUrl = INVENTORY_CSV_URL) {
@@ -251,7 +279,7 @@ export async function fetchInventoryFromCsv(csvUrl = INVENTORY_CSV_URL) {
   const csvText = await response.text()
   const parsedRows = parseCsv(csvText)
 
-  return parsedRows.map((row, index) => normalizeInventoryRow(row, index))
+  return normalizeRows(parsedRows)
 }
 
 export function saveInventoryCache(inventory) {

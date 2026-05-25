@@ -11,10 +11,20 @@ function formatCurrency(value) {
   }).format(value)
 }
 
+function formatKilometers(value) {
+  if (!Number.isFinite(value) || value <= 0) return 'Kilometraje por confirmar'
+
+  const formatted = new Intl.NumberFormat('es-MX', {
+    maximumFractionDigits: 0,
+  }).format(value)
+
+  return `${formatted} km`
+}
+
 function getStatusStyle(status) {
   return /disponible/i.test(status)
-    ? 'bg-emerald-100 text-emerald-700 border-emerald-200'
-    : 'bg-amber-100 text-amber-700 border-amber-200'
+    ? 'border-emerald-200 bg-emerald-100 text-emerald-700'
+    : 'border-amber-200 bg-amber-100 text-amber-700'
 }
 
 function InventoryCard({ unit, onViewDetail }) {
@@ -22,48 +32,37 @@ function InventoryCard({ unit, onViewDetail }) {
     <article className="group overflow-hidden rounded-2xl border border-lab-border bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lab">
       <div className="relative aspect-[16/10] w-full overflow-hidden bg-lab-bg">
         <img
-          src={unit.image || PLACEHOLDER_IMAGE}
-          alt={`${unit.brand} ${unit.model}`}
+          src={unit.imagenPortada || PLACEHOLDER_IMAGE}
+          alt={`${unit.marca || 'Unidad'} ${unit.modelo || ''}`}
           className="size-full object-cover transition-transform duration-500 group-hover:scale-105"
           loading="lazy"
           onError={(event) => {
             event.currentTarget.src = PLACEHOLDER_IMAGE
           }}
         />
-        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-900/60 to-transparent p-3">
+        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-900/70 to-transparent p-3">
           <p className="text-sm font-semibold text-white">
-            {unit.brand} {unit.model}
+            {unit.marca || 'Sin marca'} {unit.modelo || 'Sin modelo'}
           </p>
         </div>
       </div>
 
       <div className="space-y-4 p-5">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="text-sm font-medium text-lab-muted">{unit.year || 'Ano no especificado'}</p>
+          <p className="text-sm font-medium text-lab-muted">{unit.anio || 'Ano no especificado'}</p>
           <span className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${getStatusStyle(unit.status)}`}>
             {unit.status}
           </span>
         </div>
 
-        <div className="flex flex-wrap gap-2">
-          {unit.unitType ? (
-            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700">
-              {unit.unitType}
-            </span>
-          ) : null}
-          {unit.transmission ? (
-            <span className="rounded-full bg-lab-primary/10 px-2.5 py-1 text-xs font-medium text-lab-primary">
-              {unit.transmission}
-            </span>
-          ) : null}
-        </div>
-
-        <p className="text-2xl font-bold text-lab-primary">{formatCurrency(unit.price)}</p>
+        <p className="text-2xl font-bold text-lab-primary">{formatCurrency(unit.precio)}</p>
 
         <div className="grid gap-1 text-sm text-lab-muted">
-          <p>Ubicacion: {unit.location}</p>
-          {unit.mileage ? <p>Kilometraje: {unit.mileage}</p> : null}
-          {unit.motor ? <p>Motor: {unit.motor}</p> : null}
+          <p>Ubicacion: {unit.ubicacion || 'Sin ubicacion'}</p>
+          <p>Kilometraje: {formatKilometers(unit.kilometros)}</p>
+          <p>Motor: {unit.motor || 'No especificado'}</p>
+          <p>Transmision: {unit.transmision || 'No especificada'}</p>
+          {unit.promocion ? <p>Promocion: {unit.promocion}</p> : null}
         </div>
 
         <button

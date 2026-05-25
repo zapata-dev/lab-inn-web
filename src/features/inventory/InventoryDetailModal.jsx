@@ -8,6 +8,12 @@ function formatCurrency(value) {
   }).format(value)
 }
 
+function formatKilometers(value) {
+  if (!Number.isFinite(value) || value <= 0) return 'Kilometraje por confirmar'
+
+  return `${new Intl.NumberFormat('es-MX', { maximumFractionDigits: 0 }).format(value)} km`
+}
+
 function DetailRow({ label, value }) {
   if (!value) return null
 
@@ -41,12 +47,12 @@ function InventoryDetailModal({ unit, onClose, onCopy }) {
         <div className="flex items-start justify-between gap-3 border-b border-lab-border bg-white p-5">
           <div>
             <h2 className="text-2xl font-bold text-lab-text">
-              {unit.brand} {unit.model}
+              {unit.marca || 'Sin marca'} {unit.modelo || 'Sin modelo'}
             </h2>
             <p className="text-sm text-lab-muted">
-              {unit.year || 'Ano no especificado'} | {unit.location}
+              {unit.anio || 'Ano no especificado'} | {unit.ubicacion || 'Sin ubicacion'}
             </p>
-            <p className="mt-1 text-xl font-bold text-lab-primary">{formatCurrency(unit.price)}</p>
+            <p className="mt-1 text-xl font-bold text-lab-primary">{formatCurrency(unit.precio)}</p>
           </div>
           <button
             type="button"
@@ -57,44 +63,37 @@ function InventoryDetailModal({ unit, onClose, onCopy }) {
           </button>
         </div>
 
-        <div className="max-h-[72vh] overflow-y-auto p-5">
+        <div className="max-h-[72vh] space-y-4 overflow-y-auto p-5">
           <div className="grid gap-4 md:grid-cols-2">
             <DetailSection title="Informacion general">
-              <DetailRow label="Marca" value={unit.brand} />
-              <DetailRow label="Modelo" value={unit.model} />
-              <DetailRow label="Ano" value={unit.year} />
-              <DetailRow label="Tipo de unidad" value={unit.unitType} />
+              <DetailRow label="Marca" value={unit.marca} />
+              <DetailRow label="Modelo" value={unit.modelo} />
+              <DetailRow label="Ano" value={unit.anio} />
               <DetailRow label="Color" value={unit.color} />
+              <DetailRow label="Subempresa" value={unit.subempresa} />
               <DetailRow label="Status" value={unit.status} />
             </DetailSection>
 
             <DetailSection title="Tren motriz">
               <DetailRow label="Motor" value={unit.motor} />
-              <DetailRow label="Transmision" value={unit.transmission} />
-              <DetailRow label="Potencia HP" value={unit.horsepower} />
-              <DetailRow label="Torque" value={unit.torque} />
-              <DetailRow label="Combustible" value={unit.fuelType} />
-              <DetailRow label="Traccion" value={unit.traction} />
-              <DetailRow label="Kilometraje" value={unit.mileage} />
+              <DetailRow label="Transmision" value={unit.transmision} />
+              <DetailRow label="Cilindros" value={unit.cilindros} />
+              <DetailRow label="Kilometraje" value={formatKilometers(unit.kilometros)} />
             </DetailSection>
 
             <DetailSection title="Configuracion">
               <DetailRow label="Paso" value={unit.paso} />
               <DetailRow label="Rodada" value={unit.rodada} />
-              <DetailRow label="Cabina" value={unit.cabina} />
-              <DetailRow label="Configuracion" value={unit.configuration} />
-              <DetailRow label="Suspension" value={unit.suspension} />
-              <DetailRow label="Numero de ejes" value={unit.axles} />
-              <DetailRow label="Sleeper / daycab" value={unit.sleeper} />
-              <DetailRow label="Capacidad de carga" value={unit.payload} />
-              <DetailRow label="Caja / remolque" value={unit.boxTrailer} />
+              <DetailRow label="Eje delantero" value={unit.ejeDelantero} />
+              <DetailRow label="Eje trasero" value={unit.ejeTrasero} />
+              <DetailRow label="Dormitorio" value={unit.dormitorio} />
             </DetailSection>
 
             <DetailSection title="Ubicacion y contacto">
-              <DetailRow label="Sucursal / ubicacion" value={unit.location} />
-              <DetailRow label="Descripcion" value={unit.description} />
+              <DetailRow label="Centro" value={unit.centro} />
+              <DetailRow label="Ubicacion fisica" value={unit.ubicacion} />
               <a
-                href={`mailto:innovaciogoon@zapata.com.mx?subject=Interes%20en%20${encodeURIComponent(`${unit.brand} ${unit.model}`)}`}
+                href={`mailto:innovaciogoon@zapata.com.mx?subject=Interes%20en%20${encodeURIComponent(`${unit.marca || ''} ${unit.modelo || ''}`.trim())}`}
                 className="mt-3 inline-flex rounded-lg bg-lab-primary px-3 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90"
               >
                 Contactar
@@ -102,13 +101,39 @@ function InventoryDetailModal({ unit, onClose, onCopy }) {
             </DetailSection>
 
             <DetailSection title="Datos administrativos">
+              <DetailRow label="VIN completo" value={unit.vinCompleto} />
               <DetailRow label="VIN" value={unit.vin} />
-              <DetailRow label="Placas" value={unit.plates} />
-              {Object.keys(unit.specs || {}).map((key) => (
-                <DetailRow key={key} label={key} value={unit.specs[key]} />
-              ))}
+              <DetailRow label="Promocion" value={unit.promocion} />
             </DetailSection>
           </div>
+
+          <section className="rounded-xl border border-lab-border bg-white p-4">
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-lab-muted">Imagenes</h3>
+            <div className="mt-3 space-y-3">
+              {unit.imagenPortada ? (
+                <img
+                  src={unit.imagenPortada}
+                  alt={`${unit.marca || 'Unidad'} portada`}
+                  className="h-56 w-full rounded-xl object-cover"
+                />
+              ) : null}
+
+              {Array.isArray(unit.imagenesCompletas) && unit.imagenesCompletas.length > 0 ? (
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {unit.imagenesCompletas.map((url, index) => (
+                    <img
+                      key={`${url}-${index}`}
+                      src={url}
+                      alt={`Galeria ${index + 1}`}
+                      className="h-28 w-full rounded-lg object-cover"
+                    />
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-lab-muted">No hay galeria disponible para esta unidad.</p>
+              )}
+            </div>
+          </section>
         </div>
 
         <div className="flex flex-wrap gap-3 border-t border-lab-border bg-white p-5">
@@ -120,7 +145,7 @@ function InventoryDetailModal({ unit, onClose, onCopy }) {
             Copiar informacion
           </button>
           <a
-            href={`mailto:innovaciogoon@zapata.com.mx?subject=Interes%20en%20${encodeURIComponent(`${unit.brand} ${unit.model}`)}`}
+            href={`mailto:innovaciogoon@zapata.com.mx?subject=Interes%20en%20${encodeURIComponent(`${unit.marca || ''} ${unit.modelo || ''}`.trim())}`}
             className="rounded-xl bg-lab-primary px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90"
           >
             Contacto
