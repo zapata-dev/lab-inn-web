@@ -44,13 +44,38 @@ function DetailSection({ title, children }) {
 function InventoryDetailModal({ unit, onClose, onCopy }) {
   if (!unit) return null
 
-  const handleExportPdf = () => {
+  const handleExportPdf = async () => {
+    const now = new Date()
+    const fileName = buildInventoryPdfFileName(unit, now)
+    const generatedDate = new Intl.DateTimeFormat('es-MX', {
+      dateStyle: 'long',
+      timeStyle: 'short',
+    }).format(now)
+
+    try {
+      const [{ pdf }, { InventoryPdfReactDocument }] = await Promise.all([
+        import('@react-pdf/renderer'),
+        import('./InventoryPdfReactDocument'),
+      ])
+      const blob = await pdf(<InventoryPdfReactDocument unit={unit} generatedDate={generatedDate} />).toBlob()
+      const blobUrl = URL.createObjectURL(blob)
+      const downloadLink = document.createElement('a')
+      downloadLink.href = blobUrl
+      downloadLink.download = fileName
+      downloadLink.rel = 'noopener'
+      document.body.appendChild(downloadLink)
+      downloadLink.click()
+      document.body.removeChild(downloadLink)
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 1500)
+      return
+    } catch (error) {
+      // Fallback to print-based export for environments where react-pdf fails.
+    }
+
     const printWindow = window.open('', '_blank')
     if (!printWindow) return
 
-    const now = new Date()
     const fileBase = buildInventoryPdfFileBase(unit, now)
-    const fileName = buildInventoryPdfFileName(unit, now)
     const html = buildInventoryPdfHtml(unit, now)
 
     printWindow.document.open()
@@ -97,8 +122,6 @@ function InventoryDetailModal({ unit, onClose, onCopy }) {
         printWindow.document.title = fileBase
       }
     }, 150)
-
-    return fileName
   }
 
   return (
