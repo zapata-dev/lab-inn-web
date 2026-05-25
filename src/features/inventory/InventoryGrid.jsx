@@ -34,7 +34,7 @@ function InventoryGrid({ units, onViewDetail, loading }) {
   }
 
   return (
-    <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+    <section className="grid items-stretch gap-4 sm:grid-cols-2 xl:grid-cols-3">
       {units.map((unit) => (
         <InventoryCard key={unit.id} unit={unit} onViewDetail={onViewDetail} />
       ))}
