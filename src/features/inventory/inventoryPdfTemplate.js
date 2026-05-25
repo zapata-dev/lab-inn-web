@@ -93,6 +93,11 @@ function normalizeToken(value, fallback = 'POR_CONFIRMAR') {
   return base || fallback
 }
 
+function normalizeModelToken(value) {
+  const base = normalizeToken(value, 'SIN_MODELO')
+  return base.replaceAll('_', '')
+}
+
 function buildStamp(now) {
   const year = String(now.getFullYear())
   const month = String(now.getMonth() + 1).padStart(2, '0')
@@ -113,7 +118,7 @@ function specRow(label, value) {
 
 export function buildInventoryPdfFileBase(unit, now = new Date()) {
   const brand = normalizeToken(unit?.marca, 'SIN_MARCA')
-  const model = normalizeToken(unit?.modelo, 'SIN_MODELO')
+  const model = normalizeModelToken(unit?.modelo)
   const year = normalizeToken(unit?.anio, 'SIN_ANO')
   const vin = normalizeToken(getVinShort(unit), 'SIN_VIN')
   const stamp = buildStamp(now)
