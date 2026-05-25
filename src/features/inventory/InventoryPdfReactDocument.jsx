@@ -4,10 +4,11 @@ const CONTACT_EMAIL = 'innovaciogoon@zapata.com.mx'
 
 const styles = StyleSheet.create({
   page: {
-    padding: 28,
-    fontSize: 11,
-    color: '#10213a',
+    paddingTop: 26,
+    paddingBottom: 24,
+    paddingHorizontal: 26,
     fontFamily: 'Helvetica',
+    color: '#10213a',
     backgroundColor: '#ffffff',
   },
   topbar: {
@@ -19,130 +20,265 @@ const styles = StyleSheet.create({
   brand: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
   },
-  mark: {
-    width: 24,
-    height: 24,
-    borderRadius: 6,
+  brandMark: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
     backgroundColor: '#0e4ea6',
     color: '#ffffff',
     fontSize: 8,
     fontWeight: 700,
     textAlign: 'center',
-    lineHeight: 2.5,
+    lineHeight: 3.4,
+    marginRight: 8,
   },
-  brandTitle: { fontSize: 13, fontWeight: 700 },
-  brandSubtitle: { fontSize: 9, color: '#5f7087', marginTop: 1 },
-  status: {
+  brandTitle: {
+    fontSize: 13,
+    fontWeight: 700,
+  },
+  brandSubtitle: {
+    marginTop: 1,
     fontSize: 9,
-    backgroundColor: '#eaf2ff',
-    borderColor: '#c6dbff',
-    borderWidth: 1,
-    borderRadius: 999,
-    color: '#154f95',
-    paddingVertical: 4,
-    paddingHorizontal: 8,
+    color: '#5f7086',
   },
-  date: { fontSize: 8, color: '#5f7087', marginBottom: 4, textAlign: 'right' },
+  metaDate: {
+    fontSize: 8,
+    color: '#5f7086',
+    textAlign: 'right',
+    marginBottom: 4,
+  },
+  status: {
+    fontSize: 8,
+    color: '#164f98',
+    borderWidth: 1,
+    borderColor: '#c7dcff',
+    backgroundColor: '#eaf2ff',
+    borderRadius: 999,
+    paddingVertical: 3,
+    paddingHorizontal: 7,
+  },
+  hero: {
+    width: '100%',
+    height: 305,
+    borderRadius: 12,
+    overflow: 'hidden',
+    position: 'relative',
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#ccdae8',
+  },
   heroImage: {
     width: '100%',
-    height: 250,
-    borderRadius: 10,
+    height: '100%',
     objectFit: 'cover',
   },
-  heroPlaceholder: {
+  heroShade: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: '#0b1628',
+    opacity: 0.44,
+  },
+  heroFallback: {
     width: '100%',
-    height: 250,
-    borderRadius: 10,
-    backgroundColor: '#eef3fb',
+    height: '100%',
     alignItems: 'center',
     justifyContent: 'center',
-    color: '#5f7087',
-    fontSize: 11,
+    backgroundColor: '#edf3fb',
   },
-  titleWrap: { marginTop: 12 },
-  unitName: { fontSize: 25, fontWeight: 700, lineHeight: 1.15 },
-  unitSubline: { marginTop: 3, color: '#5f7087', fontSize: 11 },
-  price: { marginTop: 8, fontSize: 29, fontWeight: 700, color: '#0e4ea6' },
-  vin: { marginTop: 3, fontSize: 9, color: '#5f7087' },
-  keyGrid: { marginTop: 10, flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  heroFallbackText: {
+    fontSize: 10,
+    color: '#5f7086',
+  },
+  heroCopy: {
+    position: 'absolute',
+    left: 12,
+    right: 12,
+    bottom: 12,
+  },
+  heroTitle: {
+    color: '#ffffff',
+    fontSize: 27,
+    fontWeight: 700,
+    lineHeight: 1.08,
+  },
+  heroSubtitle: {
+    color: '#ffffff',
+    fontSize: 10,
+    marginTop: 3,
+    opacity: 0.95,
+  },
+  pricePanel: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    width: 210,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#bfd6ff',
+    backgroundColor: '#e9f2ff',
+    paddingVertical: 8,
+    paddingHorizontal: 9,
+  },
+  priceLabel: {
+    fontSize: 8,
+    color: '#275189',
+    textTransform: 'uppercase',
+  },
+  priceValue: {
+    marginTop: 4,
+    fontSize: 24,
+    color: '#0e4ea6',
+    fontWeight: 700,
+    lineHeight: 1.05,
+  },
+  vinText: {
+    marginTop: 4,
+    fontSize: 8,
+    color: '#3f587d',
+  },
+  keyGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
   keyCard: {
     width: '32%',
-    minHeight: 44,
     borderWidth: 1,
-    borderColor: '#d7e2f1',
+    borderColor: '#d7e3f2',
     borderRadius: 8,
     backgroundColor: '#f8fbff',
-    padding: 6,
+    paddingVertical: 6,
+    paddingHorizontal: 7,
   },
-  keyLabel: { fontSize: 8, color: '#5f7087' },
-  keyValue: { marginTop: 3, fontSize: 10, fontWeight: 700 },
+  keyLabel: {
+    fontSize: 8,
+    color: '#607188',
+  },
+  keyValue: {
+    marginTop: 3,
+    fontSize: 10,
+    fontWeight: 700,
+    color: '#10213a',
+  },
   cta: {
-    marginTop: 10,
+    marginTop: 8,
     borderWidth: 1,
     borderColor: '#cfe0ff',
     borderRadius: 10,
     backgroundColor: '#edf3ff',
-    padding: 8,
+    paddingVertical: 7,
+    paddingHorizontal: 9,
   },
-  ctaTitle: { fontSize: 9, color: '#1a3661' },
-  ctaEmail: { fontSize: 12, fontWeight: 700, color: '#0e4ea6', marginTop: 2 },
-  sectionTitle: {
+  ctaTitle: {
+    fontSize: 9,
+    color: '#1a3661',
+  },
+  ctaEmail: {
+    marginTop: 2,
+    fontSize: 12,
+    fontWeight: 700,
+    color: '#0e4ea6',
+  },
+  sectionEyebrow: {
     fontSize: 10,
+    color: '#607188',
+    letterSpacing: 0.8,
     textTransform: 'uppercase',
-    color: '#5f7087',
-    letterSpacing: 1,
-    marginBottom: 8,
+    marginBottom: 7,
   },
   pageTwoLayout: {
     flexDirection: 'row',
     gap: 8,
   },
-  galleryCol: { width: '66%', flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  galleryMain: { width: '100%', height: 180, borderRadius: 8, objectFit: 'cover' },
-  galleryItem: { width: '48.5%', height: 110, borderRadius: 8, objectFit: 'cover' },
+  galleryColumn: {
+    width: '66%',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  galleryMain: {
+    width: '100%',
+    height: 195,
+    borderRadius: 8,
+    objectFit: 'cover',
+  },
+  galleryItem: {
+    width: '48.5%',
+    height: 122,
+    borderRadius: 8,
+    objectFit: 'cover',
+  },
   galleryEmpty: {
     width: '100%',
-    height: 180,
-    borderRadius: 8,
+    height: 195,
     borderWidth: 1,
-    borderColor: '#d7e2f1',
+    borderColor: '#d8e2ef',
+    borderRadius: 8,
+    backgroundColor: '#f8fbff',
     alignItems: 'center',
     justifyContent: 'center',
-    color: '#5f7087',
-    fontSize: 10,
   },
-  specCol: {
+  galleryEmptyText: {
+    fontSize: 9,
+    color: '#607188',
+  },
+  specColumn: {
     width: '34%',
     borderWidth: 1,
-    borderColor: '#d7e2f1',
+    borderColor: '#d7e3f2',
     borderRadius: 8,
     backgroundColor: '#fbfdff',
-    padding: 7,
+    paddingVertical: 6,
+    paddingHorizontal: 7,
   },
   specRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    gap: 6,
     borderBottomWidth: 1,
     borderBottomColor: '#e8eef8',
-    paddingVertical: 4,
+    paddingVertical: 3,
   },
-  specLabel: { fontSize: 8, color: '#5f7087', width: '44%' },
-  specValue: { fontSize: 8, fontWeight: 700, width: '56%', textAlign: 'right' },
+  specLabel: {
+    width: '44%',
+    fontSize: 8,
+    color: '#607188',
+  },
+  specValue: {
+    width: '56%',
+    fontSize: 8,
+    fontWeight: 700,
+    textAlign: 'right',
+    color: '#10213a',
+  },
   footer: {
-    marginTop: 10,
+    marginTop: 9,
     borderTopWidth: 1,
     borderTopColor: '#dce5f1',
     paddingTop: 6,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    color: '#5f7087',
+    alignItems: 'flex-start',
   },
-  footerLeftTitle: { fontSize: 9, fontWeight: 700, color: '#10213a' },
-  footerLeftText: { fontSize: 8, marginTop: 1 },
-  footerRight: { fontSize: 8, textAlign: 'right', lineHeight: 1.4 },
+  footerLeftTitle: {
+    fontSize: 9,
+    fontWeight: 700,
+    color: '#10213a',
+  },
+  footerLeftText: {
+    marginTop: 1,
+    fontSize: 8,
+    color: '#607188',
+  },
+  footerRight: {
+    fontSize: 8,
+    color: '#607188',
+    lineHeight: 1.35,
+    textAlign: 'right',
+  },
 })
 
 function hasValue(value) {
@@ -250,31 +386,39 @@ export function InventoryPdfReactDocument({ unit, generatedDate }) {
       <Page size="LETTER" style={styles.page}>
         <View style={styles.topbar}>
           <View style={styles.brand}>
-            <Text style={styles.mark}>LAB</Text>
+            <Text style={styles.brandMark}>LAB</Text>
             <View>
               <Text style={styles.brandTitle}>Mi Oficina Virtual</Text>
               <Text style={styles.brandSubtitle}>Ficha comercial de unidad</Text>
             </View>
           </View>
           <View>
-            <Text style={styles.date}>Generado: {generatedDate}</Text>
+            <Text style={styles.metaDate}>Generado: {generatedDate}</Text>
             <Text style={styles.status}>{status}</Text>
           </View>
         </View>
 
-        {cover ? (
-          <Image src={cover} style={styles.heroImage} />
-        ) : (
-          <View style={styles.heroPlaceholder}>
-            <Text>Imagen principal por confirmar</Text>
-          </View>
-        )}
+        <View style={styles.hero}>
+          {cover ? (
+            <>
+              <Image src={cover} style={styles.heroImage} />
+              <View style={styles.heroShade} />
+              <View style={styles.heroCopy}>
+                <Text style={styles.heroTitle}>{`${brand} ${model}`}</Text>
+                <Text style={styles.heroSubtitle}>{`Ano ${year} | ${location}`}</Text>
+              </View>
+            </>
+          ) : (
+            <View style={styles.heroFallback}>
+              <Text style={styles.heroFallbackText}>Imagen principal por confirmar</Text>
+            </View>
+          )}
 
-        <View style={styles.titleWrap}>
-          <Text style={styles.unitName}>{`${brand} ${model}`}</Text>
-          <Text style={styles.unitSubline}>{`Ano ${year} | ${location}`}</Text>
-          <Text style={styles.price}>{price}</Text>
-          <Text style={styles.vin}>{`VIN corto: ${vinShort}`}</Text>
+          <View style={styles.pricePanel}>
+            <Text style={styles.priceLabel}>Precio publicado</Text>
+            <Text style={styles.priceValue}>{price}</Text>
+            <Text style={styles.vinText}>{`VIN corto: ${vinShort}`}</Text>
+          </View>
         </View>
 
         <View style={styles.keyGrid}>
@@ -293,9 +437,9 @@ export function InventoryPdfReactDocument({ unit, generatedDate }) {
       </Page>
 
       <Page size="LETTER" style={styles.page}>
-        <Text style={styles.sectionTitle}>Galeria comercial y especificaciones</Text>
+        <Text style={styles.sectionEyebrow}>Galeria comercial y especificaciones</Text>
         <View style={styles.pageTwoLayout}>
-          <View style={styles.galleryCol}>
+          <View style={styles.galleryColumn}>
             {gallery.length ? (
               gallery.map((imageUrl, index) => (
                 <Image
@@ -306,12 +450,12 @@ export function InventoryPdfReactDocument({ unit, generatedDate }) {
               ))
             ) : (
               <View style={styles.galleryEmpty}>
-                <Text>No hay imagenes disponibles para esta unidad.</Text>
+                <Text style={styles.galleryEmptyText}>No hay imagenes disponibles para esta unidad.</Text>
               </View>
             )}
           </View>
 
-          <View style={styles.specCol}>
+          <View style={styles.specColumn}>
             {specs.map(([label, value]) => (
               <View key={label} style={styles.specRow}>
                 <Text style={styles.specLabel}>{label}</Text>
@@ -334,4 +478,3 @@ export function InventoryPdfReactDocument({ unit, generatedDate }) {
     </Document>
   )
 }
-
