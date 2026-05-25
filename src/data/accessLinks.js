@@ -12,13 +12,13 @@ export const accessLinks = [
   {
     id: 'promociones',
     title: 'Catalogo de Promociones',
-    description: 'Disponible proximamente.',
+    description: 'Consulta unidades con promociones vigentes.',
     icon: 'Tags',
     logoUrl: 'https://cdn.simpleicons.org/canva/00C4CC',
     logoAlt: 'Canva',
     brandColor: 'cyan',
-    url: '',
-    disabled: true,
+    to: '/promociones',
+    disabled: false,
   },
   {
     id: 'portadas',
