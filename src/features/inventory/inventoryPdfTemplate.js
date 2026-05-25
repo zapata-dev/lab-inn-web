@@ -193,12 +193,13 @@ export function buildInventoryPdfHtml(unit, now = new Date()) {
       }
 
       :root {
+        --bg: #eaf0f8;
         --paper: #ffffff;
-        --ink: #0f1c31;
-        --muted: #60708a;
-        --line: #d8e1ec;
-        --primary: #0c4ea3;
-        --primary-soft: #edf3ff;
+        --ink: #101f35;
+        --muted: #607086;
+        --line: #d6e0ec;
+        --primary: #0e4ea6;
+        --primary-soft: #ebf2ff;
       }
 
       * {
@@ -206,35 +207,34 @@ export function buildInventoryPdfHtml(unit, now = new Date()) {
       }
 
       body {
-        font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+        background: var(--bg);
         color: var(--ink);
-        background: #eef3fa;
+        font-family: "Avenir Next", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
       }
 
-      .brochure {
+      .sheet {
         width: 100%;
         max-width: 960px;
         margin: 0 auto;
-        padding: 12mm;
+        padding: 10mm;
       }
 
       .page {
         background: var(--paper);
-        border-radius: 16px;
+        border-radius: 18px;
         border: 1px solid var(--line);
-        box-shadow: 0 18px 48px rgba(16, 44, 86, 0.12);
-        padding: 14mm;
+        box-shadow: 0 20px 48px rgba(12, 32, 65, 0.12);
+        padding: 12mm;
         break-inside: avoid;
-        position: relative;
       }
 
       .page + .page {
-        margin-top: 10mm;
+        margin-top: 8mm;
       }
 
-      .header {
+      .topbar {
         display: flex;
         justify-content: space-between;
         align-items: flex-start;
@@ -243,15 +243,15 @@ export function buildInventoryPdfHtml(unit, now = new Date()) {
 
       .brand {
         display: flex;
-        gap: 10px;
         align-items: center;
+        gap: 9px;
       }
 
-      .brand-pill {
+      .brand-mark {
         width: 40px;
         height: 40px;
-        border-radius: 11px;
-        background: linear-gradient(145deg, #0f5ec8, #0a346c);
+        border-radius: 12px;
+        background: linear-gradient(145deg, #0f5fc8, #0a3268);
         color: #fff;
         display: grid;
         place-items: center;
@@ -261,7 +261,7 @@ export function buildInventoryPdfHtml(unit, now = new Date()) {
 
       .brand-title {
         margin: 0;
-        font-size: 19px;
+        font-size: 18px;
       }
 
       .brand-subtitle {
@@ -270,82 +270,48 @@ export function buildInventoryPdfHtml(unit, now = new Date()) {
         color: var(--muted);
       }
 
-      .header-meta {
+      .meta {
         text-align: right;
       }
 
-      .header-date {
+      .meta-date {
         margin: 0;
         font-size: 11px;
         color: var(--muted);
       }
 
       .status {
-        margin-top: 7px;
+        margin-top: 6px;
         display: inline-flex;
         align-items: center;
-        border-radius: 999px;
         padding: 6px 12px;
+        border-radius: 999px;
+        border: 1px solid #c7dbff;
+        background: #e9f2ff;
+        color: #164f97;
         font-size: 11px;
         font-weight: 700;
-        color: #154e95;
-        background: #e9f2ff;
-        border: 1px solid #c7dcff;
-        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.5);
       }
 
       .hero {
         margin-top: 10px;
-        display: grid;
-        grid-template-columns: 56% 44%;
-        gap: 10px;
-      }
-
-      .hero-media {
-        min-height: 420px;
-        border-radius: 14px;
-        overflow: hidden;
-        border: 1px solid #cfdbea;
         position: relative;
+        border-radius: 16px;
+        overflow: hidden;
+        border: 1px solid #cbdae9;
+        min-height: 470px;
       }
 
       .hero-image {
         width: 100%;
-        height: 100%;
+        height: 470px;
         object-fit: cover;
         display: block;
       }
 
-      .hero-overlay {
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(190deg, rgba(13, 32, 58, 0.12) 0%, rgba(5, 11, 19, 0.68) 88%);
-      }
-
-      .hero-overlay-content {
-        position: absolute;
-        bottom: 14px;
-        left: 14px;
-        right: 14px;
-        color: #fff;
-      }
-
-      .hero-overlay-title {
-        margin: 0;
-        font-size: 21px;
-        line-height: 1.12;
-        text-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
-      }
-
-      .hero-overlay-subtitle {
-        margin: 5px 0 0;
-        font-size: 12px;
-        opacity: 0.92;
-      }
-
       .hero-placeholder {
-        height: 100%;
-        min-height: 420px;
+        width: 100%;
+        height: 470px;
         display: grid;
         place-items: center;
         color: var(--muted);
@@ -353,75 +319,103 @@ export function buildInventoryPdfHtml(unit, now = new Date()) {
           linear-gradient(135deg, #edf3fb 25%, transparent 25%) -12px 0 / 24px 24px,
           linear-gradient(225deg, #edf3fb 25%, transparent 25%) -12px 0 / 24px 24px,
           linear-gradient(315deg, #edf3fb 25%, transparent 25%) 0px 0 / 24px 24px,
-          linear-gradient(45deg, #edf3fb 25%, #f8fbff 25%) 0px 0 / 24px 24px;
+          linear-gradient(45deg, #edf3fb 25%, #f9fbff 25%) 0px 0 / 24px 24px;
       }
 
-      .hero-content {
-        border: 1px solid var(--line);
-        border-radius: 14px;
-        padding: 13px;
-        background: linear-gradient(180deg, #ffffff, #f8fbff);
-        display: flex;
-        flex-direction: column;
+      .hero-shade {
+        position: absolute;
+        inset: 0;
+        background:
+          linear-gradient(175deg, rgba(6, 18, 33, 0.05) 0%, rgba(6, 18, 33, 0.75) 72%),
+          linear-gradient(55deg, rgba(14, 78, 166, 0.26) 0%, transparent 42%);
       }
 
-      .unit-name {
+      .hero-title-wrap {
+        position: absolute;
+        left: 16px;
+        right: 16px;
+        bottom: 16px;
+        color: #fff;
+      }
+
+      .hero-title {
         margin: 0;
-        font-size: 34px;
-        line-height: 1.03;
+        font-size: 35px;
+        line-height: 1.02;
+        letter-spacing: -0.01em;
+        text-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
       }
 
-      .unit-subline {
+      .hero-subtitle {
+        margin: 7px 0 0;
+        font-size: 13px;
+        opacity: 0.93;
+      }
+
+      .info-panel {
+        position: absolute;
+        right: 16px;
+        top: 16px;
+        width: 40%;
+        min-width: 240px;
+        border-radius: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        background: rgba(7, 20, 36, 0.64);
+        backdrop-filter: blur(6px);
+        color: #fff;
+        padding: 12px;
+      }
+
+      .unit-label {
+        margin: 0;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        opacity: 0.85;
+      }
+
+      .unit-price {
         margin: 6px 0 0;
-        font-size: 14px;
-        color: var(--muted);
-      }
-
-      .price {
-        margin: 16px 0 0;
-        font-size: 43px;
-        color: var(--primary);
+        font-size: 44px;
+        line-height: 0.98;
         font-weight: 800;
-        line-height: 1;
         letter-spacing: -0.02em;
       }
 
       .vin {
-        margin: 8px 0 0;
+        margin: 7px 0 0;
         font-size: 12px;
-        color: var(--muted);
+        opacity: 0.88;
       }
 
       .key-grid {
-        margin-top: 12px;
+        margin-top: 11px;
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 8px;
       }
 
       .key-card {
-        border: 1px solid #d9e5f4;
+        border: 1px solid #d8e4f3;
         border-radius: 10px;
         background: #f8fbff;
         padding: 9px;
-        break-inside: avoid;
       }
 
       .key-label {
         margin: 0;
-        color: var(--muted);
         font-size: 11px;
+        color: var(--muted);
       }
 
       .key-value {
         margin: 4px 0 0;
         font-size: 13px;
         font-weight: 700;
-        line-height: 1.2;
       }
 
       .cta {
-        margin-top: auto;
+        margin-top: 9px;
         border: 1px solid #cee0ff;
         border-radius: 12px;
         background: var(--primary-soft);
@@ -441,7 +435,7 @@ export function buildInventoryPdfHtml(unit, now = new Date()) {
         font-weight: 700;
       }
 
-      .page-title {
+      .section-eyebrow {
         margin: 0;
         font-size: 12px;
         letter-spacing: 0.08em;
@@ -449,11 +443,11 @@ export function buildInventoryPdfHtml(unit, now = new Date()) {
         color: var(--muted);
       }
 
-      .gallery-layout {
-        margin-top: 10px;
+      .page-two-layout {
+        margin-top: 9px;
         display: grid;
         grid-template-columns: 66% 34%;
-        gap: 10px;
+        gap: 9px;
       }
 
       .gallery-grid {
@@ -467,13 +461,12 @@ export function buildInventoryPdfHtml(unit, now = new Date()) {
         border-radius: 12px;
         overflow: hidden;
         border: 1px solid var(--line);
-        min-height: 172px;
-        break-inside: avoid;
+        min-height: 180px;
       }
 
       .gallery-tile-main {
         grid-column: span 2;
-        min-height: 274px;
+        min-height: 282px;
       }
 
       .gallery-image {
@@ -486,19 +479,19 @@ export function buildInventoryPdfHtml(unit, now = new Date()) {
       .gallery-empty {
         border: 1px dashed var(--line);
         border-radius: 12px;
-        min-height: 274px;
+        min-height: 282px;
         display: grid;
         place-items: center;
-        padding: 18px;
-        color: var(--muted);
         text-align: center;
+        color: var(--muted);
+        padding: 16px;
       }
 
       .spec-card {
         border: 1px solid var(--line);
         border-radius: 12px;
-        padding: 10px;
         background: #fbfdff;
+        padding: 10px;
       }
 
       .spec-row {
@@ -507,7 +500,6 @@ export function buildInventoryPdfHtml(unit, now = new Date()) {
         gap: 8px;
         padding: 5px 0;
         border-bottom: 1px solid #e9eef7;
-        break-inside: avoid;
       }
 
       .spec-row:last-child {
@@ -515,38 +507,37 @@ export function buildInventoryPdfHtml(unit, now = new Date()) {
       }
 
       .spec-label {
-        color: var(--muted);
         font-size: 11px;
+        color: var(--muted);
       }
 
       .spec-value {
+        max-width: 58%;
         text-align: right;
         font-size: 11px;
         font-weight: 700;
-        max-width: 58%;
       }
 
-      .corporate-footer {
-        margin-top: 11px;
-        border-top: 1px solid #dce5f2;
+      .corp-footer {
+        margin-top: 10px;
+        border-top: 1px solid #dce5f1;
         padding-top: 8px;
         display: flex;
         justify-content: space-between;
-        align-items: flex-start;
         gap: 10px;
       }
 
-      .corp-brand {
+      .corp-left {
         display: flex;
-        align-items: center;
         gap: 8px;
+        align-items: center;
       }
 
       .corp-mark {
         width: 24px;
         height: 24px;
         border-radius: 7px;
-        background: linear-gradient(145deg, #0f5ec8, #0a346c);
+        background: linear-gradient(145deg, #0f5fc8, #0a3268);
         color: #fff;
         display: grid;
         place-items: center;
@@ -566,10 +557,10 @@ export function buildInventoryPdfHtml(unit, now = new Date()) {
         color: var(--muted);
       }
 
-      .corp-meta {
+      .corp-right {
         text-align: right;
-        font-size: 9px;
         color: var(--muted);
+        font-size: 9px;
         line-height: 1.35;
       }
 
@@ -578,17 +569,17 @@ export function buildInventoryPdfHtml(unit, now = new Date()) {
           background: #fff;
         }
 
-        .brochure {
+        .sheet {
           max-width: none;
           margin: 0;
-          padding: 10mm;
+          padding: 8mm;
         }
 
         .page {
           box-shadow: none;
           border-radius: 0;
           border-color: transparent;
-          padding: 10mm;
+          padding: 8mm;
         }
 
         .page + .page {
@@ -599,68 +590,66 @@ export function buildInventoryPdfHtml(unit, now = new Date()) {
     </style>
   </head>
   <body>
-    <main class="brochure">
+    <main class="sheet">
       <section class="page">
-        <header class="header">
+        <header class="topbar">
           <div class="brand">
-            <span class="brand-pill">LAB</span>
+            <span class="brand-mark">LAB</span>
             <div>
               <h1 class="brand-title">Mi Oficina Virtual</h1>
               <p class="brand-subtitle">Ficha comercial de unidad</p>
             </div>
           </div>
-          <div class="header-meta">
-            <p class="header-date">Generado: ${escapeHtml(generatedDate)}</p>
+          <div class="meta">
+            <p class="meta-date">Generado: ${escapeHtml(generatedDate)}</p>
             <span class="status">${escapeHtml(status)}</span>
           </div>
         </header>
 
         <section class="hero">
-          <figure class="hero-media">
-            ${
-              cover
-                ? `
-              <img src="${escapeHtml(cover)}" alt="Imagen principal de la unidad" class="hero-image" />
-              <div class="hero-overlay"></div>
-              <figcaption class="hero-overlay-content">
-                <h2 class="hero-overlay-title">${escapeHtml(`${brand} ${model}`)}</h2>
-                <p class="hero-overlay-subtitle">Ano ${escapeHtml(year)} | ${escapeHtml(location)}</p>
-              </figcaption>
-            `
-                : '<div class="hero-placeholder">Imagen principal por confirmar</div>'
-            }
-          </figure>
+          ${
+            cover
+              ? `
+            <img src="${escapeHtml(cover)}" alt="Imagen principal de la unidad" class="hero-image" />
+            <div class="hero-shade"></div>
+            <div class="hero-title-wrap">
+              <h2 class="hero-title">${escapeHtml(`${brand} ${model}`)}</h2>
+              <p class="hero-subtitle">Ano ${escapeHtml(year)} | ${escapeHtml(location)}</p>
+            </div>
+          `
+              : '<div class="hero-placeholder">Imagen principal por confirmar</div>'
+          }
 
-          <article class="hero-content">
-            <h2 class="unit-name">${escapeHtml(`${brand} ${model}`)}</h2>
-            <p class="unit-subline">Ano ${escapeHtml(year)}</p>
-            <p class="price">${escapeHtml(price)}</p>
+          <aside class="info-panel">
+            <p class="unit-label">Precio publicado</p>
+            <p class="unit-price">${escapeHtml(price)}</p>
             <p class="vin">VIN corto: ${escapeHtml(vinShort)}</p>
+          </aside>
+        </section>
 
-            <div class="key-grid">
-              ${keyCards
-                .map(
-                  (item) => `
-                <div class="key-card">
-                  <p class="key-label">${escapeHtml(item.label)}</p>
-                  <p class="key-value">${escapeHtml(item.value)}</p>
-                </div>
-              `
-                )
-                .join('')}
-            </div>
+        <div class="key-grid">
+          ${keyCards
+            .map(
+              (item) => `
+            <article class="key-card">
+              <p class="key-label">${escapeHtml(item.label)}</p>
+              <p class="key-value">${escapeHtml(item.value)}</p>
+            </article>
+          `
+            )
+            .join('')}
+        </div>
 
-            <div class="cta">
-              <p class="cta-title">Para mas informacion, contacta al equipo comercial.</p>
-              <p class="cta-email">${escapeHtml(CONTACT_EMAIL)}</p>
-            </div>
-          </article>
+        <section class="cta">
+          <p class="cta-title">Para mas informacion, contacta al equipo comercial.</p>
+          <p class="cta-email">${escapeHtml(CONTACT_EMAIL)}</p>
         </section>
       </section>
 
       <section class="page">
-        <h2 class="page-title">Galeria comercial y especificaciones</h2>
-        <section class="gallery-layout">
+        <h2 class="section-eyebrow">Galeria comercial y especificaciones</h2>
+
+        <section class="page-two-layout">
           ${
             galleryHtml
               ? `<div class="gallery-grid">${galleryHtml}</div>`
@@ -669,15 +658,15 @@ export function buildInventoryPdfHtml(unit, now = new Date()) {
           <aside class="spec-card">${specs}</aside>
         </section>
 
-        <footer class="corporate-footer">
-          <div class="corp-brand">
+        <footer class="corp-footer">
+          <div class="corp-left">
             <span class="corp-mark">LAB</span>
             <div>
               <p class="corp-title">Mi Oficina Virtual</p>
               <p class="corp-subtitle">Documento comercial para cliente</p>
             </div>
           </div>
-          <div class="corp-meta">
+          <div class="corp-right">
             <div>Generado: ${escapeHtml(generatedDate)}</div>
             <div>Informacion sujeta a disponibilidad y confirmacion comercial.</div>
           </div>
