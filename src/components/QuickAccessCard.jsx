@@ -11,6 +11,7 @@ import {
   Tags,
   Truck,
 } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 
 const iconMap = {
   Bus,
@@ -27,12 +28,21 @@ const iconMap = {
 
 const FALLBACK_ICON = Link2
 
-function QuickAccessCard({ title, description, icon, url, disabled = false }) {
+function QuickAccessCard({ title, description, icon, url, to, disabled = false }) {
+  const navigate = useNavigate()
   const Icon = iconMap[icon] ?? FALLBACK_ICON
-  const isDisabled = disabled || !url
+  const hasInternalRoute = Boolean(to)
+  const hasExternalLink = Boolean(url)
+  const isDisabled = disabled || (!hasInternalRoute && !hasExternalLink)
 
   const handleOpenLink = () => {
     if (isDisabled) return
+
+    if (hasInternalRoute) {
+      navigate(to)
+      return
+    }
+
     window.open(url, '_blank', 'noopener,noreferrer')
   }
 

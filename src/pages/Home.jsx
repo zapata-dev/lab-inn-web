@@ -30,6 +30,8 @@ function Home() {
               description={access.description}
               icon={access.icon}
               url={access.url}
+              to={access.to}
+              disabled={access.disabled}
             />
           ))}
         </section>

@@ -2,10 +2,9 @@ export const accessLinks = [
   {
     id: 'inventario',
     title: 'Inventario Nacional',
-    description: 'Disponible proximamente.',
+    description: 'Explora unidades disponibles en el marketplace interno.',
     icon: 'Truck',
-    url: '',
-    disabled: true,
+    to: '/inventario',
   },
   {
     id: 'promociones',
