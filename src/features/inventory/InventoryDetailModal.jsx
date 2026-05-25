@@ -48,8 +48,22 @@ function InventoryDetailModal({ unit, onClose, onCopy }) {
     printWindow.document.close()
 
     printWindow.addEventListener('load', () => {
-      printWindow.focus()
-      printWindow.print()
+      const imageElements = Array.from(printWindow.document.images || [])
+      const waitImagePromises = imageElements.map((image) => {
+        if (image.complete) return Promise.resolve()
+
+        return new Promise((resolve) => {
+          image.addEventListener('load', resolve, { once: true })
+          image.addEventListener('error', resolve, { once: true })
+        })
+      })
+
+      Promise.all(waitImagePromises)
+        .catch(() => null)
+        .finally(() => {
+          printWindow.focus()
+          printWindow.print()
+        })
     })
   }
 
