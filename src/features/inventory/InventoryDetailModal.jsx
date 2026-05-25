@@ -43,11 +43,15 @@ function InventoryDetailModal({ unit, onClose, onCopy }) {
     const printWindow = window.open('', '_blank')
     if (!printWindow) return
 
+    const cleanTitle = `Ficha comercial - ${[unit.marca, unit.modelo, unit.anio].filter(Boolean).join(' ')}`.trim()
+
     printWindow.document.open()
     printWindow.document.write(buildInventoryPdfHtml(unit))
     printWindow.document.close()
+    printWindow.document.title = cleanTitle || 'Ficha comercial'
 
     printWindow.addEventListener('load', () => {
+      printWindow.document.title = cleanTitle || 'Ficha comercial'
       const imageElements = Array.from(printWindow.document.images || [])
       const waitImagePromises = imageElements.map((image) => {
         if (image.complete) return Promise.resolve()
@@ -191,6 +195,10 @@ function InventoryDetailModal({ unit, onClose, onCopy }) {
           >
             Contacto
           </a>
+          <p className="basis-full text-xs text-lab-muted">
+            Al guardar como PDF, desactiva &quot;Encabezados y pies&quot; en el cuadro de impresion para un
+            resultado limpio.
+          </p>
         </div>
       </div>
     </div>
