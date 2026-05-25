@@ -58,7 +58,7 @@ function getStatus(unit) {
 
 function getVinShort(unit) {
   if (hasValue(unit.vin)) return String(unit.vin).trim()
-  if (!hasValue(unit.vinCompleto)) return 'Por confirmar'
+  if (!hasValue(unit.vinCompleto)) return ''
   const fullVin = String(unit.vinCompleto).trim()
   return fullVin.length > 8 ? fullVin.slice(-8) : fullVin
 }
@@ -81,6 +81,27 @@ function getImageSet(unit) {
   }
 }
 
+function normalizeToken(value, fallback = 'POR_CONFIRMAR') {
+  const base = String(value ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .replace(/_+/g, '_')
+
+  return base || fallback
+}
+
+function buildStamp(now) {
+  const year = String(now.getFullYear())
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  const hours = String(now.getHours()).padStart(2, '0')
+  const minutes = String(now.getMinutes()).padStart(2, '0')
+  return `${year}${month}${day}-${hours}${minutes}`
+}
+
 function specRow(label, value) {
   return `
     <div class="spec-row">
@@ -90,17 +111,33 @@ function specRow(label, value) {
   `
 }
 
-export function buildInventoryPdfHtml(unit) {
-  const now = new Date()
-  const generatedDate = new Intl.DateTimeFormat('es-MX', { dateStyle: 'long', timeStyle: 'short' }).format(now)
+export function buildInventoryPdfFileBase(unit, now = new Date()) {
+  const brand = normalizeToken(unit?.marca, 'SIN_MARCA')
+  const model = normalizeToken(unit?.modelo, 'SIN_MODELO')
+  const year = normalizeToken(unit?.anio, 'SIN_ANO')
+  const vin = normalizeToken(getVinShort(unit), 'SIN_VIN')
+  const stamp = buildStamp(now)
 
+  return `FICHA_COMERCIAL_${brand}_${model}_${year}_${vin}_${stamp}`
+}
+
+export function buildInventoryPdfFileName(unit, now = new Date()) {
+  return `${buildInventoryPdfFileBase(unit, now)}.pdf`
+}
+
+export function buildInventoryPdfPrintPath(unit) {
+  return `/print/${normalizeToken(unit?.marca, 'UNIDAD').toLowerCase()}/${normalizeToken(unit?.modelo, 'FICHA').toLowerCase()}`
+}
+
+export function buildInventoryPdfHtml(unit, now = new Date()) {
+  const generatedDate = new Intl.DateTimeFormat('es-MX', { dateStyle: 'long', timeStyle: 'short' }).format(now)
   const brand = toText(unit.marca)
   const model = toText(unit.modelo)
   const year = toText(unit.anio)
-  const title = `${brand} ${model} ${year}`.replace(/\s+/g, ' ').trim()
   const status = getStatus(unit)
   const price = getPrice(unit)
   const location = getLocation(unit)
+  const vinShort = getVinShort(unit) || 'Por confirmar'
   const { cover, gallery } = getImageSet(unit)
 
   const keyCards = [
@@ -120,7 +157,7 @@ export function buildInventoryPdfHtml(unit) {
     specRow('Dormitorio', unit.dormitorio),
     specRow('Subempresa', unit.subempresa),
     specRow('Centro', unit.centro),
-    specRow('VIN corto', getVinShort(unit)),
+    specRow('VIN corto', vinShort),
     specRow('VIN completo', unit.vinCompleto),
     specRow('Promocion', unit.promocion),
   ].join('')
@@ -141,21 +178,27 @@ export function buildInventoryPdfHtml(unit) {
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Ficha comercial ${escapeHtml(title)}</title>
+    <meta name="referrer" content="no-referrer" />
+    <title>${escapeHtml(buildInventoryPdfFileBase(unit, now))}</title>
     <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+      }
+
       @page {
         size: letter;
-        margin: 10mm;
+        margin: 0;
       }
 
       :root {
-        --bg: #ecf2fa;
         --paper: #ffffff;
-        --ink: #12243a;
-        --muted: #5f7087;
-        --line: #d5dfec;
-        --primary: #0f4c9f;
-        --primary-soft: #eaf2ff;
+        --ink: #0f1c31;
+        --muted: #60708a;
+        --line: #d8e1ec;
+        --primary: #0c4ea3;
+        --primary-soft: #edf3ff;
       }
 
       * {
@@ -163,35 +206,39 @@ export function buildInventoryPdfHtml(unit) {
       }
 
       body {
-        margin: 0;
         font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-        background: var(--bg);
         color: var(--ink);
+        background: #eef3fa;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
       }
 
       .brochure {
-        width: min(100%, 940px);
+        width: 100%;
+        max-width: 960px;
         margin: 0 auto;
-        padding: 14px;
+        padding: 12mm;
       }
 
       .page {
         background: var(--paper);
-        border: 1px solid var(--line);
         border-radius: 16px;
-        padding: 16px;
+        border: 1px solid var(--line);
+        box-shadow: 0 18px 48px rgba(16, 44, 86, 0.12);
+        padding: 14mm;
         break-inside: avoid;
+        position: relative;
       }
 
       .page + .page {
-        margin-top: 14px;
+        margin-top: 10mm;
       }
 
       .header {
         display: flex;
-        align-items: flex-start;
         justify-content: space-between;
-        gap: 12px;
+        align-items: flex-start;
+        gap: 10px;
       }
 
       .brand {
@@ -201,10 +248,10 @@ export function buildInventoryPdfHtml(unit) {
       }
 
       .brand-pill {
-        width: 38px;
-        height: 38px;
-        border-radius: 10px;
-        background: linear-gradient(145deg, #0d58ba, #0c376f);
+        width: 40px;
+        height: 40px;
+        border-radius: 11px;
+        background: linear-gradient(145deg, #0f5ec8, #0a346c);
         color: #fff;
         display: grid;
         place-items: center;
@@ -215,7 +262,6 @@ export function buildInventoryPdfHtml(unit) {
       .brand-title {
         margin: 0;
         font-size: 19px;
-        line-height: 1.15;
       }
 
       .brand-subtitle {
@@ -235,31 +281,32 @@ export function buildInventoryPdfHtml(unit) {
       }
 
       .status {
+        margin-top: 7px;
         display: inline-flex;
-        margin-top: 6px;
+        align-items: center;
         border-radius: 999px;
-        border: 1px solid #b6d5ff;
-        background: #eaf3ff;
-        color: #154d96;
-        padding: 5px 10px;
+        padding: 6px 12px;
         font-size: 11px;
         font-weight: 700;
+        color: #154e95;
+        background: #e9f2ff;
+        border: 1px solid #c7dcff;
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.5);
       }
 
       .hero {
-        margin-top: 12px;
+        margin-top: 10px;
         display: grid;
-        grid-template-columns: 54% 46%;
-        gap: 12px;
-        break-inside: avoid;
+        grid-template-columns: 56% 44%;
+        gap: 10px;
       }
 
       .hero-media {
+        min-height: 420px;
         border-radius: 14px;
         overflow: hidden;
-        border: 1px solid var(--line);
-        min-height: 420px;
-        max-height: 520px;
+        border: 1px solid #cfdbea;
+        position: relative;
       }
 
       .hero-image {
@@ -269,6 +316,33 @@ export function buildInventoryPdfHtml(unit) {
         display: block;
       }
 
+      .hero-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(190deg, rgba(13, 32, 58, 0.12) 0%, rgba(5, 11, 19, 0.68) 88%);
+      }
+
+      .hero-overlay-content {
+        position: absolute;
+        bottom: 14px;
+        left: 14px;
+        right: 14px;
+        color: #fff;
+      }
+
+      .hero-overlay-title {
+        margin: 0;
+        font-size: 21px;
+        line-height: 1.12;
+        text-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
+      }
+
+      .hero-overlay-subtitle {
+        margin: 5px 0 0;
+        font-size: 12px;
+        opacity: 0.92;
+      }
+
       .hero-placeholder {
         height: 100%;
         min-height: 420px;
@@ -276,17 +350,17 @@ export function buildInventoryPdfHtml(unit) {
         place-items: center;
         color: var(--muted);
         background:
-          linear-gradient(135deg, #eff4fb 25%, transparent 25%) -12px 0 / 24px 24px,
-          linear-gradient(225deg, #eff4fb 25%, transparent 25%) -12px 0 / 24px 24px,
-          linear-gradient(315deg, #eff4fb 25%, transparent 25%) 0px 0 / 24px 24px,
-          linear-gradient(45deg, #eff4fb 25%, #f9fbff 25%) 0px 0 / 24px 24px;
+          linear-gradient(135deg, #edf3fb 25%, transparent 25%) -12px 0 / 24px 24px,
+          linear-gradient(225deg, #edf3fb 25%, transparent 25%) -12px 0 / 24px 24px,
+          linear-gradient(315deg, #edf3fb 25%, transparent 25%) 0px 0 / 24px 24px,
+          linear-gradient(45deg, #edf3fb 25%, #f8fbff 25%) 0px 0 / 24px 24px;
       }
 
       .hero-content {
         border: 1px solid var(--line);
         border-radius: 14px;
-        padding: 14px;
-        background: linear-gradient(180deg, #ffffff, #f9fbff);
+        padding: 13px;
+        background: linear-gradient(180deg, #ffffff, #f8fbff);
         display: flex;
         flex-direction: column;
       }
@@ -294,7 +368,7 @@ export function buildInventoryPdfHtml(unit) {
       .unit-name {
         margin: 0;
         font-size: 34px;
-        line-height: 1.05;
+        line-height: 1.03;
       }
 
       .unit-subline {
@@ -304,11 +378,12 @@ export function buildInventoryPdfHtml(unit) {
       }
 
       .price {
-        margin: 14px 0 0;
-        font-size: 38px;
+        margin: 16px 0 0;
+        font-size: 43px;
         color: var(--primary);
         font-weight: 800;
         line-height: 1;
+        letter-spacing: -0.02em;
       }
 
       .vin {
@@ -325,7 +400,7 @@ export function buildInventoryPdfHtml(unit) {
       }
 
       .key-card {
-        border: 1px solid #dce6f3;
+        border: 1px solid #d9e5f4;
         border-radius: 10px;
         background: #f8fbff;
         padding: 9px;
@@ -347,7 +422,7 @@ export function buildInventoryPdfHtml(unit) {
 
       .cta {
         margin-top: auto;
-        border: 1px solid #cddffd;
+        border: 1px solid #cee0ff;
         border-radius: 12px;
         background: var(--primary-soft);
         padding: 10px 12px;
@@ -392,13 +467,13 @@ export function buildInventoryPdfHtml(unit) {
         border-radius: 12px;
         overflow: hidden;
         border: 1px solid var(--line);
-        min-height: 170px;
+        min-height: 172px;
         break-inside: avoid;
       }
 
       .gallery-tile-main {
         grid-column: span 2;
-        min-height: 270px;
+        min-height: 274px;
       }
 
       .gallery-image {
@@ -411,7 +486,7 @@ export function buildInventoryPdfHtml(unit) {
       .gallery-empty {
         border: 1px dashed var(--line);
         border-radius: 12px;
-        min-height: 270px;
+        min-height: 274px;
         display: grid;
         place-items: center;
         padding: 18px;
@@ -451,47 +526,69 @@ export function buildInventoryPdfHtml(unit) {
         max-width: 58%;
       }
 
-      .footer {
-        margin-top: 12px;
-        border-top: 1px solid #e3eaf5;
+      .corporate-footer {
+        margin-top: 11px;
+        border-top: 1px solid #dce5f2;
         padding-top: 8px;
-        display: grid;
-        gap: 3px;
-        color: var(--muted);
-        font-size: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 10px;
       }
 
-      @media (max-width: 860px) {
-        .hero {
-          grid-template-columns: 1fr;
-        }
+      .corp-brand {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
 
-        .hero-media {
-          min-height: 320px;
-        }
+      .corp-mark {
+        width: 24px;
+        height: 24px;
+        border-radius: 7px;
+        background: linear-gradient(145deg, #0f5ec8, #0a346c);
+        color: #fff;
+        display: grid;
+        place-items: center;
+        font-size: 9px;
+        font-weight: 700;
+      }
 
-        .gallery-layout {
-          grid-template-columns: 1fr;
-        }
+      .corp-title {
+        margin: 0;
+        font-size: 11px;
+        font-weight: 700;
+      }
+
+      .corp-subtitle {
+        margin: 1px 0 0;
+        font-size: 10px;
+        color: var(--muted);
+      }
+
+      .corp-meta {
+        text-align: right;
+        font-size: 9px;
+        color: var(--muted);
+        line-height: 1.35;
       }
 
       @media print {
         body {
           background: #fff;
-          -webkit-print-color-adjust: exact;
-          print-color-adjust: exact;
         }
 
         .brochure {
-          width: 100%;
-          padding: 0;
+          max-width: none;
+          margin: 0;
+          padding: 10mm;
         }
 
         .page {
-          border: 0;
-          border-radius: 0;
-          padding: 0;
           box-shadow: none;
+          border-radius: 0;
+          border-color: transparent;
+          padding: 10mm;
         }
 
         .page + .page {
@@ -506,7 +603,7 @@ export function buildInventoryPdfHtml(unit) {
       <section class="page">
         <header class="header">
           <div class="brand">
-            <span class="brand-pill">MOV</span>
+            <span class="brand-pill">LAB</span>
             <div>
               <h1 class="brand-title">Mi Oficina Virtual</h1>
               <p class="brand-subtitle">Ficha comercial de unidad</p>
@@ -522,7 +619,14 @@ export function buildInventoryPdfHtml(unit) {
           <figure class="hero-media">
             ${
               cover
-                ? `<img src="${escapeHtml(cover)}" alt="Imagen principal de la unidad" class="hero-image" />`
+                ? `
+              <img src="${escapeHtml(cover)}" alt="Imagen principal de la unidad" class="hero-image" />
+              <div class="hero-overlay"></div>
+              <figcaption class="hero-overlay-content">
+                <h2 class="hero-overlay-title">${escapeHtml(`${brand} ${model}`)}</h2>
+                <p class="hero-overlay-subtitle">Ano ${escapeHtml(year)} | ${escapeHtml(location)}</p>
+              </figcaption>
+            `
                 : '<div class="hero-placeholder">Imagen principal por confirmar</div>'
             }
           </figure>
@@ -531,7 +635,7 @@ export function buildInventoryPdfHtml(unit) {
             <h2 class="unit-name">${escapeHtml(`${brand} ${model}`)}</h2>
             <p class="unit-subline">Ano ${escapeHtml(year)}</p>
             <p class="price">${escapeHtml(price)}</p>
-            <p class="vin">VIN corto: ${escapeHtml(getVinShort(unit))}</p>
+            <p class="vin">VIN corto: ${escapeHtml(vinShort)}</p>
 
             <div class="key-grid">
               ${keyCards
@@ -562,16 +666,21 @@ export function buildInventoryPdfHtml(unit) {
               ? `<div class="gallery-grid">${galleryHtml}</div>`
               : '<div class="gallery-empty">No hay imagenes disponibles para esta unidad.</div>'
           }
-
-          <aside class="spec-card">
-            ${specs}
-          </aside>
+          <aside class="spec-card">${specs}</aside>
         </section>
 
-        <footer class="footer">
-          <span>Documento generado desde Mi Oficina Virtual LAB.</span>
-          <span>Fecha: ${escapeHtml(generatedDate)}</span>
-          <span>Informacion sujeta a disponibilidad y confirmacion comercial.</span>
+        <footer class="corporate-footer">
+          <div class="corp-brand">
+            <span class="corp-mark">LAB</span>
+            <div>
+              <p class="corp-title">Mi Oficina Virtual</p>
+              <p class="corp-subtitle">Documento comercial para cliente</p>
+            </div>
+          </div>
+          <div class="corp-meta">
+            <div>Generado: ${escapeHtml(generatedDate)}</div>
+            <div>Informacion sujeta a disponibilidad y confirmacion comercial.</div>
+          </div>
         </footer>
       </section>
     </main>

@@ -1,4 +1,9 @@
-import { buildInventoryPdfHtml } from './inventoryPdfTemplate'
+import {
+  buildInventoryPdfFileBase,
+  buildInventoryPdfFileName,
+  buildInventoryPdfHtml,
+  buildInventoryPdfPrintPath,
+} from './inventoryPdfTemplate'
 
 function formatCurrency(value) {
   if (!Number.isFinite(value) || value <= 0) return 'Precio por confirmar'
@@ -43,15 +48,25 @@ function InventoryDetailModal({ unit, onClose, onCopy }) {
     const printWindow = window.open('', '_blank')
     if (!printWindow) return
 
-    const cleanTitle = `Ficha comercial - ${[unit.marca, unit.modelo, unit.anio].filter(Boolean).join(' ')}`.trim()
+    const now = new Date()
+    const fileBase = buildInventoryPdfFileBase(unit, now)
+    const fileName = buildInventoryPdfFileName(unit, now)
+    const html = buildInventoryPdfHtml(unit, now)
 
     printWindow.document.open()
-    printWindow.document.write(buildInventoryPdfHtml(unit))
+    printWindow.document.write(html)
     printWindow.document.close()
-    printWindow.document.title = cleanTitle || 'Ficha comercial'
+
+    try {
+      printWindow.history.replaceState({}, '', buildInventoryPdfPrintPath(unit))
+    } catch (error) {
+      // Ignore history API failures in restrictive contexts.
+    }
+
+    printWindow.document.title = fileBase
 
     printWindow.addEventListener('load', () => {
-      printWindow.document.title = cleanTitle || 'Ficha comercial'
+      printWindow.document.title = fileBase
       const imageElements = Array.from(printWindow.document.images || [])
       const waitImagePromises = imageElements.map((image) => {
         if (image.complete) return Promise.resolve()
@@ -65,10 +80,25 @@ function InventoryDetailModal({ unit, onClose, onCopy }) {
       Promise.all(waitImagePromises)
         .catch(() => null)
         .finally(() => {
+          const closeAfterPrint = () => {
+            setTimeout(() => {
+              if (!printWindow.closed) printWindow.close()
+            }, 300)
+          }
+
+          printWindow.addEventListener('afterprint', closeAfterPrint, { once: true })
           printWindow.focus()
           printWindow.print()
         })
     })
+
+    setTimeout(() => {
+      if (!printWindow.closed) {
+        printWindow.document.title = fileBase
+      }
+    }, 150)
+
+    return fileName
   }
 
   return (
