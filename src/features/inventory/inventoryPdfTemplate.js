@@ -9,25 +9,24 @@ function escapeHtml(value) {
     .replaceAll("'", '&#39;')
 }
 
-function isPresent(value) {
-  const normalized = String(value ?? '').trim()
-  if (!normalized) return false
-  if (normalized.toLowerCase() === 'undefined') return false
-  if (normalized.toLowerCase() === 'null') return false
+function hasValue(value) {
+  const text = String(value ?? '').trim()
+  if (!text) return false
+  if (text.toLowerCase() === 'undefined') return false
+  if (text.toLowerCase() === 'null') return false
   return true
 }
 
-function asText(value, fallback = 'Por confirmar') {
-  return isPresent(value) ? String(value).trim() : fallback
+function toText(value, fallback = 'Por confirmar') {
+  return hasValue(value) ? String(value).trim() : fallback
 }
 
-function asOptionalText(value) {
-  return isPresent(value) ? String(value).trim() : ''
+function toOptionalText(value) {
+  return hasValue(value) ? String(value).trim() : ''
 }
 
-function formatCurrency(value) {
+function formatMoney(value) {
   if (!Number.isFinite(value) || value <= 0) return 'Por confirmar'
-
   return new Intl.NumberFormat('es-MX', {
     style: 'currency',
     currency: 'MXN',
@@ -35,156 +34,106 @@ function formatCurrency(value) {
   }).format(value)
 }
 
-function formatKilometers(value) {
+function formatKm(value) {
   if (!Number.isFinite(value) || value <= 0) return 'Por confirmar'
   return `${new Intl.NumberFormat('es-MX', { maximumFractionDigits: 0 }).format(value)} km`
 }
 
-function shortVin(unit) {
-  if (isPresent(unit.vin)) return String(unit.vin).trim()
-  if (!isPresent(unit.vinCompleto)) return 'Por confirmar'
-  const full = String(unit.vinCompleto).trim()
-  return full.length > 8 ? full.slice(-8) : full
-}
-
-function getLocation(unit) {
-  return asText(unit.ubicacionFisica || unit.ubicacion || unit.centro)
-}
-
-function getStatus(unit) {
-  const status = asOptionalText(unit.status)
-  if (!status) return 'Disponible'
-  return status.replaceAll('_', ' ')
-}
-
 function getPrice(unit) {
-  if (isPresent(unit.precioFormatted)) return String(unit.precioFormatted).trim()
-  return formatCurrency(unit.precio)
+  return hasValue(unit.precioFormatted) ? String(unit.precioFormatted).trim() : formatMoney(unit.precio)
 }
 
 function getKilometers(unit) {
-  if (isPresent(unit.kilometrosFormatted)) return String(unit.kilometrosFormatted).trim()
-  return formatKilometers(unit.kilometros)
+  return hasValue(unit.kilometrosFormatted) ? String(unit.kilometrosFormatted).trim() : formatKm(unit.kilometros)
 }
 
-function safeImageUrl(url) {
+function getLocation(unit) {
+  return toText(unit.ubicacionFisica || unit.ubicacion || unit.centro)
+}
+
+function getStatus(unit) {
+  const status = toOptionalText(unit.status)
+  return status ? status.replaceAll('_', ' ') : 'Disponible'
+}
+
+function getVinShort(unit) {
+  if (hasValue(unit.vin)) return String(unit.vin).trim()
+  if (!hasValue(unit.vinCompleto)) return 'Por confirmar'
+  const fullVin = String(unit.vinCompleto).trim()
+  return fullVin.length > 8 ? fullVin.slice(-8) : fullVin
+}
+
+function toSafeImage(url) {
   const text = String(url ?? '').trim()
   return /^https?:\/\//i.test(text) ? text : ''
 }
 
-function buildGallery(unit) {
-  const rawImages = Array.isArray(unit.imagenesCompletas) ? unit.imagenesCompletas : []
-  const imageList = [unit.imagenPortada, ...rawImages]
-    .map(safeImageUrl)
+function getImageSet(unit) {
+  const images = Array.isArray(unit.imagenesCompletas) ? unit.imagenesCompletas : []
+  const merged = [unit.imagenPortada, ...images]
+    .map(toSafeImage)
     .filter(Boolean)
-    .filter((url, index, urls) => urls.indexOf(url) === index)
-    .slice(0, 9)
+    .filter((url, index, list) => list.indexOf(url) === index)
 
   return {
-    coverImage: imageList[0] || '',
-    galleryImages: imageList.slice(0, 9),
+    cover: merged[0] || '',
+    gallery: merged.slice(0, 6),
   }
 }
 
-function detailRow(label, value, allowFallback = true) {
-  const safeValue = allowFallback ? asText(value) : asOptionalText(value)
-  if (!safeValue) return ''
-
+function specRow(label, value) {
   return `
-    <div class="row">
-      <span class="row-label">${escapeHtml(label)}</span>
-      <span class="row-value">${escapeHtml(safeValue)}</span>
+    <div class="spec-row">
+      <span class="spec-label">${escapeHtml(label)}</span>
+      <span class="spec-value">${escapeHtml(toText(value))}</span>
     </div>
-  `
-}
-
-function section(title, rowsHtml) {
-  if (!rowsHtml.trim()) return ''
-  return `
-    <section class="spec-card">
-      <h3>${escapeHtml(title)}</h3>
-      <div class="rows">${rowsHtml}</div>
-    </section>
   `
 }
 
 export function buildInventoryPdfHtml(unit) {
   const now = new Date()
-  const generatedDate = new Intl.DateTimeFormat('es-MX', {
-    dateStyle: 'long',
-    timeStyle: 'short',
-  }).format(now)
-  const title = `${asText(unit.marca)} ${asText(unit.modelo)}`.trim()
-  const year = asText(unit.anio)
+  const generatedDate = new Intl.DateTimeFormat('es-MX', { dateStyle: 'long', timeStyle: 'short' }).format(now)
+
+  const brand = toText(unit.marca)
+  const model = toText(unit.modelo)
+  const year = toText(unit.anio)
+  const title = `${brand} ${model} ${year}`.replace(/\s+/g, ' ').trim()
+  const status = getStatus(unit)
   const price = getPrice(unit)
   const location = getLocation(unit)
-  const { coverImage, galleryImages } = buildGallery(unit)
-  const status = getStatus(unit)
+  const { cover, gallery } = getImageSet(unit)
 
-  const executiveItems = [
+  const keyCards = [
     { label: 'Kilometraje', value: getKilometers(unit) },
-    { label: 'Motor', value: asText(unit.motor) },
-    { label: 'Transmision', value: asText(unit.transmision) },
-    { label: 'Paso', value: asText(unit.paso) },
-    { label: 'Rodada', value: asText(unit.rodada) },
-    { label: 'Dormitorio', value: asText(unit.dormitorio) },
-    { label: 'Eje trasero', value: asText(unit.ejeTrasero) },
+    { label: 'Motor', value: toText(unit.motor) },
+    { label: 'Transmision', value: toText(unit.transmision) },
+    { label: 'Ubicacion', value: location },
+    { label: 'Paso', value: toText(unit.paso) },
+    { label: 'Rodada', value: toText(unit.rodada) },
   ]
 
-  const technicalSections = [
-    section(
-      'Informacion general',
-      [
-        detailRow('Marca', unit.marca),
-        detailRow('Modelo', unit.modelo),
-        detailRow('Ano', unit.anio),
-        detailRow('Color exterior', unit.color),
-        detailRow('Color interior', unit.colorInterior),
-        detailRow('Subempresa', unit.subempresa),
-        detailRow('Status', status),
-      ].join('')
-    ),
-    section(
-      'Tren motriz',
-      [
-        detailRow('Motor', unit.motor),
-        detailRow('Transmision', unit.transmision),
-        detailRow('Kilometraje', getKilometers(unit)),
-      ].join('')
-    ),
-    section(
-      'Configuracion',
-      [
-        detailRow('Paso', unit.paso),
-        detailRow('Rodada', unit.rodada),
-        detailRow('Eje delantero', unit.ejeDelantero),
-        detailRow('Eje trasero', unit.ejeTrasero),
-        detailRow('Dormitorio', unit.dormitorio),
-      ].join('')
-    ),
-    section(
-      'Ubicacion',
-      [detailRow('Centro', unit.centro), detailRow('Ubicacion fisica', unit.ubicacionFisica || unit.ubicacion)].join(
-        ''
-      )
-    ),
-    section(
-      'Datos administrativos',
-      [
-        detailRow('VIN completo', unit.vinCompleto),
-        detailRow('VIN corto', shortVin(unit)),
-        detailRow('Promocion', unit.promocion),
-      ].join('')
-    ),
-  ]
-    .filter(Boolean)
-    .join('')
+  const specs = [
+    specRow('Color exterior', unit.color),
+    specRow('Color interior', unit.colorInterior),
+    specRow('Eje delantero', unit.ejeDelantero),
+    specRow('Eje trasero', unit.ejeTrasero),
+    specRow('Dormitorio', unit.dormitorio),
+    specRow('Subempresa', unit.subempresa),
+    specRow('Centro', unit.centro),
+    specRow('VIN corto', getVinShort(unit)),
+    specRow('VIN completo', unit.vinCompleto),
+    specRow('Promocion', unit.promocion),
+  ].join('')
 
-  const galleryHtml = galleryImages
-    .map(
-      (url, index) =>
-        `<figure class="gallery-item"><img src="${escapeHtml(url)}" alt="Imagen ${index + 1} de la unidad" class="gallery-image" loading="lazy" /></figure>`
-    )
+  const galleryHtml = gallery
+    .map((imageUrl, index) => {
+      const classes = index === 0 ? 'gallery-tile gallery-tile-main' : 'gallery-tile'
+      return `
+        <figure class="${classes}">
+          <img src="${escapeHtml(imageUrl)}" alt="Vista ${index + 1} de la unidad" class="gallery-image" loading="lazy" />
+        </figure>
+      `
+    })
     .join('')
 
   return `<!doctype html>
@@ -192,23 +141,21 @@ export function buildInventoryPdfHtml(unit) {
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Ficha comercial - ${escapeHtml(title)}</title>
+    <title>Ficha comercial ${escapeHtml(title)}</title>
     <style>
       @page {
         size: letter;
-        margin: 14mm;
+        margin: 10mm;
       }
 
       :root {
-        --bg: #f3f6fb;
-        --white: #ffffff;
-        --ink: #0e1a2b;
-        --muted: #5d6a7b;
-        --border: #d8e0ea;
-        --primary: #0d3f8a;
-        --primary-soft: #e8f0ff;
-        --success-soft: #e9f8ee;
-        --success-ink: #1d7a44;
+        --bg: #ecf2fa;
+        --paper: #ffffff;
+        --ink: #12243a;
+        --muted: #5f7087;
+        --line: #d5dfec;
+        --primary: #0f4c9f;
+        --primary-soft: #eaf2ff;
       }
 
       * {
@@ -218,326 +165,240 @@ export function buildInventoryPdfHtml(unit) {
       body {
         margin: 0;
         font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-        color: var(--ink);
         background: var(--bg);
+        color: var(--ink);
       }
 
-      .document {
-        width: min(100%, 920px);
+      .brochure {
+        width: min(100%, 940px);
         margin: 0 auto;
-        padding: 18px;
+        padding: 14px;
       }
 
       .page {
-        background: var(--white);
-        border: 1px solid var(--border);
-        border-radius: 18px;
-        padding: 20px;
+        background: var(--paper);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 16px;
         break-inside: avoid;
       }
 
       .page + .page {
-        margin-top: 18px;
+        margin-top: 14px;
       }
 
-      .page-header {
+      .header {
         display: flex;
-        justify-content: space-between;
-        gap: 16px;
         align-items: flex-start;
-        margin-bottom: 14px;
-      }
-
-      .brand-block {
-        display: flex;
+        justify-content: space-between;
         gap: 12px;
       }
 
-      .brand-mark {
-        width: 44px;
-        height: 44px;
-        border-radius: 12px;
-        background: linear-gradient(145deg, #0f4ea8, #0d2e63);
-        color: #fff;
-        display: inline-flex;
+      .brand {
+        display: flex;
+        gap: 10px;
         align-items: center;
-        justify-content: center;
-        font-size: 15px;
+      }
+
+      .brand-pill {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        background: linear-gradient(145deg, #0d58ba, #0c376f);
+        color: #fff;
+        display: grid;
+        place-items: center;
+        font-size: 13px;
         font-weight: 700;
       }
 
-      .eyebrow {
+      .brand-title {
         margin: 0;
-        font-size: 11px;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        color: var(--muted);
-      }
-
-      .brand-name {
-        margin: 2px 0 0;
-        font-size: 24px;
-        line-height: 1.1;
+        font-size: 19px;
+        line-height: 1.15;
       }
 
       .brand-subtitle {
-        margin: 3px 0 0;
+        margin: 2px 0 0;
+        font-size: 12px;
         color: var(--muted);
-        font-size: 13px;
       }
 
-      .meta {
+      .header-meta {
         text-align: right;
       }
 
-      .date {
+      .header-date {
         margin: 0;
-        font-size: 12px;
+        font-size: 11px;
         color: var(--muted);
       }
 
-      .status-badge {
-        margin-top: 8px;
+      .status {
         display: inline-flex;
-        align-items: center;
+        margin-top: 6px;
         border-radius: 999px;
-        padding: 6px 11px;
-        font-size: 12px;
+        border: 1px solid #b6d5ff;
+        background: #eaf3ff;
+        color: #154d96;
+        padding: 5px 10px;
+        font-size: 11px;
         font-weight: 700;
-        color: var(--success-ink);
-        background: var(--success-soft);
-        border: 1px solid #b9e4c6;
       }
 
       .hero {
+        margin-top: 12px;
         display: grid;
-        grid-template-columns: 1.15fr 0.85fr;
-        gap: 14px;
-        margin-bottom: 14px;
+        grid-template-columns: 54% 46%;
+        gap: 12px;
         break-inside: avoid;
       }
 
-      .hero-image-wrap {
-        border: 1px solid var(--border);
+      .hero-media {
         border-radius: 14px;
         overflow: hidden;
-        min-height: 280px;
-        background: #e9edf5;
+        border: 1px solid var(--line);
+        min-height: 420px;
+        max-height: 520px;
       }
 
       .hero-image {
         width: 100%;
         height: 100%;
-        min-height: 280px;
         object-fit: cover;
         display: block;
       }
 
-      .image-placeholder {
-        min-height: 280px;
+      .hero-placeholder {
         height: 100%;
+        min-height: 420px;
         display: grid;
         place-items: center;
         color: var(--muted);
         background:
-          linear-gradient(135deg, #edf2fb 25%, transparent 25%) -10px 0 / 20px 20px,
-          linear-gradient(225deg, #edf2fb 25%, transparent 25%) -10px 0 / 20px 20px,
-          linear-gradient(315deg, #edf2fb 25%, transparent 25%) 0px 0 / 20px 20px,
-          linear-gradient(45deg, #edf2fb 25%, #f8faff 25%) 0px 0 / 20px 20px;
+          linear-gradient(135deg, #eff4fb 25%, transparent 25%) -12px 0 / 24px 24px,
+          linear-gradient(225deg, #eff4fb 25%, transparent 25%) -12px 0 / 24px 24px,
+          linear-gradient(315deg, #eff4fb 25%, transparent 25%) 0px 0 / 24px 24px,
+          linear-gradient(45deg, #eff4fb 25%, #f9fbff 25%) 0px 0 / 24px 24px;
       }
 
       .hero-content {
-        border: 1px solid var(--border);
+        border: 1px solid var(--line);
         border-radius: 14px;
-        padding: 16px;
-        background: linear-gradient(170deg, #ffffff, #f8fbff);
+        padding: 14px;
+        background: linear-gradient(180deg, #ffffff, #f9fbff);
+        display: flex;
+        flex-direction: column;
       }
 
-      .unit-title {
+      .unit-name {
         margin: 0;
-        font-size: 31px;
-        line-height: 1.08;
+        font-size: 34px;
+        line-height: 1.05;
       }
 
-      .unit-year {
-        margin: 7px 0 0;
-        font-size: 16px;
+      .unit-subline {
+        margin: 6px 0 0;
+        font-size: 14px;
         color: var(--muted);
       }
 
       .price {
         margin: 14px 0 0;
-        font-size: 35px;
-        line-height: 1;
+        font-size: 38px;
         color: var(--primary);
         font-weight: 800;
+        line-height: 1;
       }
 
-      .meta-list {
-        margin: 15px 0 0;
+      .vin {
+        margin: 8px 0 0;
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      .key-grid {
+        margin-top: 12px;
         display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 8px;
       }
 
-      .meta-item {
-        display: flex;
-        justify-content: space-between;
-        gap: 10px;
-        border-bottom: 1px solid #eaf0f8;
-        padding-bottom: 7px;
-        font-size: 13px;
-      }
-
-      .meta-item:last-child {
-        border-bottom: 0;
-      }
-
-      .meta-label {
-        color: var(--muted);
-      }
-
-      .meta-value {
-        text-align: right;
-        font-weight: 700;
-      }
-
-      .card {
-        border: 1px solid var(--border);
-        border-radius: 14px;
-        padding: 14px;
-        background: var(--white);
+      .key-card {
+        border: 1px solid #dce6f3;
+        border-radius: 10px;
+        background: #f8fbff;
+        padding: 9px;
         break-inside: avoid;
       }
 
-      .card h2 {
-        margin: 0 0 10px;
-        font-size: 12px;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        color: var(--muted);
-      }
-
-      .summary-grid {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 9px;
-      }
-
-      .summary-item {
-        border: 1px solid #e2e9f4;
-        border-radius: 11px;
-        padding: 10px;
-        background: #f8fbff;
-      }
-
-      .summary-label {
+      .key-label {
         margin: 0;
-        font-size: 11px;
         color: var(--muted);
+        font-size: 11px;
       }
 
-      .summary-value {
+      .key-value {
         margin: 4px 0 0;
         font-size: 13px;
         font-weight: 700;
+        line-height: 1.2;
       }
 
-      .cta-card {
-        margin-top: 12px;
-        display: flex;
-        justify-content: space-between;
-        gap: 12px;
-        align-items: center;
-        border: 1px solid #cfe0fb;
+      .cta {
+        margin-top: auto;
+        border: 1px solid #cddffd;
+        border-radius: 12px;
         background: var(--primary-soft);
+        padding: 10px 12px;
       }
 
-      .cta-copy {
+      .cta-title {
         margin: 0;
-        font-size: 14px;
-        font-weight: 600;
+        font-size: 12px;
+        color: #1a3661;
       }
 
       .cta-email {
-        font-size: 14px;
-        font-weight: 700;
+        margin: 4px 0 0;
+        font-size: 15px;
         color: var(--primary);
+        font-weight: 700;
       }
 
-      .section-title {
-        margin: 0 0 10px;
+      .page-title {
+        margin: 0;
         font-size: 12px;
         letter-spacing: 0.08em;
         text-transform: uppercase;
         color: var(--muted);
       }
 
-      .spec-grid {
+      .gallery-layout {
+        margin-top: 10px;
         display: grid;
+        grid-template-columns: 66% 34%;
         gap: 10px;
+      }
+
+      .gallery-grid {
+        display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-
-      .spec-card {
-        border: 1px solid var(--border);
-        border-radius: 12px;
-        padding: 12px;
-        background: #fcfdff;
-        break-inside: avoid;
-      }
-
-      .spec-card h3 {
-        margin: 0 0 8px;
-        font-size: 12px;
-        color: var(--primary);
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-      }
-
-      .rows {
-        display: grid;
-      }
-
-      .row {
-        display: flex;
-        justify-content: space-between;
-        gap: 10px;
-        padding: 6px 0;
-        border-bottom: 1px solid #ebf0f7;
-      }
-
-      .row:last-child {
-        border-bottom: 0;
-      }
-
-      .row-label {
-        color: var(--muted);
-        font-size: 12px;
-      }
-
-      .row-value {
-        text-align: right;
-        font-size: 12px;
-        font-weight: 700;
-      }
-
-      .gallery-card {
-        margin-top: 12px;
-      }
-
-      .gallery {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 8px;
       }
 
-      .gallery-item {
+      .gallery-tile {
         margin: 0;
-        border: 1px solid #dce5f1;
-        border-radius: 10px;
+        border-radius: 12px;
         overflow: hidden;
-        height: 112px;
+        border: 1px solid var(--line);
+        min-height: 170px;
         break-inside: avoid;
+      }
+
+      .gallery-tile-main {
+        grid-column: span 2;
+        min-height: 270px;
       }
 
       .gallery-image {
@@ -547,43 +408,81 @@ export function buildInventoryPdfHtml(unit) {
         display: block;
       }
 
-      .empty-gallery {
-        border: 1px dashed var(--border);
-        border-radius: 10px;
-        padding: 20px 12px;
-        text-align: center;
+      .gallery-empty {
+        border: 1px dashed var(--line);
+        border-radius: 12px;
+        min-height: 270px;
+        display: grid;
+        place-items: center;
+        padding: 18px;
         color: var(--muted);
-        font-size: 13px;
+        text-align: center;
       }
 
-      .footer {
-        margin-top: 14px;
-        border-top: 1px solid #e6ebf4;
-        padding-top: 10px;
+      .spec-card {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 10px;
+        background: #fbfdff;
+      }
+
+      .spec-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 5px 0;
+        border-bottom: 1px solid #e9eef7;
+        break-inside: avoid;
+      }
+
+      .spec-row:last-child {
+        border-bottom: 0;
+      }
+
+      .spec-label {
         color: var(--muted);
-        display: grid;
-        gap: 4px;
         font-size: 11px;
       }
 
-      @media (max-width: 900px) {
+      .spec-value {
+        text-align: right;
+        font-size: 11px;
+        font-weight: 700;
+        max-width: 58%;
+      }
+
+      .footer {
+        margin-top: 12px;
+        border-top: 1px solid #e3eaf5;
+        padding-top: 8px;
+        display: grid;
+        gap: 3px;
+        color: var(--muted);
+        font-size: 10px;
+      }
+
+      @media (max-width: 860px) {
         .hero {
           grid-template-columns: 1fr;
         }
 
-        .summary-grid {
-          grid-template-columns: repeat(2, minmax(0, 1fr));
+        .hero-media {
+          min-height: 320px;
+        }
+
+        .gallery-layout {
+          grid-template-columns: 1fr;
         }
       }
 
       @media print {
         body {
+          background: #fff;
           -webkit-print-color-adjust: exact;
           print-color-adjust: exact;
-          background: #fff;
         }
 
-        .document {
+        .brochure {
           width: 100%;
           padding: 0;
         }
@@ -593,96 +492,80 @@ export function buildInventoryPdfHtml(unit) {
           border-radius: 0;
           padding: 0;
           box-shadow: none;
-          break-inside: avoid;
         }
 
         .page + .page {
-          page-break-before: always;
           margin-top: 0;
+          page-break-before: always;
         }
       }
     </style>
   </head>
   <body>
-    <main class="document">
+    <main class="brochure">
       <section class="page">
-        <header class="page-header">
-          <div class="brand-block">
-            <span class="brand-mark">MOV</span>
+        <header class="header">
+          <div class="brand">
+            <span class="brand-pill">MOV</span>
             <div>
-              <p class="eyebrow">Mi Oficina Virtual</p>
-              <h1 class="brand-name">Ficha comercial de unidad</h1>
-              <p class="brand-subtitle">Documento premium para atencion a cliente</p>
+              <h1 class="brand-title">Mi Oficina Virtual</h1>
+              <p class="brand-subtitle">Ficha comercial de unidad</p>
             </div>
           </div>
-          <div class="meta">
-            <p class="date">Generado: ${escapeHtml(generatedDate)}</p>
-            <span class="status-badge">${escapeHtml(status)}</span>
+          <div class="header-meta">
+            <p class="header-date">Generado: ${escapeHtml(generatedDate)}</p>
+            <span class="status">${escapeHtml(status)}</span>
           </div>
         </header>
 
         <section class="hero">
-          <div class="hero-image-wrap">
+          <figure class="hero-media">
             ${
-              coverImage
-                ? `<img src="${escapeHtml(coverImage)}" alt="Imagen principal de la unidad" class="hero-image" />`
-                : '<div class="image-placeholder">Imagen no disponible</div>'
+              cover
+                ? `<img src="${escapeHtml(cover)}" alt="Imagen principal de la unidad" class="hero-image" />`
+                : '<div class="hero-placeholder">Imagen principal por confirmar</div>'
             }
-          </div>
-          <div class="hero-content">
-            <h2 class="unit-title">${escapeHtml(title)}</h2>
-            <p class="unit-year">Ano ${escapeHtml(year)}</p>
+          </figure>
+
+          <article class="hero-content">
+            <h2 class="unit-name">${escapeHtml(`${brand} ${model}`)}</h2>
+            <p class="unit-subline">Ano ${escapeHtml(year)}</p>
             <p class="price">${escapeHtml(price)}</p>
-            <div class="meta-list">
-              <div class="meta-item">
-                <span class="meta-label">Ubicacion</span>
-                <span class="meta-value">${escapeHtml(location)}</span>
-              </div>
-              <div class="meta-item">
-                <span class="meta-label">VIN corto</span>
-                <span class="meta-value">${escapeHtml(shortVin(unit))}</span>
-              </div>
+            <p class="vin">VIN corto: ${escapeHtml(getVinShort(unit))}</p>
+
+            <div class="key-grid">
+              ${keyCards
+                .map(
+                  (item) => `
+                <div class="key-card">
+                  <p class="key-label">${escapeHtml(item.label)}</p>
+                  <p class="key-value">${escapeHtml(item.value)}</p>
+                </div>
+              `
+                )
+                .join('')}
             </div>
-          </div>
-        </section>
 
-        <section class="card">
-          <h2>Resumen ejecutivo</h2>
-          <div class="summary-grid">
-            ${executiveItems
-              .map(
-                (item) => `
-              <article class="summary-item">
-                <p class="summary-label">${escapeHtml(item.label)}</p>
-                <p class="summary-value">${escapeHtml(item.value)}</p>
-              </article>
-            `
-              )
-              .join('')}
-          </div>
-        </section>
-
-        <section class="card cta-card">
-          <p class="cta-copy">Para mas informacion, contacta al equipo comercial.</p>
-          <span class="cta-email">${escapeHtml(CONTACT_EMAIL)}</span>
+            <div class="cta">
+              <p class="cta-title">Para mas informacion, contacta al equipo comercial.</p>
+              <p class="cta-email">${escapeHtml(CONTACT_EMAIL)}</p>
+            </div>
+          </article>
         </section>
       </section>
 
       <section class="page">
-        <section class="card">
-          <h2 class="section-title">Especificaciones tecnicas</h2>
-          <div class="spec-grid">
-            ${technicalSections}
-          </div>
-        </section>
-
-        <section class="card gallery-card">
-          <h2>Galeria</h2>
+        <h2 class="page-title">Galeria comercial y especificaciones</h2>
+        <section class="gallery-layout">
           ${
             galleryHtml
-              ? `<div class="gallery">${galleryHtml}</div>`
-              : '<div class="empty-gallery">No hay imagenes disponibles para esta unidad.</div>'
+              ? `<div class="gallery-grid">${galleryHtml}</div>`
+              : '<div class="gallery-empty">No hay imagenes disponibles para esta unidad.</div>'
           }
+
+          <aside class="spec-card">
+            ${specs}
+          </aside>
         </section>
 
         <footer class="footer">
