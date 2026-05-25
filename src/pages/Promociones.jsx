@@ -4,18 +4,16 @@ import { Link } from 'react-router-dom'
 import InventoryDetailModal from '../features/inventory/InventoryDetailModal'
 import InventoryFilters from '../features/inventory/InventoryFilters'
 import PromotionCard from '../features/promotions/PromotionCard'
-import { fetchInventoryFromCsv, getInventoryCache, saveInventoryCache } from '../services/inventoryService'
+import {
+  fetchInventoryFromCsv,
+  getInventoryCache,
+  INVENTORY_FILTER_FIELDS,
+  saveInventoryCache,
+} from '../services/inventoryService'
 import { hasPromotion } from '../utils/promotionUtils'
 
-const PROMOTION_FILTER_FIELDS = [
-  { key: 'marca', label: 'Marca', type: 'select' },
-  { key: 'anio', label: 'Ano', type: 'select' },
-  { key: 'ubicacion', label: 'Ubicacion', type: 'select' },
-  { key: 'precio', label: 'Precio', type: 'numberRange' },
-]
-
-const SEARCHABLE_KEYS = ['marca', 'modelo', 'anio', 'vin', 'vinCompleto', 'motor', 'ubicacion', 'promocion']
-const FILTER_LABELS = PROMOTION_FILTER_FIELDS.reduce((accumulator, field) => {
+const SEARCHABLE_KEYS = ['marca', 'modelo', 'vin', 'vinCompleto', 'motor', 'tipoUnidad', 'descripcion', 'placas']
+const FILTER_LABELS = INVENTORY_FILTER_FIELDS.reduce((accumulator, field) => {
   accumulator[field.key] = field.label
   return accumulator
 }, {})
@@ -34,6 +32,32 @@ function uniqueSorted(values) {
   return [...new Set(values.filter(Boolean))].sort((first, second) => first.localeCompare(second, 'es'))
 }
 
+function parseNumber(value) {
+  const cleaned = String(value ?? '').replace(/[^0-9.,-]/g, '')
+  if (!cleaned) return null
+
+  let normalized = cleaned
+
+  if (cleaned.includes('.') && cleaned.includes(',')) {
+    normalized = cleaned.replace(/,/g, '')
+  } else if (cleaned.includes(',')) {
+    const commaCount = (cleaned.match(/,/g) || []).length
+    const [left = '', right = ''] = cleaned.split(',')
+    const isThousandsSeparator = commaCount > 1 || (right.length === 3 && left.length >= 1)
+    normalized = isThousandsSeparator ? cleaned.replace(/,/g, '') : cleaned.replace(',', '.')
+  }
+
+  const parsed = Number(normalized)
+  return Number.isFinite(parsed) ? parsed : null
+}
+
+function getNumericFieldValue(unit, key) {
+  if (key === 'precio') return unit.precio
+  if (key === 'kilometros') return unit.kilometros
+
+  return parseNumber(unit[key])
+}
+
 function matchesSearch(unit, searchTerm) {
   if (!searchTerm) return true
   const normalizedSearch = normalizeText(searchTerm)
@@ -49,9 +73,20 @@ function applyFilters(units, filters, search, definitions) {
       if (definition.type === 'numberRange') {
         const minValue = filters[`${definition.key}Min`]
         const maxValue = filters[`${definition.key}Max`]
+        if (!minValue && !maxValue) continue
 
-        if (minValue && (!Number.isFinite(unit.precio) || unit.precio < Number(minValue))) return false
-        if (maxValue && (!Number.isFinite(unit.precio) || unit.precio > Number(maxValue))) return false
+        const unitValue = getNumericFieldValue(unit, definition.key)
+        if (!Number.isFinite(unitValue)) return false
+
+        if (minValue && unitValue < Number(minValue)) return false
+        if (maxValue && unitValue > Number(maxValue)) return false
+        continue
+      }
+
+      if (definition.type === 'text') {
+        const filterValue = normalizeText(filters[definition.key])
+        if (!filterValue) continue
+        if (!normalizeText(unit[definition.key]).includes(filterValue)) return false
         continue
       }
 
@@ -66,14 +101,15 @@ function applyFilters(units, filters, search, definitions) {
 
 function hasFieldValue(unit, definition) {
   if (definition.type === 'numberRange') {
-    return Number.isFinite(unit.precio)
+    const numericValue = getNumericFieldValue(unit, definition.key)
+    return Number.isFinite(numericValue)
   }
 
   return String(unit[definition.key] ?? '').trim().length > 0
 }
 
 function detectAvailableFilters(units) {
-  return PROMOTION_FILTER_FIELDS.filter((definition) => units.some((unit) => hasFieldValue(unit, definition)))
+  return INVENTORY_FILTER_FIELDS.filter((definition) => units.some((unit) => hasFieldValue(unit, definition)))
 }
 
 function removeDefinitionFromFilters(filters, definition) {
