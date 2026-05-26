@@ -134,61 +134,8 @@ export function buildInventoryPdfPrintPath(unit) {
   return `/print/${normalizeToken(unit?.marca, 'UNIDAD').toLowerCase()}/${normalizeToken(unit?.modelo, 'FICHA').toLowerCase()}`
 }
 
-export function buildInventoryPdfHtml(unit, now = new Date()) {
-  const generatedDate = new Intl.DateTimeFormat('es-MX', { dateStyle: 'long', timeStyle: 'short' }).format(now)
-  const brand = toText(unit.marca)
-  const model = toText(unit.modelo)
-  const year = toText(unit.anio)
-  const status = getStatus(unit)
-  const price = getPrice(unit)
-  const location = getLocation(unit)
-  const vinShort = getVinShort(unit) || 'Por confirmar'
-  const { cover, gallery } = getImageSet(unit)
-
-  const keyCards = [
-    { label: 'Kilometraje', value: getKilometers(unit) },
-    { label: 'Motor', value: toText(unit.motor) },
-    { label: 'Transmision', value: toText(unit.transmision) },
-    { label: 'Ubicacion', value: location },
-    { label: 'Paso', value: toText(unit.paso) },
-    { label: 'Rodada', value: toText(unit.rodada) },
-  ]
-  const isCompactGallery = gallery.length >= 6
-  const galleryGridClass = isCompactGallery ? 'gallery-grid gallery-grid-compact' : 'gallery-grid'
-
-  const specs = [
-    specRow('Color exterior', unit.color),
-    specRow('Color interior', unit.colorInterior),
-    specRow('Eje delantero', unit.ejeDelantero),
-    specRow('Eje trasero', unit.ejeTrasero),
-    specRow('Dormitorio', unit.dormitorio),
-    specRow('Subempresa', unit.subempresa),
-    specRow('Centro', unit.centro),
-    specRow('VIN corto', vinShort),
-    specRow('VIN completo', unit.vinCompleto),
-    specRow('Promocion', unit.promocion),
-  ].join('')
-
-  const galleryHtml = gallery
-    .map((imageUrl, index) => {
-      const classes =
-        !isCompactGallery && index === 0 ? 'gallery-tile gallery-tile-main' : 'gallery-tile'
-      return `
-        <figure class="${classes}">
-          <img src="${escapeHtml(imageUrl)}" alt="Vista ${index + 1} de la unidad" class="gallery-image" loading="lazy" />
-        </figure>
-      `
-    })
-    .join('')
-
-  return `<!doctype html>
-<html lang="es">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="referrer" content="no-referrer" />
-    <title>${escapeHtml(buildInventoryPdfFileBase(unit, now))}</title>
-    <style>
+export function buildInventoryPdfStyles(additionalCss = '') {
+  return `
       html,
       body {
         margin: 0;
@@ -240,6 +187,11 @@ export function buildInventoryPdfHtml(unit, now = new Date()) {
 
       .page + .page {
         margin-top: 8mm;
+      }
+
+      .unit-sheet {
+        break-before: page;
+        page-break-before: always;
       }
 
       .topbar {
@@ -610,11 +562,67 @@ export function buildInventoryPdfHtml(unit, now = new Date()) {
           page-break-before: always;
         }
       }
-    </style>
-  </head>
-  <body>
-    <main class="sheet">
-      <section class="page">
+
+      ${additionalCss}
+  `
+}
+
+export function buildUnitCommercialSheetHtml(unit, now = new Date(), options = {}) {
+  const generatedDate = new Intl.DateTimeFormat('es-MX', { dateStyle: 'long', timeStyle: 'short' }).format(now)
+  const brand = toText(unit?.marca)
+  const model = toText(unit?.modelo)
+  const year = toText(unit?.anio)
+  const status = getStatus(unit)
+  const price = getPrice(unit)
+  const location = getLocation(unit)
+  const vinShort = getVinShort(unit) || 'Por confirmar'
+  const { cover, gallery } = getImageSet(unit || {})
+
+  const keyCards = [
+    { label: 'Kilometraje', value: getKilometers(unit || {}) },
+    { label: 'Motor', value: toText(unit?.motor) },
+    { label: 'Transmision', value: toText(unit?.transmision) },
+    { label: 'Ubicacion', value: location },
+    { label: 'Paso', value: toText(unit?.paso) },
+    { label: 'Rodada', value: toText(unit?.rodada) },
+  ]
+
+  const isCompactGallery = gallery.length >= 6
+  const galleryGridClass = isCompactGallery ? 'gallery-grid gallery-grid-compact' : 'gallery-grid'
+
+  const specs = [
+    specRow('Color exterior', unit?.color),
+    specRow('Color interior', unit?.colorInterior),
+    specRow('Eje delantero', unit?.ejeDelantero),
+    specRow('Eje trasero', unit?.ejeTrasero),
+    specRow('Dormitorio', unit?.dormitorio),
+    specRow('Subempresa', unit?.subempresa),
+    specRow('Centro', unit?.centro),
+    specRow('VIN corto', vinShort),
+    specRow('VIN completo', unit?.vinCompleto),
+    specRow('Promocion', unit?.promocion),
+  ].join('')
+
+  const galleryHtml = gallery
+    .map((imageUrl, index) => {
+      const classes = !isCompactGallery && index === 0 ? 'gallery-tile gallery-tile-main' : 'gallery-tile'
+      return `
+        <figure class="${classes}">
+          <img src="${escapeHtml(imageUrl)}" alt="Vista ${index + 1} de la unidad" class="gallery-image" loading="lazy" />
+        </figure>
+      `
+    })
+    .join('')
+
+  const firstPageClasses = ['page']
+  if (options.startOnNewPage) firstPageClasses.push('unit-sheet')
+  if (options.firstPageClassName) firstPageClasses.push(options.firstPageClassName)
+
+  const secondPageClasses = ['page']
+  if (options.secondPageClassName) secondPageClasses.push(options.secondPageClassName)
+
+  return `
+      <section class="${firstPageClasses.join(' ')}">
         <header class="topbar">
           <div class="brand">
             <span class="brand-mark">LAB</span>
@@ -669,7 +677,7 @@ export function buildInventoryPdfHtml(unit, now = new Date()) {
         </section>
       </section>
 
-      <section class="page">
+      <section class="${secondPageClasses.join(' ')}">
         <h2 class="section-eyebrow">Galeria comercial y especificaciones</h2>
 
         <section class="page-two-layout">
@@ -695,6 +703,24 @@ export function buildInventoryPdfHtml(unit, now = new Date()) {
           </div>
         </footer>
       </section>
+  `
+}
+
+export function buildInventoryPdfHtml(unit, now = new Date()) {
+  return `<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="referrer" content="no-referrer" />
+    <title>${escapeHtml(buildInventoryPdfFileBase(unit, now))}</title>
+    <style>
+${buildInventoryPdfStyles()}
+    </style>
+  </head>
+  <body>
+    <main class="sheet">
+      ${buildUnitCommercialSheetHtml(unit, now)}
     </main>
   </body>
 </html>`

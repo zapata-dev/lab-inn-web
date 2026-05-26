@@ -30,6 +30,7 @@ function ExportPromotionsPdfButton({ units, activeChips, disabled = false }) {
   const totalUnits = Array.isArray(units) ? units.length : 0
   const isDisabled = disabled || totalUnits === 0
   const filtersForPdf = useMemo(() => (Array.isArray(activeChips) ? activeChips : []), [activeChips])
+  const showLargeWarning = totalUnits > 25
 
   const handleConfirmExport = async () => {
     if (isDisabled || isExporting) return
@@ -92,6 +93,10 @@ function ExportPromotionsPdfButton({ units, activeChips, disabled = false }) {
     }
   }
 
+  const confirmDescription = showLargeWarning
+    ? `Se generara un PDF con fichas completas de ${totalUnits} unidades filtradas. Este archivo puede tener varias paginas. Deseas continuar?\n\nEste PDF puede tardar en generarse por la cantidad de unidades.`
+    : `Se generara un PDF con fichas completas de ${totalUnits} unidades filtradas. Este archivo puede tener varias paginas. Deseas continuar?`
+
   return (
     <>
       <div className="flex flex-col items-start gap-1">
@@ -102,7 +107,7 @@ function ExportPromotionsPdfButton({ units, activeChips, disabled = false }) {
           className="inline-flex items-center gap-2 rounded-xl border border-lab-primary/25 bg-lab-primary/10 px-4 py-2.5 text-sm font-semibold text-lab-primary transition-all hover:-translate-y-0.5 hover:bg-lab-primary hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
         >
           <FileDown className="size-4" aria-hidden="true" />
-          Exportar catalogo PDF
+          Exportar fichas PDF
         </button>
 
         {isDisabled ? (
@@ -115,8 +120,8 @@ function ExportPromotionsPdfButton({ units, activeChips, disabled = false }) {
       <ConfirmModal
         open={isConfirmOpen}
         title="Exportar catalogo de promociones"
-        description={`Se generara un PDF con ${totalUnits} unidades filtradas. Deseas continuar?`}
-        confirmText="Generar PDF"
+        description={confirmDescription}
+        confirmText="Generar fichas PDF"
         cancelText="Cancelar"
         loading={isExporting}
         onCancel={() => {

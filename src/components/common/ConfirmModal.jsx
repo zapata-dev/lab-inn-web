@@ -14,7 +14,7 @@ function ConfirmModal({
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/55 p-4 backdrop-blur-[1px]" role="dialog" aria-modal="true">
       <div className="w-full max-w-md rounded-2xl border border-lab-border bg-white p-5 shadow-2xl">
         <h3 className="text-xl font-bold text-lab-text">{title}</h3>
-        <p className="mt-2 text-sm leading-relaxed text-lab-muted">{description}</p>
+        <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-lab-muted">{description}</p>
 
         <div className="mt-5 flex items-center justify-end gap-3">
           <button
