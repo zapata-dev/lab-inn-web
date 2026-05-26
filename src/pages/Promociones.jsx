@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import InventoryDetailModal from '../features/inventory/InventoryDetailModal'
 import InventoryFilters from '../features/inventory/InventoryFilters'
+import ExportPromotionsPdfButton from '../features/promotions/ExportPromotionsPdfButton'
 import PromotionCard from '../features/promotions/PromotionCard'
 import {
   fetchInventoryFromCsv,
@@ -324,6 +325,10 @@ function Promociones() {
     [promotionUnits, filters, search, availableFilterDefinitions]
   )
   const activeChips = useMemo(() => getActiveChips(search, filters), [search, filters])
+  const exportChips = useMemo(() => {
+    const allowedKeys = new Set(['search', 'marca', 'anio', 'ubicacion', 'rodada', 'precioMin', 'precioMax'])
+    return activeChips.filter((chip) => allowedKeys.has(chip.key))
+  }, [activeChips])
   const totalPages = useMemo(
     () => Math.max(1, Math.ceil(filteredPromotions.length / pageSize)),
     [filteredPromotions.length, pageSize]
@@ -496,15 +501,22 @@ function Promociones() {
               <p className="text-sm text-lab-muted">Ultima actualizacion: {formatLastUpdated(lastUpdated)}</p>
             </div>
 
-            <button
-              type="button"
-              onClick={() => refreshPromotions(true)}
-              disabled={loading}
-              className="inline-flex items-center gap-2 rounded-xl bg-lab-primary px-5 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              <RefreshCw className={`size-4 ${loading ? 'animate-spin' : ''}`} aria-hidden="true" />
-              {loading ? 'Actualizando promociones...' : 'Actualizar promociones'}
-            </button>
+            <div className="flex flex-col items-end gap-2">
+              <button
+                type="button"
+                onClick={() => refreshPromotions(true)}
+                disabled={loading}
+                className="inline-flex items-center gap-2 rounded-xl bg-lab-primary px-5 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <RefreshCw className={`size-4 ${loading ? 'animate-spin' : ''}`} aria-hidden="true" />
+                {loading ? 'Actualizando promociones...' : 'Actualizar promociones'}
+              </button>
+              <ExportPromotionsPdfButton
+                units={filteredPromotions}
+                activeChips={exportChips}
+                disabled={loading}
+              />
+            </div>
           </div>
 
           <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-lab-muted">
