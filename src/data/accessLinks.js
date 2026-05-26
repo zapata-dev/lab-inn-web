@@ -1,3 +1,6 @@
+import krinoLogo from '../assets/brands/krino.png'
+import salesforceLogo from '../assets/brands/salesforce.png'
+
 export const accessLinks = [
   {
     id: 'inventario',
@@ -46,8 +49,9 @@ export const accessLinks = [
     title: 'Acceso Salesforce',
     description: 'Ingresa al CRM comercial.',
     icon: 'Database',
-    logoUrl: 'https://cdn.simpleicons.org/salesforce/00A1E0',
+    logoUrl: salesforceLogo,
     logoAlt: 'Salesforce',
+    logoClassName: 'inset-0 size-full rounded-2xl bg-transparent object-cover p-0',
     brandColor: 'sky',
     url: 'https://zapata.my.salesforce.com/',
   },
@@ -56,8 +60,9 @@ export const accessLinks = [
     title: 'Acceso Krino',
     description: 'Abre la plataforma Krino.',
     icon: 'ShieldCheck',
-    logoUrl: 'https://cdn.simpleicons.org/openai/412991',
+    logoUrl: krinoLogo,
     logoAlt: 'Krino',
+    logoClassName: 'inset-0 size-full rounded-2xl bg-transparent object-cover p-0',
     brandColor: 'emerald',
     url: 'https://app.krino.ai/',
   },

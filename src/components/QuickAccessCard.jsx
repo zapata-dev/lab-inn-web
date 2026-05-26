@@ -81,6 +81,7 @@ function QuickAccessCard({
   icon,
   logoUrl,
   logoAlt,
+  logoClassName,
   brandColor,
   url,
   to,
@@ -135,7 +136,7 @@ function QuickAccessCard({
             alt={logoAlt || title}
             className={`absolute inset-1 m-auto size-6 rounded-sm bg-white object-contain p-0.5 ${
               isDisabled ? 'opacity-60 grayscale' : ''
-            }`}
+            } ${logoClassName || ''}`}
             loading="lazy"
             onError={(event) => {
               event.currentTarget.style.display = 'none'

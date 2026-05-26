@@ -31,6 +31,7 @@ function Home() {
               icon={access.icon}
               logoUrl={access.logoUrl}
               logoAlt={access.logoAlt}
+              logoClassName={access.logoClassName}
               brandColor={access.brandColor}
               url={access.url}
               to={access.to}
