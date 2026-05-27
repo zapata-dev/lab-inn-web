@@ -2,7 +2,13 @@
   buildInventoryPdfStyles,
   buildUnitCommercialSheetHtml,
 } from '../inventory/inventoryPdfTemplate'
-import { buildPromotionDifferencesText, getPromotionCoverImage } from '../../utils/promotionUtils'
+import {
+  buildPromotionDifferencesText,
+  getPromotionCoverImage,
+  getUnitKilometers,
+  getUnitVinShort,
+} from '../../utils/promotionUtils'
+import { getSubempresa } from '../../utils/inventoryUnitUtils'
 
 function formatStamp(now) {
   const year = String(now.getFullYear())
@@ -112,10 +118,27 @@ export function buildPromotionSummaryPdfHtml(group, now = new Date()) {
   const generatedDate = new Intl.DateTimeFormat('es-MX', { dateStyle: 'long', timeStyle: 'short' }).format(now)
   const count = Number(group?.count) || (Array.isArray(group?.units) ? group.units.length : 0)
   const models = Array.isArray(group?.models) ? group.models : []
+  const units = Array.isArray(group?.units) ? group.units : []
   const promoText = String(group?.promoText ?? '').trim() || 'Por confirmar'
-  const representativeUnit = group?.representativeUnit ?? (Array.isArray(group?.units) ? group.units[0] : null)
+  const representativeUnit = group?.representativeUnit ?? units[0] ?? null
   const coverImage = String(group?.coverImage || getPromotionCoverImage(representativeUnit) || '').trim()
   const differencesText = buildPromotionDifferencesText(group) || 'Sin diferencias relevantes.'
+
+  const unitRowsHtml = units.length
+    ? units
+        .map((unit) => {
+          const subempresa = String(getSubempresa(unit) ?? '').trim()
+          return `
+            <tr>
+              <td>${escapeHtml(getUnitVinShort(unit))}</td>
+              <td>${escapeHtml(getUnitKilometers(unit))}</td>
+              <td>${escapeHtml(formatMoney(unit?.precio))}</td>
+              <td>${escapeHtml(subempresa || '—')}</td>
+            </tr>
+          `
+        })
+        .join('')
+    : '<tr><td colspan="4">Sin unidades disponibles</td></tr>'
 
   return `<!doctype html>
 <html lang="es">
@@ -127,35 +150,39 @@ export function buildPromotionSummaryPdfHtml(group, now = new Date()) {
     <style>
 ${buildInventoryPdfStyles(`
       .summary-page {
-        min-height: 235mm;
+        min-height: auto;
+        max-height: 260mm;
+        overflow: hidden;
+        padding: 6.5mm;
       }
       .summary-grid {
-        margin-top: 14px;
+        margin-top: 8px;
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 10px;
+        gap: 6px;
       }
       .summary-cover {
-        margin-top: 12px;
+        margin-top: 8px;
         border: 1px solid var(--line);
-        border-radius: 14px;
+        border-radius: 10px;
         overflow: hidden;
-        min-height: 180px;
+        min-height: 112px;
+        max-height: 112px;
         background: #f4f8ff;
       }
       .summary-cover img {
         width: 100%;
         height: 100%;
-        min-height: 180px;
+        min-height: 112px;
         object-fit: cover;
         display: block;
       }
       .summary-cover-placeholder {
-        min-height: 180px;
+        min-height: 112px;
         display: grid;
         place-items: center;
         color: var(--muted);
-        font-size: 13px;
+        font-size: 11px;
         font-weight: 600;
         background:
           linear-gradient(135deg, #edf3fb 25%, transparent 25%) -12px 0 / 24px 24px,
@@ -165,40 +192,77 @@ ${buildInventoryPdfStyles(`
       }
       .summary-card {
         border: 1px solid var(--line);
-        border-radius: 12px;
+        border-radius: 10px;
         background: #f8fbff;
-        padding: 10px;
+        padding: 7px 8px;
       }
       .summary-label {
         margin: 0;
         color: var(--muted);
-        font-size: 11px;
+        font-size: 9px;
         text-transform: uppercase;
         letter-spacing: 0.08em;
       }
       .summary-value {
-        margin: 4px 0 0;
-        font-size: 15px;
+        margin: 2px 0 0;
+        font-size: 12px;
         font-weight: 700;
       }
       .summary-section {
-        margin-top: 12px;
+        margin-top: 8px;
         border: 1px solid var(--line);
-        border-radius: 12px;
-        padding: 10px;
+        border-radius: 10px;
+        padding: 7px 8px;
       }
       .summary-title {
         margin: 0;
-        font-size: 12px;
+        font-size: 10px;
         text-transform: uppercase;
         letter-spacing: 0.08em;
         color: var(--muted);
       }
       .summary-body {
-        margin: 6px 0 0;
-        font-size: 13px;
-        line-height: 1.45;
+        margin: 4px 0 0;
+        font-size: 11px;
+        line-height: 1.35;
         color: var(--ink);
+      }
+      .summary-units-table {
+        width: 100%;
+        margin-top: 4px;
+        border-collapse: collapse;
+        table-layout: fixed;
+      }
+      .summary-units-table th,
+      .summary-units-table td {
+        border-bottom: 1px solid #e7edf6;
+        text-align: left;
+        padding: 3px 2px;
+        font-size: 10px;
+        line-height: 1.2;
+        vertical-align: top;
+      }
+      .summary-units-table th {
+        color: var(--muted);
+        font-size: 9px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+      .summary-note {
+        margin: 5px 0 0;
+        font-size: 9px;
+        line-height: 1.25;
+        color: var(--muted);
+      }
+
+      @media print {
+        .sheet {
+          padding: 6mm;
+        }
+        .summary-page {
+          box-shadow: none;
+          border: 0;
+        }
       }
 `)}
     </style>
@@ -247,8 +311,25 @@ ${buildInventoryPdfStyles(`
         </div>
 
         <section class="summary-section">
-          <p class="summary-title">Modelos</p>
+          <p class="summary-title">Modelo</p>
           <p class="summary-body">${escapeHtml(models.join(' / ') || 'Por confirmar')}</p>
+        </section>
+
+        <section class="summary-section">
+          <p class="summary-title">Unidades incluidas</p>
+          <table class="summary-units-table">
+            <thead>
+              <tr>
+                <th>VIN corto</th>
+                <th>Kilometraje</th>
+                <th>Precio</th>
+                <th>Subempresa</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${unitRowsHtml}
+            </tbody>
+          </table>
         </section>
 
         <section class="summary-section">
@@ -259,6 +340,7 @@ ${buildInventoryPdfStyles(`
         <section class="summary-section">
           <p class="summary-title">Texto comercial de promocion</p>
           <p class="summary-body">${escapeHtml(promoText)}</p>
+          <p class="summary-note">Informacion sujeta a disponibilidad y confirmacion comercial.</p>
         </section>
       </section>
     </main>
