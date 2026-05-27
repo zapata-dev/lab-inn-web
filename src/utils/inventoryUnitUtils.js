@@ -10,13 +10,20 @@ function toCanonicalAgency(value) {
   const raw = String(value ?? '').trim()
   if (!raw) return ''
 
-  const normalized = normalizeText(raw)
+  const normalized = normalizeText(raw).replace(/\s+/g, ' ')
 
-  if (normalized.includes('queretaro') || normalized.includes('qro')) return 'Querétaro'
-  if (normalized.includes('leon')) return 'León'
-  if (normalized.includes('monterrey') || normalized.includes('mty')) return 'Monterrey'
+  if (normalized.includes('camiones tlanepantla')) return 'CAMIONES TLALNEPANTLA'
+  if (normalized.includes('camiones guadalajara otero')) return 'CAMIONES GUADALAJARA OTERO'
+  if (normalized.includes('camiones aeropuerto')) return 'CAMIONES AEROPUERTO'
+  if (normalized.includes('camiones leon')) return 'CAMIONES LEON'
+  if (normalized.includes('camiones queretaro') || normalized.includes('camiones qro'))
+    return 'CAMIONES QUERETARO'
+  if (normalized.includes('camiones celaya')) return 'CAMIONES CELAYA'
+  if (normalized.includes('camiones tampico')) return 'CAMIONES TAMPICO'
+  if (normalized.includes('camiones monterrey') || normalized.includes('camiones mty'))
+    return 'CAMIONES MONTERREY'
 
-  return raw
+  return raw.replace(/\s+/g, ' ').trim()
 }
 
 function hasText(value) {
@@ -40,7 +47,17 @@ export function getSubempresa(unit) {
 }
 
 export function getCodigo(unit) {
-  return String(unit?.codigo ?? unit?.Codigo ?? '').trim()
+  return String(
+    unit?.codigo ??
+      unit?.Codigo ??
+      unit?.['Código'] ??
+      unit?.CODIGO ??
+      unit?.raw?.codigo ??
+      unit?.raw?.Codigo ??
+      unit?.raw?.['Código'] ??
+      unit?.raw?.CODIGO ??
+      ''
+  ).trim()
 }
 
 export function isPromotionUnit(unit) {

@@ -21,7 +21,7 @@ const FILTER_LABELS = INVENTORY_FILTER_FIELDS.reduce((accumulator, field) => {
 }, {})
 const DESKTOP_PAGE_SIZE = 12
 const MOBILE_PAGE_SIZE = 6
-const PROMOTION_AGENCIES = ['Querétaro', 'León', 'Monterrey', 'Todas las agencias']
+const ALL_AGENCIES_LABEL = 'Todas las agencias'
 
 function normalizeText(value) {
   return String(value ?? '')
@@ -125,9 +125,24 @@ function detectAvailableFilters(units) {
 
 function applyAgencySelection(units, selectedAgency) {
   if (!selectedAgency) return []
-  if (selectedAgency === 'Todas las agencias') return units
+  if (selectedAgency === ALL_AGENCIES_LABEL) return units
 
   return units.filter((unit) => getUnitAgency(unit) === selectedAgency)
+}
+
+function buildAgencyOptions(units) {
+  const byKey = new Map()
+
+  units.forEach((unit) => {
+    const agency = String(getUnitAgency(unit) ?? '').trim()
+    if (!agency) return
+
+    const normalized = normalizeText(agency)
+    if (!byKey.has(normalized)) byKey.set(normalized, agency)
+  })
+
+  const dynamicAgencies = [...byKey.values()].sort((first, second) => first.localeCompare(second, 'es'))
+  return [...dynamicAgencies, ALL_AGENCIES_LABEL]
 }
 
 function removeDefinitionFromFilters(filters, definition) {
@@ -335,6 +350,7 @@ function Promociones() {
   const hasPaginatedOnce = useRef(false)
 
   const promotionUnits = useMemo(() => inventory.filter(hasPromotion), [inventory])
+  const agencyOptions = useMemo(() => buildAgencyOptions(promotionUnits), [promotionUnits])
   const agencyScopedPromotionUnits = useMemo(
     () => applyAgencySelection(promotionUnits, selectedAgency),
     [promotionUnits, selectedAgency]
@@ -370,6 +386,19 @@ function Promociones() {
     const start = (currentPage - 1) * pageSize
     return filteredPromotions.slice(start, start + pageSize)
   }, [filteredPromotions, currentPage, pageSize])
+
+  useEffect(() => {
+    if (!selectedAgency) return
+    if (agencyOptions.includes(selectedAgency)) return
+    setSelectedAgency('')
+  }, [selectedAgency, agencyOptions])
+
+  useEffect(() => {
+    const agenciesWithPromos = agencyOptions.filter((agency) => agency !== ALL_AGENCIES_LABEL)
+    console.info('[LAB PROMOS] Total inventory:', inventory.length)
+    console.info('[LAB PROMOS] Units with codigo:', promotionUnits.length)
+    console.info('[LAB PROMOS] Agencies with promos:', agenciesWithPromos)
+  }, [inventory.length, promotionUnits.length, agencyOptions])
 
   useEffect(() => {
     const media = window.matchMedia('(max-width: 767px)')
@@ -482,7 +511,6 @@ function Promociones() {
     if (cache.items.length > 0) {
       setInventory(cache.items)
       setLastUpdated(cache.lastUpdated)
-      return
     }
 
     refreshPromotions(false)
@@ -595,7 +623,7 @@ function Promociones() {
               El catalogo mostrara solo unidades con codigo de promocion valido.
             </p>
             <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              {PROMOTION_AGENCIES.map((agency) => (
+              {agencyOptions.map((agency) => (
                 <button
                   key={agency}
                   type="button"

@@ -63,7 +63,7 @@ const BASE_HEADER_MAP = {
 
 const OPTIONAL_COLUMN_ALIASES = {
   subempresa: ['subempresa'],
-  codigo: ['codigo', 'codigoPromocion', 'codigoPromo'],
+  codigo: ['codigo', 'Codigo', 'Código', 'CODIGO', 'codigoPromocion', 'codigoPromo'],
   cabina: ['cabina'],
   configuracion: ['configuracion'],
   tipoUnidad: ['tipoUnidad', 'tipoDeUnidad', 'tipo'],
@@ -198,6 +198,20 @@ function splitImageUrls(value) {
   return [...new Set(urls)]
 }
 
+function getCodigoFromCachedUnit(unit) {
+  return String(
+    unit?.codigo ??
+      unit?.Codigo ??
+      unit?.['Código'] ??
+      unit?.CODIGO ??
+      unit?.raw?.codigo ??
+      unit?.raw?.Codigo ??
+      unit?.raw?.['Código'] ??
+      unit?.raw?.CODIGO ??
+      ''
+  ).trim()
+}
+
 function mapRowToUnit(rawRow, index) {
   const precioNumber = parseNumber(rawRow.precioRaw)
   const kilometrosNumber = parseNumber(rawRow.kilometrosRaw)
@@ -216,6 +230,7 @@ function mapRowToUnit(rawRow, index) {
   const cilindros = normalizeIntegerLike(rawRow.cilindros)
   const vinCompleto = String(rawRow.vinCompleto ?? '').trim()
   const vin = String(rawRow.vin ?? '').trim()
+  const codigo = getFirstNotEmpty(rawRow, ['codigo', 'Codigo', 'Código', 'CODIGO', 'codigoPromocion', 'codigoPromo'])
 
   return {
     id: vinCompleto || vin || `unit-${index + 1}`,
@@ -237,7 +252,7 @@ function mapRowToUnit(rawRow, index) {
     colorInterior: String(rawRow.colorInterior ?? '').trim(),
     cilindros,
     subempresa: String(rawRow.subempresa ?? '').trim(),
-    codigo: String(rawRow.codigo ?? '').trim(),
+    codigo: String(codigo).trim(),
     promocion: String(rawRow.promocion ?? '').trim(),
     ubicacion: String(rawRow.ubicacionFisica ?? '').trim() || String(rawRow.centro ?? '').trim(),
     centro: String(rawRow.centro ?? '').trim(),
@@ -302,7 +317,13 @@ export function getInventoryCache() {
 
   try {
     const items = JSON.parse(rawCache)
-    return { items: Array.isArray(items) ? items : [], lastUpdated: lastUpdated ?? null }
+    const normalizedItems = Array.isArray(items)
+      ? items.map((unit) => ({
+          ...unit,
+          codigo: getCodigoFromCachedUnit(unit),
+        }))
+      : []
+    return { items: normalizedItems, lastUpdated: lastUpdated ?? null }
   } catch (error) {
     return { items: [], lastUpdated: lastUpdated ?? null }
   }
