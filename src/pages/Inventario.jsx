@@ -1,6 +1,7 @@
 import { ArrowLeft, ChevronLeft, ChevronRight, RefreshCw, Search } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
+import ExportInventoryCatalogPdfButton from '../features/inventory/ExportInventoryCatalogPdfButton'
 import InventoryDetailModal from '../features/inventory/InventoryDetailModal'
 import InventoryFilters from '../features/inventory/InventoryFilters'
 import InventoryGrid from '../features/inventory/InventoryGrid'
@@ -490,15 +491,22 @@ function Inventario() {
               </p>
             </div>
 
-            <button
-              type="button"
-              onClick={() => refreshInventory(true)}
-              disabled={loading}
-              className="inline-flex items-center gap-2 rounded-xl bg-lab-primary px-5 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              <RefreshCw className={`size-4 ${loading ? 'animate-spin' : ''}`} aria-hidden="true" />
-              {loading ? 'Actualizando inventario...' : 'Actualizar inventario'}
-            </button>
+            <div className="flex flex-col items-end gap-2">
+              <button
+                type="button"
+                onClick={() => refreshInventory(true)}
+                disabled={loading}
+                className="inline-flex items-center gap-2 rounded-xl bg-lab-primary px-5 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <RefreshCw className={`size-4 ${loading ? 'animate-spin' : ''}`} aria-hidden="true" />
+                {loading ? 'Actualizando inventario...' : 'Actualizar inventario'}
+              </button>
+              <ExportInventoryCatalogPdfButton
+                units={filteredUnits}
+                activeChips={activeChips}
+                disabled={loading}
+              />
+            </div>
           </div>
 
           <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-lab-muted">

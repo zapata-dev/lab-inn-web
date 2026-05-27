@@ -134,6 +134,70 @@ export function buildInventoryPdfPrintPath(unit) {
   return `/print/${normalizeToken(unit?.marca, 'UNIDAD').toLowerCase()}/${normalizeToken(unit?.modelo, 'FICHA').toLowerCase()}`
 }
 
+function buildCatalogFilterChips(activeFilters) {
+  if (!Array.isArray(activeFilters) || activeFilters.length === 0) {
+    return '<span class="catalog-chip">Sin filtros aplicados</span>'
+  }
+
+  return activeFilters
+    .map((item) => `<span class="catalog-chip">${escapeHtml(`${item.label}: ${item.value}`)}</span>`)
+    .join('')
+}
+
+function buildCatalogCoverHtml(unitsCount, generatedDate, activeFilters) {
+  return `
+      <section class="page catalog-cover">
+        <header class="catalog-brand-row">
+          <div class="brand">
+            <span class="brand-mark">LAB</span>
+            <div>
+              <h1 class="brand-title">Mi Oficina Virtual</h1>
+              <p class="brand-subtitle">Catalogo de inventario nacional</p>
+            </div>
+          </div>
+          <div class="meta">
+            <p class="meta-date">Generado: ${escapeHtml(generatedDate)}</p>
+          </div>
+        </header>
+
+        <h2 class="catalog-title">Catalogo comercial de unidades</h2>
+
+        <div class="catalog-meta-grid">
+          <article class="catalog-meta-card">
+            <p class="catalog-meta-label">Unidades incluidas</p>
+            <p class="catalog-meta-value">${unitsCount}</p>
+          </article>
+          <article class="catalog-meta-card">
+            <p class="catalog-meta-label">Contacto comercial</p>
+            <p class="catalog-meta-value">${escapeHtml(CONTACT_EMAIL)}</p>
+          </article>
+        </div>
+
+        <section class="catalog-filters">
+          <p class="catalog-filters-title">Filtros aplicados</p>
+          <div class="catalog-chip-list">${buildCatalogFilterChips(activeFilters)}</div>
+        </section>
+
+        <footer class="catalog-disclaimer">
+          Informacion sujeta a disponibilidad y confirmacion comercial.
+        </footer>
+      </section>
+  `
+}
+
+export function buildInventoryCatalogPdfFileBase(unitsCount, now = new Date()) {
+  const total = Number.isFinite(unitsCount) && unitsCount >= 0 ? unitsCount : 0
+  return `CATALOGO_INVENTARIO_${buildStamp(now)}_${total}_UNIDADES`
+}
+
+export function buildInventoryCatalogPdfFileName(unitsCount, now = new Date()) {
+  return `${buildInventoryCatalogPdfFileBase(unitsCount, now)}.pdf`
+}
+
+export function buildInventoryCatalogPdfPrintPath(unitsCount = 0) {
+  return `/print/inventario/catalogo-${Math.max(0, Number(unitsCount) || 0)}`
+}
+
 export function buildInventoryPdfStyles(additionalCss = '') {
   return `
       html,
@@ -721,6 +785,125 @@ ${buildInventoryPdfStyles()}
   <body>
     <main class="sheet">
       ${buildUnitCommercialSheetHtml(unit, now)}
+    </main>
+  </body>
+</html>`
+}
+
+export function buildInventoryCatalogPdfHtml(units, activeFilters = [], now = new Date()) {
+  const list = Array.isArray(units) ? units : []
+  const generatedDate = new Intl.DateTimeFormat('es-MX', { dateStyle: 'long', timeStyle: 'short' }).format(now)
+
+  const additionalCss = `
+      .catalog-cover {
+        min-height: 235mm;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .catalog-brand-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .catalog-title {
+        margin: 30px 0 10px;
+        font-size: 42px;
+        line-height: 1;
+        letter-spacing: -0.02em;
+      }
+
+      .catalog-meta-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .catalog-meta-card {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: #f8fbff;
+        padding: 10px;
+      }
+
+      .catalog-meta-label {
+        margin: 0;
+        color: var(--muted);
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      .catalog-meta-value {
+        margin: 4px 0 0;
+        font-size: 16px;
+        font-weight: 700;
+      }
+
+      .catalog-filters {
+        margin-top: 18px;
+      }
+
+      .catalog-filters-title {
+        margin: 0 0 8px;
+        font-size: 12px;
+        text-transform: uppercase;
+        color: var(--muted);
+        letter-spacing: 0.08em;
+      }
+
+      .catalog-chip-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .catalog-chip {
+        border-radius: 999px;
+        border: 1px solid #c8daf7;
+        background: var(--primary-soft);
+        color: var(--primary);
+        padding: 5px 10px;
+        font-size: 11px;
+        font-weight: 600;
+      }
+
+      .catalog-disclaimer {
+        margin-top: auto;
+        border-top: 1px solid var(--line);
+        padding-top: 10px;
+        color: var(--muted);
+        font-size: 11px;
+      }
+
+      @media print {
+        .catalog-cover {
+          page-break-after: always;
+          break-after: page;
+        }
+      }
+  `
+
+  const unitsHtml = list
+    .map((unit) => buildUnitCommercialSheetHtml(unit, now, { startOnNewPage: true }))
+    .join('')
+
+  return `<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="referrer" content="no-referrer" />
+    <title>${escapeHtml(buildInventoryCatalogPdfFileBase(list.length, now))}</title>
+    <style>
+${buildInventoryPdfStyles(additionalCss)}
+    </style>
+  </head>
+  <body>
+    <main class="sheet">
+      ${buildCatalogCoverHtml(list.length, generatedDate, activeFilters)}
+      ${unitsHtml}
     </main>
   </body>
 </html>`

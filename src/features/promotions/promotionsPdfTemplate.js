@@ -189,20 +189,21 @@ ${buildInventoryPdfStyles(`
         border: 1px solid var(--line);
         border-radius: 12px;
         overflow: hidden;
-        height: 220px;
-        max-height: 220px;
-        background: #f4f8ff;
+        height: 200px;
+        max-height: 200px;
+        background: #f5f7fb;
         break-inside: avoid;
         page-break-inside: avoid;
       }
       .summary-cover img {
         width: 100%;
         height: 100%;
-        object-fit: cover;
+        object-fit: contain;
+        object-position: center;
         display: block;
       }
       .summary-cover-placeholder {
-        height: 220px;
+        height: 200px;
         display: grid;
         place-items: center;
         color: var(--muted);
