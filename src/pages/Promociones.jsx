@@ -12,7 +12,7 @@ import {
   saveInventoryCache,
 } from '../services/inventoryService'
 import { hasPromotion } from '../utils/promotionUtils'
-import { getUnitFieldValue } from '../utils/inventoryUnitUtils'
+import { getUnitAgency, getUnitFieldValue } from '../utils/inventoryUnitUtils'
 
 const SEARCHABLE_KEYS = ['marca', 'modelo', 'vin', 'vinCompleto', 'motor', 'tipoUnidad', 'descripcion', 'placas']
 const FILTER_LABELS = INVENTORY_FILTER_FIELDS.reduce((accumulator, field) => {
@@ -21,6 +21,7 @@ const FILTER_LABELS = INVENTORY_FILTER_FIELDS.reduce((accumulator, field) => {
 }, {})
 const DESKTOP_PAGE_SIZE = 12
 const MOBILE_PAGE_SIZE = 6
+const PROMOTION_AGENCIES = ['Querétaro', 'León', 'Monterrey', 'Todas las agencias']
 
 function normalizeText(value) {
   return String(value ?? '')
@@ -112,6 +113,7 @@ function hasFieldValue(unit, definition) {
 
 function detectAvailableFilters(units) {
   const detected = INVENTORY_FILTER_FIELDS.filter((definition) =>
+    definition.key !== 'promocion' &&
     units.some((unit) => hasFieldValue(unit, definition))
   )
   if (!detected.some((definition) => definition.key === 'subempresa')) {
@@ -119,6 +121,13 @@ function detectAvailableFilters(units) {
     if (subempresaDefinition) detected.push(subempresaDefinition)
   }
   return detected
+}
+
+function applyAgencySelection(units, selectedAgency) {
+  if (!selectedAgency) return []
+  if (selectedAgency === 'Todas las agencias') return units
+
+  return units.filter((unit) => getUnitAgency(unit) === selectedAgency)
 }
 
 function removeDefinitionFromFilters(filters, definition) {
@@ -320,25 +329,39 @@ function Promociones() {
   const [lastUpdated, setLastUpdated] = useState(null)
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState({ type: '', text: '' })
+  const [selectedAgency, setSelectedAgency] = useState('')
   const [pageSize, setPageSize] = useState(DESKTOP_PAGE_SIZE)
   const [currentPage, setCurrentPage] = useState(1)
   const hasPaginatedOnce = useRef(false)
 
   const promotionUnits = useMemo(() => inventory.filter(hasPromotion), [inventory])
-  const availableFilterDefinitions = useMemo(() => detectAvailableFilters(promotionUnits), [promotionUnits])
+  const agencyScopedPromotionUnits = useMemo(
+    () => applyAgencySelection(promotionUnits, selectedAgency),
+    [promotionUnits, selectedAgency]
+  )
+  const availableFilterDefinitions = useMemo(
+    () => detectAvailableFilters(agencyScopedPromotionUnits),
+    [agencyScopedPromotionUnits]
+  )
   const optionsByKey = useMemo(
-    () => buildDependentSelectOptions(promotionUnits, filters, search, availableFilterDefinitions),
-    [promotionUnits, filters, search, availableFilterDefinitions]
+    () => buildDependentSelectOptions(agencyScopedPromotionUnits, filters, search, availableFilterDefinitions),
+    [agencyScopedPromotionUnits, filters, search, availableFilterDefinitions]
   )
   const filteredPromotions = useMemo(
-    () => applyFilters(promotionUnits, filters, search, availableFilterDefinitions),
-    [promotionUnits, filters, search, availableFilterDefinitions]
+    () =>
+      selectedAgency
+        ? applyFilters(agencyScopedPromotionUnits, filters, search, availableFilterDefinitions)
+        : [],
+    [selectedAgency, agencyScopedPromotionUnits, filters, search, availableFilterDefinitions]
   )
   const activeChips = useMemo(() => getActiveChips(search, filters), [search, filters])
   const exportChips = useMemo(() => {
     const allowedKeys = new Set(['search', 'marca', 'anio', 'ubicacion', 'rodada', 'precioMin', 'precioMax'])
-    return activeChips.filter((chip) => allowedKeys.has(chip.key))
-  }, [activeChips])
+    const chips = activeChips.filter((chip) => allowedKeys.has(chip.key))
+
+    if (!selectedAgency) return chips
+    return [{ key: 'agencia', label: 'Agencia', value: selectedAgency }, ...chips]
+  }, [activeChips, selectedAgency])
   const totalPages = useMemo(
     () => Math.max(1, Math.ceil(filteredPromotions.length / pageSize)),
     [filteredPromotions.length, pageSize]
@@ -402,7 +425,7 @@ function Promociones() {
 
   useEffect(() => {
     setCurrentPage(1)
-  }, [search, filters])
+  }, [search, filters, selectedAgency])
 
   useEffect(() => {
     setCurrentPage((previous) => Math.min(previous, totalPages))
@@ -469,6 +492,13 @@ function Promociones() {
     setFilters((previous) => ({ ...previous, [key]: value }))
   }
 
+  const handleSelectAgency = (agency) => {
+    setSelectedAgency(agency)
+    setSearch('')
+    setFilters({})
+    setCurrentPage(1)
+  }
+
   const handleRemoveChip = (key) => {
     if (key === 'search') {
       setSearch('')
@@ -521,10 +551,19 @@ function Promociones() {
                 <RefreshCw className={`size-4 ${loading ? 'animate-spin' : ''}`} aria-hidden="true" />
                 {loading ? 'Actualizando promociones...' : 'Actualizar promociones'}
               </button>
+              {selectedAgency ? (
+                <button
+                  type="button"
+                  onClick={() => handleSelectAgency('')}
+                  className="rounded-xl border border-lab-border px-4 py-2 text-xs font-semibold text-lab-text transition-colors hover:border-lab-primary/40 hover:text-lab-primary"
+                >
+                  Cambiar agencia
+                </button>
+              ) : null}
               <ExportPromotionsPdfButton
                 units={filteredPromotions}
                 activeChips={exportChips}
-                disabled={loading}
+                disabled={loading || !selectedAgency}
               />
             </div>
           </div>
@@ -532,12 +571,16 @@ function Promociones() {
           <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-lab-muted">
             <span className="inline-flex items-center gap-2 rounded-full bg-lab-bg px-3 py-1">
               <Search className="size-4" aria-hidden="true" />
-              {filteredPromotions.length} promociones vigentes
+              {selectedAgency
+                ? `${filteredPromotions.length} promociones vigentes`
+                : 'Selecciona una agencia para ver promociones'}
             </span>
             <span className="rounded-full bg-lab-bg px-3 py-1">Total con promocion: {promotionUnits.length}</span>
-            <span className="rounded-full bg-lab-bg px-3 py-1">
-              Mostrando {pageUnits.length} de {filteredPromotions.length} en esta pagina
-            </span>
+            {selectedAgency ? (
+              <span className="rounded-full bg-lab-bg px-3 py-1">
+                Mostrando {pageUnits.length} de {filteredPromotions.length} en esta pagina
+              </span>
+            ) : null}
           </div>
         </header>
 
@@ -545,52 +588,73 @@ function Promociones() {
           <p className={`rounded-xl border px-4 py-3 text-sm font-medium ${messageClass}`}>{message.text}</p>
         ) : null}
 
-        <section className="grid items-start gap-5 lg:grid-cols-[320px_minmax(0,1fr)]">
-          <InventoryFilters
-            search={search}
-            onSearchChange={setSearch}
-            filters={filters}
-            filterDefinitions={availableFilterDefinitions}
-            optionsByKey={optionsByKey}
-            onFilterChange={handleFilterChange}
-            onReset={() => {
-              setSearch('')
-              setFilters({})
-              setCurrentPage(1)
-            }}
-            activeChips={activeChips}
-            onRemoveChip={handleRemoveChip}
-            resultCount={filteredPromotions.length}
-          />
+        {!selectedAgency ? (
+          <section className="rounded-2xl border border-lab-border bg-white p-6 shadow-sm">
+            <h2 className="text-xl font-bold text-lab-text">Selecciona una agencia</h2>
+            <p className="mt-1 text-sm text-lab-muted">
+              El catalogo mostrara solo unidades con codigo de promocion valido.
+            </p>
+            <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {PROMOTION_AGENCIES.map((agency) => (
+                <button
+                  key={agency}
+                  type="button"
+                  onClick={() => handleSelectAgency(agency)}
+                  className="rounded-xl border border-lab-border bg-white px-4 py-3 text-sm font-semibold text-lab-text transition-all hover:-translate-y-0.5 hover:border-lab-primary/40 hover:text-lab-primary"
+                >
+                  {agency}
+                </button>
+              ))}
+            </div>
+          </section>
+        ) : (
+          <section className="grid items-start gap-5 lg:grid-cols-[320px_minmax(0,1fr)]">
+            <InventoryFilters
+              search={search}
+              onSearchChange={setSearch}
+              filters={filters}
+              filterDefinitions={availableFilterDefinitions}
+              optionsByKey={optionsByKey}
+              onFilterChange={handleFilterChange}
+              onReset={() => {
+                setSearch('')
+                setFilters({})
+                setCurrentPage(1)
+              }}
+              activeChips={activeChips}
+              onRemoveChip={handleRemoveChip}
+              resultCount={filteredPromotions.length}
+            />
 
-          <div className="space-y-4">
-            {loading && promotionUnits.length === 0 ? (
-              <PromotionSkeleton />
-            ) : promotionUnits.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-lab-border bg-white p-10 text-center shadow-sm">
-                <h3 className="text-xl font-semibold text-lab-text">No hay promociones vigentes por ahora.</h3>
-                <p className="mt-2 text-sm text-lab-muted">
-                  Cuando el inventario tenga una promocion valida en el CSV, aparecera automaticamente aqui.
-                </p>
-              </div>
-            ) : filteredPromotions.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-lab-border bg-white p-10 text-center shadow-sm">
-                <h3 className="text-xl font-semibold text-lab-text">No encontramos promociones con esos filtros.</h3>
-                <p className="mt-2 text-sm text-lab-muted">Prueba limpiando filtros para ver mas opciones.</p>
-              </div>
-            ) : (
-              <section className="grid items-stretch gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                {pageUnits.map((unit) => (
-                  <PromotionCard key={unit.id} unit={unit} onViewDetail={setSelectedUnit} />
-                ))}
-              </section>
-            )}
+            <div className="space-y-4">
+              {loading && agencyScopedPromotionUnits.length === 0 ? (
+                <PromotionSkeleton />
+              ) : agencyScopedPromotionUnits.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-lab-border bg-white p-10 text-center shadow-sm">
+                  <h3 className="text-xl font-semibold text-lab-text">No hay promociones para esta agencia.</h3>
+                  <p className="mt-2 text-sm text-lab-muted">
+                    Prueba con otra agencia o revisa que las unidades tengan codigo lleno.
+                  </p>
+                </div>
+              ) : filteredPromotions.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-lab-border bg-white p-10 text-center shadow-sm">
+                  <h3 className="text-xl font-semibold text-lab-text">No encontramos promociones con esos filtros.</h3>
+                  <p className="mt-2 text-sm text-lab-muted">Prueba limpiando filtros para ver mas opciones.</p>
+                </div>
+              ) : (
+                <section className="grid items-stretch gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                  {pageUnits.map((unit) => (
+                    <PromotionCard key={unit.id} unit={unit} onViewDetail={setSelectedUnit} />
+                  ))}
+                </section>
+              )}
 
-            {filteredPromotions.length > 0 ? (
-              <Pagination currentPage={currentPage} totalPages={totalPages} onChange={setCurrentPage} />
-            ) : null}
-          </div>
-        </section>
+              {filteredPromotions.length > 0 ? (
+                <Pagination currentPage={currentPage} totalPages={totalPages} onChange={setCurrentPage} />
+              ) : null}
+            </div>
+          </section>
+        )}
       </div>
 
       <InventoryDetailModal
