@@ -12,6 +12,15 @@ function formatStamp(now) {
   return `${year}${month}${day}-${hours}${minutes}`
 }
 
+function formatMoney(value) {
+  if (!Number.isFinite(value) || value <= 0) return 'Por confirmar'
+  return new Intl.NumberFormat('es-MX', {
+    style: 'currency',
+    currency: 'MXN',
+    maximumFractionDigits: 0,
+  }).format(value)
+}
+
 function escapeHtml(value) {
   return String(value ?? '')
     .replaceAll('&', '&amp;')
@@ -82,6 +91,148 @@ export function buildPromotionsPdfFileName(unitsCount, now = new Date()) {
 
 export function buildPromotionsPdfPrintPath(unitsCount = 0) {
   return `/print/promociones/fichas-${Math.max(0, Number(unitsCount) || 0)}`
+}
+
+export function buildPromotionSummaryPdfFileName(group, now = new Date()) {
+  const safeAgency = String(group?.agency ?? 'SIN_AGENCIA')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^A-Za-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .toUpperCase()
+  const safeCode = String(group?.code ?? 'SIN_CODIGO')
+    .replace(/[^A-Za-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .toUpperCase()
+  return `RESUMEN_PROMOCION_${safeAgency || 'SIN_AGENCIA'}_${safeCode || 'SIN_CODIGO'}_${formatStamp(now)}.pdf`
+}
+
+export function buildPromotionSummaryPdfHtml(group, now = new Date()) {
+  const generatedDate = new Intl.DateTimeFormat('es-MX', { dateStyle: 'long', timeStyle: 'short' }).format(now)
+  const count = Number(group?.count) || (Array.isArray(group?.units) ? group.units.length : 0)
+  const models = Array.isArray(group?.models) ? group.models : []
+  const motors = Array.isArray(group?.motors) ? group.motors : []
+  const rodadas = Array.isArray(group?.rodadas) ? group.rodadas : []
+  const pasos = Array.isArray(group?.pasos) ? group.pasos : []
+  const years = Array.isArray(group?.years) ? group.years : []
+  const promoText = String(group?.promoText ?? '').trim() || 'Por confirmar'
+
+  return `<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="referrer" content="no-referrer" />
+    <title>${escapeHtml(buildPromotionSummaryPdfFileName(group, now).replace('.pdf', ''))}</title>
+    <style>
+${buildInventoryPdfStyles(`
+      .summary-page {
+        min-height: 235mm;
+      }
+      .summary-grid {
+        margin-top: 14px;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+      .summary-card {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: #f8fbff;
+        padding: 10px;
+      }
+      .summary-label {
+        margin: 0;
+        color: var(--muted);
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+      .summary-value {
+        margin: 4px 0 0;
+        font-size: 15px;
+        font-weight: 700;
+      }
+      .summary-section {
+        margin-top: 12px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 10px;
+      }
+      .summary-title {
+        margin: 0;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--muted);
+      }
+      .summary-body {
+        margin: 6px 0 0;
+        font-size: 13px;
+        line-height: 1.45;
+        color: var(--ink);
+      }
+`)}
+    </style>
+  </head>
+  <body>
+    <main class="sheet">
+      <section class="page summary-page">
+        <header class="topbar">
+          <div class="brand">
+            <span class="brand-mark">LAB</span>
+            <div>
+              <h1 class="brand-title">Mi Oficina Virtual</h1>
+              <p class="brand-subtitle">Resumen de promocion</p>
+            </div>
+          </div>
+          <div class="meta">
+            <p class="meta-date">Generado: ${escapeHtml(generatedDate)}</p>
+          </div>
+        </header>
+
+        <div class="summary-grid">
+          <article class="summary-card">
+            <p class="summary-label">Agencia</p>
+            <p class="summary-value">${escapeHtml(String(group?.agency ?? 'Por confirmar'))}</p>
+          </article>
+          <article class="summary-card">
+            <p class="summary-label">Codigo</p>
+            <p class="summary-value">${escapeHtml(String(group?.code ?? 'Por confirmar'))}</p>
+          </article>
+          <article class="summary-card">
+            <p class="summary-label">Unidades disponibles</p>
+            <p class="summary-value">${count}</p>
+          </article>
+          <article class="summary-card">
+            <p class="summary-label">Precio desde</p>
+            <p class="summary-value">${escapeHtml(formatMoney(group?.priceFrom))}</p>
+          </article>
+        </div>
+
+        <section class="summary-section">
+          <p class="summary-title">Modelos</p>
+          <p class="summary-body">${escapeHtml(models.join(' / ') || 'Por confirmar')}</p>
+        </section>
+
+        <section class="summary-section">
+          <p class="summary-title">Diferencias entre unidades</p>
+          <p class="summary-body">
+            ${escapeHtml(years.length ? `Años: ${years.join(' / ')}` : 'Años: Por confirmar')}<br/>
+            ${escapeHtml(motors.length ? `Motores: ${motors.join(' / ')}` : 'Motores: Por confirmar')}<br/>
+            ${escapeHtml(rodadas.length ? `Rodadas: ${rodadas.join(' / ')}` : 'Rodadas: Por confirmar')}<br/>
+            ${escapeHtml(pasos.length ? `Pasos: ${pasos.join(' / ')}` : 'Pasos: Por confirmar')}
+          </p>
+        </section>
+
+        <section class="summary-section">
+          <p class="summary-title">Texto comercial de promocion</p>
+          <p class="summary-body">${escapeHtml(promoText)}</p>
+        </section>
+      </section>
+    </main>
+  </body>
+</html>`
 }
 
 export function buildPromotionsPdfHtml(units, activeFilters = [], now = new Date()) {

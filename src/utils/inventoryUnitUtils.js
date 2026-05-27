@@ -1,4 +1,4 @@
-function normalizeText(value) {
+﻿function normalizeText(value) {
   return String(value ?? '')
     .trim()
     .toLowerCase()
@@ -16,12 +16,14 @@ function toCanonicalAgency(value) {
   if (normalized.includes('camiones guadalajara otero')) return 'CAMIONES GUADALAJARA OTERO'
   if (normalized.includes('camiones aeropuerto')) return 'CAMIONES AEROPUERTO'
   if (normalized.includes('camiones leon')) return 'CAMIONES LEON'
-  if (normalized.includes('camiones queretaro') || normalized.includes('camiones qro'))
+  if (normalized.includes('camiones queretaro') || normalized.includes('camiones qro')) {
     return 'CAMIONES QUERETARO'
+  }
   if (normalized.includes('camiones celaya')) return 'CAMIONES CELAYA'
   if (normalized.includes('camiones tampico')) return 'CAMIONES TAMPICO'
-  if (normalized.includes('camiones monterrey') || normalized.includes('camiones mty'))
+  if (normalized.includes('camiones monterrey') || normalized.includes('camiones mty')) {
     return 'CAMIONES MONTERREY'
+  }
 
   return raw.replace(/\s+/g, ' ').trim()
 }
@@ -50,11 +52,11 @@ export function getCodigo(unit) {
   return String(
     unit?.codigo ??
       unit?.Codigo ??
-      unit?.['Código'] ??
+      unit?.['C\u00f3digo'] ??
       unit?.CODIGO ??
       unit?.raw?.codigo ??
       unit?.raw?.Codigo ??
-      unit?.raw?.['Código'] ??
+      unit?.raw?.['C\u00f3digo'] ??
       unit?.raw?.CODIGO ??
       ''
   ).trim()
@@ -97,3 +99,4 @@ export function getUnitFieldValue(unit, key) {
 
   return directValue ?? upperValue ?? ''
 }
+

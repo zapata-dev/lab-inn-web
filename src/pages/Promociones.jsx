@@ -1,17 +1,24 @@
-import { ArrowLeft, ChevronLeft, ChevronRight, RefreshCw, Search } from 'lucide-react'
+﻿import { ArrowLeft, ChevronLeft, ChevronRight, RefreshCw, Search } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import InventoryDetailModal from '../features/inventory/InventoryDetailModal'
 import InventoryFilters from '../features/inventory/InventoryFilters'
 import ExportPromotionsPdfButton from '../features/promotions/ExportPromotionsPdfButton'
-import PromotionCard from '../features/promotions/PromotionCard'
+import PromotionGroupCard from '../features/promotions/PromotionGroupCard'
+import {
+  buildPromotionSummaryPdfFileName,
+  buildPromotionSummaryPdfHtml,
+  buildPromotionsPdfFileName,
+  buildPromotionsPdfHtml,
+  buildPromotionsPdfPrintPath,
+} from '../features/promotions/promotionsPdfTemplate'
 import {
   fetchInventoryFromCsv,
   getInventoryCache,
   INVENTORY_FILTER_FIELDS,
   saveInventoryCache,
 } from '../services/inventoryService'
-import { hasPromotion } from '../utils/promotionUtils'
+import { getCodigo, groupPromotionUnits, hasPromotion } from '../utils/promotionUtils'
 import { getUnitAgency, getUnitFieldValue } from '../utils/inventoryUnitUtils'
 
 const SEARCHABLE_KEYS = ['marca', 'modelo', 'vin', 'vinCompleto', 'motor', 'tipoUnidad', 'descripcion', 'placas']
@@ -112,37 +119,14 @@ function hasFieldValue(unit, definition) {
 }
 
 function detectAvailableFilters(units) {
-  const detected = INVENTORY_FILTER_FIELDS.filter((definition) =>
-    definition.key !== 'promocion' &&
-    units.some((unit) => hasFieldValue(unit, definition))
+  const detected = INVENTORY_FILTER_FIELDS.filter(
+    (definition) => definition.key !== 'promocion' && units.some((unit) => hasFieldValue(unit, definition))
   )
   if (!detected.some((definition) => definition.key === 'subempresa')) {
     const subempresaDefinition = INVENTORY_FILTER_FIELDS.find((definition) => definition.key === 'subempresa')
     if (subempresaDefinition) detected.push(subempresaDefinition)
   }
   return detected
-}
-
-function applyAgencySelection(units, selectedAgency) {
-  if (!selectedAgency) return []
-  if (selectedAgency === ALL_AGENCIES_LABEL) return units
-
-  return units.filter((unit) => getUnitAgency(unit) === selectedAgency)
-}
-
-function buildAgencyOptions(units) {
-  const byKey = new Map()
-
-  units.forEach((unit) => {
-    const agency = String(getUnitAgency(unit) ?? '').trim()
-    if (!agency) return
-
-    const normalized = normalizeText(agency)
-    if (!byKey.has(normalized)) byKey.set(normalized, agency)
-  })
-
-  const dynamicAgencies = [...byKey.values()].sort((first, second) => first.localeCompare(second, 'es'))
-  return [...dynamicAgencies, ALL_AGENCIES_LABEL]
 }
 
 function removeDefinitionFromFilters(filters, definition) {
@@ -217,6 +201,28 @@ function getActiveChips(search, filters) {
   })
 
   return chips
+}
+
+function buildAgencyOptions(units) {
+  const byKey = new Map()
+
+  units.forEach((unit) => {
+    const agency = String(getUnitAgency(unit) ?? '').trim()
+    if (!agency) return
+
+    const normalized = normalizeText(agency)
+    if (!byKey.has(normalized)) byKey.set(normalized, agency)
+  })
+
+  const dynamicAgencies = [...byKey.values()].sort((first, second) => first.localeCompare(second, 'es'))
+  return [...dynamicAgencies, ALL_AGENCIES_LABEL]
+}
+
+function applyAgencySelection(units, selectedAgency) {
+  if (!selectedAgency) return []
+  if (selectedAgency === ALL_AGENCIES_LABEL) return units
+
+  return units.filter((unit) => getUnitAgency(unit) === selectedAgency)
 }
 
 function formatLastUpdated(dateString) {
@@ -336,6 +342,62 @@ function Pagination({ currentPage, totalPages, onChange }) {
   )
 }
 
+function waitForImages(printWindow) {
+  const images = Array.from(printWindow.document.images || [])
+  const waiting = images.map((image) => {
+    if (image.complete) return Promise.resolve()
+
+    return new Promise((resolve) => {
+      image.addEventListener('load', resolve, { once: true })
+      image.addEventListener('error', resolve, { once: true })
+    })
+  })
+
+  return Promise.all(waiting)
+}
+
+function printHtmlDocument({ html, fileBase, fileName, printPath }) {
+  const printWindow = window.open('', '_blank')
+  if (!printWindow) return false
+
+  printWindow.document.open()
+  printWindow.document.write(html)
+  printWindow.document.close()
+
+  try {
+    printWindow.history.replaceState({}, '', printPath)
+  } catch (error) {
+    // Ignore history API failures in restrictive contexts.
+  }
+
+  printWindow.document.title = fileBase
+
+  printWindow.addEventListener('load', () => {
+    printWindow.document.title = fileBase
+    waitForImages(printWindow)
+      .catch(() => null)
+      .finally(() => {
+        const closeAfterPrint = () => {
+          setTimeout(() => {
+            if (!printWindow.closed) printWindow.close()
+          }, 300)
+        }
+
+        printWindow.addEventListener('afterprint', closeAfterPrint, { once: true })
+        printWindow.focus()
+        printWindow.print()
+      })
+  })
+
+  setTimeout(() => {
+    if (!printWindow.closed) {
+      printWindow.document.title = fileName.replace('.pdf', '')
+    }
+  }, 150)
+
+  return true
+}
+
 function Promociones() {
   const [inventory, setInventory] = useState([])
   const [filters, setFilters] = useState({})
@@ -349,14 +411,11 @@ function Promociones() {
   const [currentPage, setCurrentPage] = useState(1)
   const hasPaginatedOnce = useRef(false)
 
-  // Base obligatoria del catalogo de promociones:
-  // siempre partimos de unidades con codigo lleno.
   const promotionUnits = useMemo(() => inventory.filter(hasPromotion), [inventory])
-  const basePromotionUnits = useMemo(() => promotionUnits, [promotionUnits])
   const agencyOptions = useMemo(() => buildAgencyOptions(promotionUnits), [promotionUnits])
   const agencyScopedPromotionUnits = useMemo(
-    () => applyAgencySelection(basePromotionUnits, selectedAgency),
-    [basePromotionUnits, selectedAgency]
+    () => applyAgencySelection(promotionUnits, selectedAgency),
+    [promotionUnits, selectedAgency]
   )
   const availableFilterDefinitions = useMemo(
     () => detectAvailableFilters(agencyScopedPromotionUnits),
@@ -366,13 +425,15 @@ function Promociones() {
     () => buildDependentSelectOptions(agencyScopedPromotionUnits, filters, search, availableFilterDefinitions),
     [agencyScopedPromotionUnits, filters, search, availableFilterDefinitions]
   )
-  const filteredPromotions = useMemo(
+  const filteredPromotionUnits = useMemo(
     () =>
       selectedAgency
         ? applyFilters(agencyScopedPromotionUnits, filters, search, availableFilterDefinitions)
         : [],
     [selectedAgency, agencyScopedPromotionUnits, filters, search, availableFilterDefinitions]
   )
+  const groupedPromotions = useMemo(() => groupPromotionUnits(filteredPromotionUnits), [filteredPromotionUnits])
+
   const activeChips = useMemo(() => getActiveChips(search, filters), [search, filters])
   const exportChips = useMemo(() => {
     const allowedKeys = new Set(['search', 'marca', 'anio', 'ubicacion', 'rodada', 'precioMin', 'precioMax'])
@@ -381,14 +442,15 @@ function Promociones() {
     if (!selectedAgency) return chips
     return [{ key: 'agencia', label: 'Agencia', value: selectedAgency }, ...chips]
   }, [activeChips, selectedAgency])
+
   const totalPages = useMemo(
-    () => Math.max(1, Math.ceil(filteredPromotions.length / pageSize)),
-    [filteredPromotions.length, pageSize]
+    () => Math.max(1, Math.ceil(groupedPromotions.length / pageSize)),
+    [groupedPromotions.length, pageSize]
   )
-  const pageUnits = useMemo(() => {
+  const pageGroups = useMemo(() => {
     const start = (currentPage - 1) * pageSize
-    return filteredPromotions.slice(start, start + pageSize)
-  }, [filteredPromotions, currentPage, pageSize])
+    return groupedPromotions.slice(start, start + pageSize)
+  }, [groupedPromotions, currentPage, pageSize])
 
   useEffect(() => {
     if (!selectedAgency) return
@@ -548,6 +610,34 @@ function Promociones() {
     }
   }
 
+  const handleExportGroupSummary = (group) => {
+    const now = new Date()
+    const fileName = buildPromotionSummaryPdfFileName(group, now)
+    const html = buildPromotionSummaryPdfHtml(group, now)
+    const fileBase = fileName.replace('.pdf', '')
+
+    printHtmlDocument({
+      html,
+      fileBase,
+      fileName,
+      printPath: `/print/promociones/resumen/${encodeURIComponent(getCodigo(group) || group.code || 'codigo')}`,
+    })
+  }
+
+  const handleExportGroupCatalog = (group) => {
+    const now = new Date()
+    const fileName = buildPromotionsPdfFileName(group.units.length, now)
+    const html = buildPromotionsPdfHtml(group.units, [{ key: 'codigo', label: 'Codigo', value: group.code }], now)
+    const fileBase = fileName.replace('.pdf', '')
+
+    printHtmlDocument({
+      html,
+      fileBase,
+      fileName,
+      printPath: buildPromotionsPdfPrintPath(group.units.length),
+    })
+  }
+
   const messageClass =
     message.type === 'success'
       ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
@@ -592,7 +682,7 @@ function Promociones() {
                 </button>
               ) : null}
               <ExportPromotionsPdfButton
-                units={filteredPromotions}
+                units={filteredPromotionUnits}
                 activeChips={exportChips}
                 disabled={loading || !selectedAgency}
               />
@@ -603,13 +693,13 @@ function Promociones() {
             <span className="inline-flex items-center gap-2 rounded-full bg-lab-bg px-3 py-1">
               <Search className="size-4" aria-hidden="true" />
               {selectedAgency
-                ? `${filteredPromotions.length} promociones vigentes`
+                ? `${groupedPromotions.length} promociones agrupadas`
                 : 'Selecciona una agencia para ver promociones'}
             </span>
             <span className="rounded-full bg-lab-bg px-3 py-1">Total con promocion: {promotionUnits.length}</span>
             {selectedAgency ? (
               <span className="rounded-full bg-lab-bg px-3 py-1">
-                Mostrando {pageUnits.length} de {filteredPromotions.length} en esta pagina
+                Mostrando {pageGroups.length} de {groupedPromotions.length} grupos en esta pagina
               </span>
             ) : null}
           </div>
@@ -623,7 +713,7 @@ function Promociones() {
           <section className="rounded-2xl border border-lab-border bg-white p-6 shadow-sm">
             <h2 className="text-xl font-bold text-lab-text">Selecciona una agencia</h2>
             <p className="mt-1 text-sm text-lab-muted">
-              El catalogo mostrara solo unidades con codigo de promocion valido.
+              El catalogo mostrara solo promociones con codigo valido agrupadas por agencia y codigo.
             </p>
             <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {agencyOptions.map((agency) => (
@@ -654,7 +744,7 @@ function Promociones() {
               }}
               activeChips={activeChips}
               onRemoveChip={handleRemoveChip}
-              resultCount={filteredPromotions.length}
+              resultCount={filteredPromotionUnits.length}
             />
 
             <div className="space-y-4">
@@ -667,20 +757,26 @@ function Promociones() {
                     Prueba con otra agencia o revisa que las unidades tengan codigo lleno.
                   </p>
                 </div>
-              ) : filteredPromotions.length === 0 ? (
+              ) : groupedPromotions.length === 0 ? (
                 <div className="rounded-2xl border border-dashed border-lab-border bg-white p-10 text-center shadow-sm">
                   <h3 className="text-xl font-semibold text-lab-text">No encontramos promociones con esos filtros.</h3>
                   <p className="mt-2 text-sm text-lab-muted">Prueba limpiando filtros para ver mas opciones.</p>
                 </div>
               ) : (
-                <section className="grid items-stretch gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                  {pageUnits.map((unit) => (
-                    <PromotionCard key={unit.id} unit={unit} onViewDetail={setSelectedUnit} />
+                <section className="grid items-stretch gap-4 sm:grid-cols-1 xl:grid-cols-2">
+                  {pageGroups.map((group) => (
+                    <PromotionGroupCard
+                      key={group.id}
+                      group={group}
+                      onViewUnit={setSelectedUnit}
+                      onExportSummary={handleExportGroupSummary}
+                      onExportCatalog={handleExportGroupCatalog}
+                    />
                   ))}
                 </section>
               )}
 
-              {filteredPromotions.length > 0 ? (
+              {groupedPromotions.length > 0 ? (
                 <Pagination currentPage={currentPage} totalPages={totalPages} onChange={setCurrentPage} />
               ) : null}
             </div>
@@ -688,13 +784,10 @@ function Promociones() {
         )}
       </div>
 
-      <InventoryDetailModal
-        unit={selectedUnit}
-        onClose={() => setSelectedUnit(null)}
-        onCopy={handleCopy}
-      />
+      <InventoryDetailModal unit={selectedUnit} onClose={() => setSelectedUnit(null)} onCopy={handleCopy} />
     </main>
   )
 }
 
 export default Promociones
+
