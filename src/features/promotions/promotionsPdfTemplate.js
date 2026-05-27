@@ -1,7 +1,8 @@
-import {
+﻿import {
   buildInventoryPdfStyles,
   buildUnitCommercialSheetHtml,
 } from '../inventory/inventoryPdfTemplate'
+import { buildPromotionDifferencesText, getPromotionCoverImage } from '../../utils/promotionUtils'
 
 function formatStamp(now) {
   const year = String(now.getFullYear())
@@ -111,11 +112,10 @@ export function buildPromotionSummaryPdfHtml(group, now = new Date()) {
   const generatedDate = new Intl.DateTimeFormat('es-MX', { dateStyle: 'long', timeStyle: 'short' }).format(now)
   const count = Number(group?.count) || (Array.isArray(group?.units) ? group.units.length : 0)
   const models = Array.isArray(group?.models) ? group.models : []
-  const motors = Array.isArray(group?.motors) ? group.motors : []
-  const rodadas = Array.isArray(group?.rodadas) ? group.rodadas : []
-  const pasos = Array.isArray(group?.pasos) ? group.pasos : []
-  const years = Array.isArray(group?.years) ? group.years : []
   const promoText = String(group?.promoText ?? '').trim() || 'Por confirmar'
+  const representativeUnit = group?.representativeUnit ?? (Array.isArray(group?.units) ? group.units[0] : null)
+  const coverImage = String(group?.coverImage || getPromotionCoverImage(representativeUnit) || '').trim()
+  const differencesText = buildPromotionDifferencesText(group) || 'Sin diferencias relevantes.'
 
   return `<!doctype html>
 <html lang="es">
@@ -134,6 +134,34 @@ ${buildInventoryPdfStyles(`
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 10px;
+      }
+      .summary-cover {
+        margin-top: 12px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        overflow: hidden;
+        min-height: 180px;
+        background: #f4f8ff;
+      }
+      .summary-cover img {
+        width: 100%;
+        height: 100%;
+        min-height: 180px;
+        object-fit: cover;
+        display: block;
+      }
+      .summary-cover-placeholder {
+        min-height: 180px;
+        display: grid;
+        place-items: center;
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 600;
+        background:
+          linear-gradient(135deg, #edf3fb 25%, transparent 25%) -12px 0 / 24px 24px,
+          linear-gradient(225deg, #edf3fb 25%, transparent 25%) -12px 0 / 24px 24px,
+          linear-gradient(315deg, #edf3fb 25%, transparent 25%) 0px 0 / 24px 24px,
+          linear-gradient(45deg, #edf3fb 25%, #f9fbff 25%) 0px 0 / 24px 24px;
       }
       .summary-card {
         border: 1px solid var(--line);
@@ -191,6 +219,14 @@ ${buildInventoryPdfStyles(`
           </div>
         </header>
 
+        <section class="summary-cover">
+          ${
+            coverImage
+              ? `<img src="${escapeHtml(coverImage)}" alt="Portada de promocion ${escapeHtml(String(group?.code ?? ''))}" loading="lazy" />`
+              : '<div class="summary-cover-placeholder">Imagen de portada por confirmar</div>'
+          }
+        </section>
+
         <div class="summary-grid">
           <article class="summary-card">
             <p class="summary-label">Agencia</p>
@@ -217,12 +253,7 @@ ${buildInventoryPdfStyles(`
 
         <section class="summary-section">
           <p class="summary-title">Diferencias entre unidades</p>
-          <p class="summary-body">
-            ${escapeHtml(years.length ? `Años: ${years.join(' / ')}` : 'Años: Por confirmar')}<br/>
-            ${escapeHtml(motors.length ? `Motores: ${motors.join(' / ')}` : 'Motores: Por confirmar')}<br/>
-            ${escapeHtml(rodadas.length ? `Rodadas: ${rodadas.join(' / ')}` : 'Rodadas: Por confirmar')}<br/>
-            ${escapeHtml(pasos.length ? `Pasos: ${pasos.join(' / ')}` : 'Pasos: Por confirmar')}
-          </p>
+          <p class="summary-body">${escapeHtml(differencesText)}</p>
         </section>
 
         <section class="summary-section">

@@ -8,9 +8,6 @@ import PromotionGroupCard from '../features/promotions/PromotionGroupCard'
 import {
   buildPromotionSummaryPdfFileName,
   buildPromotionSummaryPdfHtml,
-  buildPromotionsPdfFileName,
-  buildPromotionsPdfHtml,
-  buildPromotionsPdfPrintPath,
 } from '../features/promotions/promotionsPdfTemplate'
 import {
   fetchInventoryFromCsv,
@@ -18,7 +15,7 @@ import {
   INVENTORY_FILTER_FIELDS,
   saveInventoryCache,
 } from '../services/inventoryService'
-import { getCodigo, groupPromotionUnits, hasPromotion } from '../utils/promotionUtils'
+import { groupPromotionUnits, hasPromotion } from '../utils/promotionUtils'
 import { getUnitAgency, getUnitFieldValue } from '../utils/inventoryUnitUtils'
 
 const SEARCHABLE_KEYS = ['marca', 'modelo', 'vin', 'vinCompleto', 'motor', 'tipoUnidad', 'descripcion', 'placas']
@@ -620,21 +617,7 @@ function Promociones() {
       html,
       fileBase,
       fileName,
-      printPath: `/print/promociones/resumen/${encodeURIComponent(getCodigo(group) || group.code || 'codigo')}`,
-    })
-  }
-
-  const handleExportGroupCatalog = (group) => {
-    const now = new Date()
-    const fileName = buildPromotionsPdfFileName(group.units.length, now)
-    const html = buildPromotionsPdfHtml(group.units, [{ key: 'codigo', label: 'Codigo', value: group.code }], now)
-    const fileBase = fileName.replace('.pdf', '')
-
-    printHtmlDocument({
-      html,
-      fileBase,
-      fileName,
-      printPath: buildPromotionsPdfPrintPath(group.units.length),
+      printPath: `/print/promociones/resumen/${encodeURIComponent(group.code || 'codigo')}`,
     })
   }
 
@@ -770,7 +753,6 @@ function Promociones() {
                       group={group}
                       onViewUnit={setSelectedUnit}
                       onExportSummary={handleExportGroupSummary}
-                      onExportCatalog={handleExportGroupCatalog}
                     />
                   ))}
                 </section>
