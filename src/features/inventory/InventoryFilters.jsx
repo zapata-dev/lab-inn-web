@@ -1,6 +1,30 @@
 import { ChevronDown, SlidersHorizontal } from 'lucide-react'
 import { useState } from 'react'
 
+const BASIC_FILTER_KEYS = ['ubicacion', 'subempresa', 'marca', 'modelo', 'anio', 'precio']
+const ADVANCED_FILTER_KEYS = [
+  'paso',
+  'rodada',
+  'motor',
+  'transmision',
+  'kilometros',
+  'cabina',
+  'configuracion',
+  'tipoUnidad',
+  'suspension',
+  'potenciaHp',
+  'torque',
+  'numeroEjes',
+  'tipoCombustible',
+  'traccion',
+  'capacidadCarga',
+  'sleeperDaycab',
+  'color',
+  'vin',
+  'placas',
+  'cajaRemolque',
+]
+
 function SelectField({ label, value, options, totalCount, onChange }) {
   return (
     <label className="space-y-1.5">
@@ -75,6 +99,52 @@ function InventoryFilters({
   resultCount,
 }) {
   const [isMobileOpen, setIsMobileOpen] = useState(false)
+  const [isAdvancedOpen, setIsAdvancedOpen] = useState(false)
+
+  const basicFilterDefinitions = filterDefinitions.filter((definition) =>
+    BASIC_FILTER_KEYS.includes(definition.key)
+  )
+  const advancedFilterDefinitions = filterDefinitions.filter((definition) =>
+    ADVANCED_FILTER_KEYS.includes(definition.key)
+  )
+
+  const renderField = (definition) => {
+    if (definition.type === 'numberRange') {
+      return (
+        <NumberRangeField
+          key={definition.key}
+          label={definition.label}
+          minKey={`${definition.key}Min`}
+          maxKey={`${definition.key}Max`}
+          filters={filters}
+          onChange={onFilterChange}
+        />
+      )
+    }
+
+    if (definition.type === 'text') {
+      return (
+        <TextField
+          key={definition.key}
+          label={definition.label}
+          value={filters[definition.key] ?? ''}
+          onChange={(value) => onFilterChange(definition.key, value)}
+          placeholder={`Filtrar por ${definition.label.toLowerCase()}`}
+        />
+      )
+    }
+
+    return (
+      <SelectField
+        key={definition.key}
+        label={definition.label}
+        value={filters[definition.key] ?? ''}
+        options={optionsByKey[definition.key]?.options ?? []}
+        totalCount={optionsByKey[definition.key]?.totalCount ?? resultCount}
+        onChange={(value) => onFilterChange(definition.key, value)}
+      />
+    )
+  }
 
   return (
     <aside className="space-y-4 rounded-2xl border border-lab-border bg-white p-4 shadow-sm lg:sticky lg:top-4">
@@ -138,44 +208,33 @@ function InventoryFilters({
         )}
 
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-          {filterDefinitions.map((definition) => {
-            if (definition.type === 'numberRange') {
-              return (
-                <NumberRangeField
-                  key={definition.key}
-                  label={definition.label}
-                  minKey={`${definition.key}Min`}
-                  maxKey={`${definition.key}Max`}
-                  filters={filters}
-                  onChange={onFilterChange}
-                />
-              )
-            }
-
-            if (definition.type === 'text') {
-              return (
-                <TextField
-                  key={definition.key}
-                  label={definition.label}
-                  value={filters[definition.key] ?? ''}
-                  onChange={(value) => onFilterChange(definition.key, value)}
-                  placeholder={`Filtrar por ${definition.label.toLowerCase()}`}
-                />
-              )
-            }
-
-            return (
-              <SelectField
-                key={definition.key}
-                label={definition.label}
-                value={filters[definition.key] ?? ''}
-                options={optionsByKey[definition.key]?.options ?? []}
-                totalCount={optionsByKey[definition.key]?.totalCount ?? resultCount}
-                onChange={(value) => onFilterChange(definition.key, value)}
-              />
-            )
-          })}
+          {basicFilterDefinitions.map(renderField)}
         </div>
+
+        {advancedFilterDefinitions.length > 0 ? (
+          <div className="rounded-xl border border-lab-border bg-white">
+            <button
+              type="button"
+              onClick={() => setIsAdvancedOpen((previous) => !previous)}
+              className="flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left"
+            >
+              <span className="text-xs font-semibold uppercase tracking-wide text-lab-muted">
+                Filtros avanzados
+              </span>
+              <ChevronDown
+                className={`size-4 text-lab-muted transition-transform ${isAdvancedOpen ? 'rotate-180' : ''}`}
+                aria-hidden="true"
+              />
+            </button>
+
+            {isAdvancedOpen ? (
+              <div className="grid gap-3 border-t border-lab-border p-3 sm:grid-cols-2 lg:grid-cols-1">
+                {advancedFilterDefinitions.map(renderField)}
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+
       </div>
     </aside>
   )

@@ -349,11 +349,14 @@ function Promociones() {
   const [currentPage, setCurrentPage] = useState(1)
   const hasPaginatedOnce = useRef(false)
 
+  // Base obligatoria del catalogo de promociones:
+  // siempre partimos de unidades con codigo lleno.
   const promotionUnits = useMemo(() => inventory.filter(hasPromotion), [inventory])
+  const basePromotionUnits = useMemo(() => promotionUnits, [promotionUnits])
   const agencyOptions = useMemo(() => buildAgencyOptions(promotionUnits), [promotionUnits])
   const agencyScopedPromotionUnits = useMemo(
-    () => applyAgencySelection(promotionUnits, selectedAgency),
-    [promotionUnits, selectedAgency]
+    () => applyAgencySelection(basePromotionUnits, selectedAgency),
+    [basePromotionUnits, selectedAgency]
   )
   const availableFilterDefinitions = useMemo(
     () => detectAvailableFilters(agencyScopedPromotionUnits),
