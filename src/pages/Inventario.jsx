@@ -10,6 +10,7 @@ import {
   INVENTORY_FILTER_FIELDS,
   saveInventoryCache,
 } from '../services/inventoryService'
+import { getUnitFieldValue } from '../utils/inventoryUnitUtils'
 
 const SEARCHABLE_KEYS = ['marca', 'modelo', 'vin', 'vinCompleto', 'motor', 'tipoUnidad', 'descripcion', 'placas']
 const FILTER_LABELS = INVENTORY_FILTER_FIELDS.reduce((accumulator, field) => {
@@ -55,7 +56,7 @@ function getNumericFieldValue(unit, key) {
   if (key === 'precio') return unit.precio
   if (key === 'kilometros') return unit.kilometros
 
-  return parseNumber(unit[key])
+  return parseNumber(getUnitFieldValue(unit, key))
 }
 
 function hasValue(unit, key, type) {
@@ -64,18 +65,25 @@ function hasValue(unit, key, type) {
     return Number.isFinite(numericValue)
   }
 
-  return String(unit[key] ?? '').trim().length > 0
+  return String(getUnitFieldValue(unit, key) ?? '').trim().length > 0
 }
 
 function detectAvailableFilters(units) {
-  return INVENTORY_FILTER_FIELDS.filter((field) => units.some((unit) => hasValue(unit, field.key, field.type)))
+  const detected = INVENTORY_FILTER_FIELDS.filter((field) =>
+    units.some((unit) => hasValue(unit, field.key, field.type))
+  )
+  if (!detected.some((field) => field.key === 'subempresa')) {
+    const subempresaDefinition = INVENTORY_FILTER_FIELDS.find((field) => field.key === 'subempresa')
+    if (subempresaDefinition) detected.push(subempresaDefinition)
+  }
+  return detected
 }
 
 function matchesSearch(unit, searchTerm) {
   if (!searchTerm) return true
   const normalizedSearch = normalizeText(searchTerm)
 
-  return SEARCHABLE_KEYS.some((key) => normalizeText(unit[key]).includes(normalizedSearch))
+  return SEARCHABLE_KEYS.some((key) => normalizeText(getUnitFieldValue(unit, key)).includes(normalizedSearch))
 }
 
 function applyFilters(units, filters, search, definitions) {
@@ -100,13 +108,13 @@ function applyFilters(units, filters, search, definitions) {
         const filterValue = normalizeText(filters[definition.key])
         if (!filterValue) continue
 
-        if (!normalizeText(unit[definition.key]).includes(filterValue)) return false
+        if (!normalizeText(getUnitFieldValue(unit, definition.key)).includes(filterValue)) return false
         continue
       }
 
       const selectedValue = filters[definition.key]
       if (!selectedValue) continue
-      if (unit[definition.key] !== selectedValue) return false
+      if (String(getUnitFieldValue(unit, definition.key)).trim() !== String(selectedValue).trim()) return false
     }
 
     return true
@@ -137,12 +145,14 @@ function buildDependentSelectOptions(units, filters, search, definitions) {
     const counter = new Map()
 
     scopedUnits.forEach((unit) => {
-      const value = String(unit[definition.key] ?? '').trim()
+      const value = String(getUnitFieldValue(unit, definition.key) ?? '').trim()
       if (!value) return
       counter.set(value, (counter.get(value) ?? 0) + 1)
     })
 
-    const options = uniqueSorted([...counter.keys()]).map((value) => ({
+    const baseValues =
+      definition.key === 'subempresa' ? ['Selectrucks', 'GoOn'] : uniqueSorted([...counter.keys()])
+    const options = baseValues.map((value) => ({
       value,
       count: counter.get(value) ?? 0,
       label: `${value} (${counter.get(value) ?? 0})`,

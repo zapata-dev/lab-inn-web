@@ -9,6 +9,7 @@ export const INVENTORY_FILTER_FIELDS = [
   { key: 'anio', label: 'Ano', type: 'select' },
   { key: 'precio', label: 'Precio', type: 'numberRange' },
   { key: 'ubicacion', label: 'Ubicacion / sucursal', type: 'select' },
+  { key: 'subempresa', label: 'Subempresa', type: 'select' },
   { key: 'status', label: 'Status', type: 'select' },
   { key: 'paso', label: 'Paso', type: 'select' },
   { key: 'rodada', label: 'Rodada', type: 'select' },
@@ -55,11 +56,14 @@ const BASE_HEADER_MAP = {
   dormitorio: 'dormitorio',
   subempresa: 'subempresa',
   promocion: 'promocion',
+  codigo: 'codigo',
   imagenPortada: 'imagenPortadaRaw',
   imagenesCompletas: 'imagenesCompletasRaw',
 }
 
 const OPTIONAL_COLUMN_ALIASES = {
+  subempresa: ['subempresa'],
+  codigo: ['codigo', 'codigoPromocion', 'codigoPromo'],
   cabina: ['cabina'],
   configuracion: ['configuracion'],
   tipoUnidad: ['tipoUnidad', 'tipoDeUnidad', 'tipo'],
@@ -233,6 +237,7 @@ function mapRowToUnit(rawRow, index) {
     colorInterior: String(rawRow.colorInterior ?? '').trim(),
     cilindros,
     subempresa: String(rawRow.subempresa ?? '').trim(),
+    codigo: String(rawRow.codigo ?? '').trim(),
     promocion: String(rawRow.promocion ?? '').trim(),
     ubicacion: String(rawRow.ubicacionFisica ?? '').trim() || String(rawRow.centro ?? '').trim(),
     centro: String(rawRow.centro ?? '').trim(),
