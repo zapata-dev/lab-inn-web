@@ -1,5 +1,6 @@
 import { Badge, Card, EmptyState } from '../../components/common'
 import { formatNumber, formatUSD } from '../../utils/formatters'
+import ExportUnitPdfButton from './ExportUnitPdfButton'
 
 const statusVariant = {
   available: 'success',
@@ -77,6 +78,7 @@ function InventoryCardGrid({ units = [], branchesById = {}, onSelectUnit }) {
             >
               Ver detalle
             </button>
+            <ExportUnitPdfButton unit={unit} fullWidth />
             <p className="text-xs text-lab-muted">Abrir detalle para cotizar y crear oportunidad simulada.</p>
           </div>
         </Card>

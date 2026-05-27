@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Badge, Card, EmptyState } from '../../components/common'
 import { formatNumber, formatUSD } from '../../utils/formatters'
+import ExportUnitPdfButton from './ExportUnitPdfButton'
 
 const statusVariant = {
   available: 'success',
@@ -74,13 +75,16 @@ function InventoryTable({ units = [], branchesById = {}, pageSize = 20, onSelect
                 <td className="px-4 py-3 font-semibold">{formatUSD(unit.priceUsd)}</td>
                 <td className="px-4 py-3">{formatNumber(unit.daysInInventory)}</td>
                 <td className="px-4 py-3">
-                  <button
-                    type="button"
-                    onClick={() => onSelectUnit?.(unit)}
-                    className="rounded-lg border border-lab-border px-3 py-1.5 text-xs font-semibold text-lab-text hover:bg-slate-50"
-                  >
-                    Ver detalle
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => onSelectUnit?.(unit)}
+                      className="rounded-lg border border-lab-border px-3 py-1.5 text-xs font-semibold text-lab-text hover:bg-slate-50"
+                    >
+                      Ver detalle
+                    </button>
+                    <ExportUnitPdfButton unit={unit} variant="icon" />
+                  </div>
                 </td>
               </tr>
             ))}

@@ -1,5 +1,6 @@
 import { Badge, Card, Modal } from '../../components/common'
 import { formatNumber, formatUSD } from '../../utils/formatters'
+import ExportUnitPdfButton from './ExportUnitPdfButton'
 
 const statusVariant = {
   available: 'success',
@@ -53,6 +54,7 @@ function UnitDetailModal({
           >
             Compartir ficha tecnica
           </button>
+          <ExportUnitPdfButton unit={unit} />
           <button
             type="button"
             onClick={() => onCreateOpportunity?.(unit)}

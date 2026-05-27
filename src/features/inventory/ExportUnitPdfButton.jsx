@@ -7,7 +7,47 @@ import {
   buildUnitCommercialSheetHtml,
 } from './inventoryPdfTemplate'
 
+function toSafeImage(value) {
+  const text = String(value ?? '').trim()
+  return /^https?:\/\//i.test(text) ? text : ''
+}
+
+function mapUnitToCommercialShape(unit) {
+  const source = unit ?? {}
+  const galleryFromArray = Array.isArray(source.imagenesCompletas)
+    ? source.imagenesCompletas
+    : Array.isArray(source.images)
+      ? source.images
+      : []
+  const mappedGallery = galleryFromArray.map(toSafeImage).filter(Boolean)
+  const mappedCover = toSafeImage(source.imagenPortada) || toSafeImage(source.coverImage) || mappedGallery[0] || ''
+
+  return {
+    ...source,
+    marca: source.marca ?? source.brand ?? '',
+    modelo: source.modelo ?? source.model ?? '',
+    anio: source.anio ?? source.year ?? '',
+    precio: source.precio ?? source.price ?? source.priceUsd ?? null,
+    kilometros: source.kilometros ?? source.mileageKm ?? null,
+    motor: source.motor ?? source.engine ?? '',
+    transmision: source.transmision ?? source.transmission ?? '',
+    color: source.color ?? '',
+    ubicacion: source.ubicacion ?? source.location ?? source.branchName ?? source.branchId ?? '',
+    centro: source.centro ?? source.branchId ?? '',
+    vin: source.vin ?? source.id ?? '',
+    vinCompleto: source.vinCompleto ?? source.vin ?? source.id ?? '',
+    status: source.status ?? 'Disponible',
+    promocion: source.promocion ?? source.promotion ?? '',
+    subempresa: source.subempresa ?? '',
+    configuracion: source.configuracion ?? source.configuration ?? '',
+    imagenPortada: mappedCover,
+    imagenesCompletas: mappedGallery,
+  }
+}
+
 function buildSingleUnitPdfHtml(unit, now = new Date()) {
+  const printableUnit = mapUnitToCommercialShape(unit)
+
   return `<!doctype html>
 <html lang="es">
   <head>
@@ -21,7 +61,7 @@ ${buildInventoryPdfStyles()}
   </head>
   <body>
     <main class="sheet">
-      ${buildUnitCommercialSheetHtml(unit, now)}
+      ${buildUnitCommercialSheetHtml(printableUnit, now)}
     </main>
   </body>
 </html>`
@@ -47,10 +87,11 @@ function ExportUnitPdfButton({ unit, variant = 'button', fullWidth = false }) {
   const handleExport = () => {
     if (!unit) return
 
+    const printableUnit = mapUnitToCommercialShape(unit)
     const now = new Date()
-    const fileName = buildInventoryPdfFileName(unit, now)
-    const fileBase = buildInventoryPdfFileBase(unit, now)
-    const html = buildSingleUnitPdfHtml(unit, now)
+    const fileName = buildInventoryPdfFileName(printableUnit, now)
+    const fileBase = buildInventoryPdfFileBase(printableUnit, now)
+    const html = buildSingleUnitPdfHtml(printableUnit, now)
     const printWindow = window.open('', '_blank')
 
     if (!printWindow) return
@@ -60,7 +101,7 @@ function ExportUnitPdfButton({ unit, variant = 'button', fullWidth = false }) {
     printWindow.document.close()
 
     try {
-      printWindow.history.replaceState({}, '', buildInventoryPdfPrintPath(unit))
+      printWindow.history.replaceState({}, '', buildInventoryPdfPrintPath(printableUnit))
     } catch (error) {
       // Ignore history API failures in restrictive contexts.
     }
