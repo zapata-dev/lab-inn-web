@@ -119,13 +119,15 @@ export function buildPromotionSummaryPdfHtml(group, now = new Date()) {
   const count = Number(group?.count) || (Array.isArray(group?.units) ? group.units.length : 0)
   const models = Array.isArray(group?.models) ? group.models : []
   const units = Array.isArray(group?.units) ? group.units : []
+  const visibleUnits = units.slice(0, 8)
+  const additionalUnits = Math.max(0, units.length - visibleUnits.length)
   const promoText = String(group?.promoText ?? '').trim() || 'Por confirmar'
   const representativeUnit = group?.representativeUnit ?? units[0] ?? null
   const coverImage = String(group?.coverImage || getPromotionCoverImage(representativeUnit) || '').trim()
   const differencesText = buildPromotionDifferencesText(group) || 'Sin diferencias relevantes.'
 
-  const unitRowsHtml = units.length
-    ? units
+  const unitRowsHtml = visibleUnits.length
+    ? visibleUnits
         .map((unit) => {
           const subempresa = String(getSubempresa(unit) ?? '').trim()
           return `
@@ -149,40 +151,62 @@ export function buildPromotionSummaryPdfHtml(group, now = new Date()) {
     <title>${escapeHtml(buildPromotionSummaryPdfFileName(group, now).replace('.pdf', ''))}</title>
     <style>
 ${buildInventoryPdfStyles(`
+      @page {
+        size: letter;
+        margin: 10mm;
+      }
+
+      body {
+        font-size: 10px;
+        line-height: 1.2;
+      }
+
+      .sheet {
+        max-width: none;
+        padding: 0;
+      }
+
       .summary-page {
-        min-height: auto;
-        max-height: 260mm;
-        overflow: hidden;
-        padding: 6.5mm;
+        min-height: 0;
+        padding: 5.5mm;
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
+      .summary-header {
+        break-inside: avoid;
+        page-break-inside: avoid;
       }
       .summary-grid {
-        margin-top: 8px;
+        margin-top: 6px;
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 6px;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 5px;
+        break-inside: avoid;
+        page-break-inside: avoid;
       }
       .summary-cover {
-        margin-top: 8px;
+        margin-top: 6px;
         border: 1px solid var(--line);
-        border-radius: 10px;
+        border-radius: 12px;
         overflow: hidden;
-        min-height: 112px;
-        max-height: 112px;
+        height: 220px;
+        max-height: 220px;
         background: #f4f8ff;
+        break-inside: avoid;
+        page-break-inside: avoid;
       }
       .summary-cover img {
         width: 100%;
         height: 100%;
-        min-height: 112px;
         object-fit: cover;
         display: block;
       }
       .summary-cover-placeholder {
-        min-height: 112px;
+        height: 220px;
         display: grid;
         place-items: center;
         color: var(--muted);
-        font-size: 11px;
+        font-size: 10px;
         font-weight: 600;
         background:
           linear-gradient(135deg, #edf3fb 25%, transparent 25%) -12px 0 / 24px 24px,
@@ -192,76 +216,94 @@ ${buildInventoryPdfStyles(`
       }
       .summary-card {
         border: 1px solid var(--line);
-        border-radius: 10px;
+        border-radius: 9px;
         background: #f8fbff;
-        padding: 7px 8px;
+        padding: 6px 7px;
+        break-inside: avoid;
+        page-break-inside: avoid;
       }
       .summary-label {
         margin: 0;
         color: var(--muted);
-        font-size: 9px;
+        font-size: 8px;
         text-transform: uppercase;
-        letter-spacing: 0.08em;
+        letter-spacing: 0.06em;
       }
       .summary-value {
         margin: 2px 0 0;
-        font-size: 12px;
+        font-size: 11px;
         font-weight: 700;
       }
       .summary-section {
-        margin-top: 8px;
+        margin-top: 6px;
         border: 1px solid var(--line);
-        border-radius: 10px;
-        padding: 7px 8px;
+        border-radius: 9px;
+        padding: 6px 7px;
+        break-inside: avoid;
+        page-break-inside: avoid;
       }
       .summary-title {
         margin: 0;
-        font-size: 10px;
+        font-size: 9px;
         text-transform: uppercase;
-        letter-spacing: 0.08em;
+        letter-spacing: 0.06em;
         color: var(--muted);
       }
       .summary-body {
-        margin: 4px 0 0;
-        font-size: 11px;
-        line-height: 1.35;
+        margin: 3px 0 0;
+        font-size: 10px;
+        line-height: 1.25;
         color: var(--ink);
       }
       .summary-units-table {
         width: 100%;
-        margin-top: 4px;
+        margin-top: 3px;
         border-collapse: collapse;
         table-layout: fixed;
+        break-inside: avoid;
+        page-break-inside: avoid;
       }
       .summary-units-table th,
       .summary-units-table td {
         border-bottom: 1px solid #e7edf6;
         text-align: left;
-        padding: 3px 2px;
-        font-size: 10px;
-        line-height: 1.2;
+        padding: 4px 5px;
+        font-size: 9px;
+        line-height: 1.15;
         vertical-align: top;
       }
       .summary-units-table th {
         color: var(--muted);
-        font-size: 9px;
+        font-size: 8px;
         text-transform: uppercase;
-        letter-spacing: 0.06em;
+        letter-spacing: 0.05em;
+      }
+      .summary-units-extra {
+        margin: 4px 0 0;
+        font-size: 8px;
+        color: var(--muted);
+      }
+      .summary-commercial-text {
+        margin-top: 3px;
+        max-height: 45px;
+        overflow: hidden;
       }
       .summary-note {
-        margin: 5px 0 0;
-        font-size: 9px;
-        line-height: 1.25;
+        margin: 4px 0 0;
+        font-size: 8px;
+        line-height: 1.15;
         color: var(--muted);
       }
 
       @media print {
         .sheet {
-          padding: 6mm;
+          padding: 0;
         }
         .summary-page {
           box-shadow: none;
           border: 0;
+          break-inside: avoid;
+          page-break-inside: avoid;
         }
       }
 `)}
@@ -270,7 +312,7 @@ ${buildInventoryPdfStyles(`
   <body>
     <main class="sheet">
       <section class="page summary-page">
-        <header class="topbar">
+        <header class="topbar summary-header">
           <div class="brand">
             <span class="brand-mark">LAB</span>
             <div>
@@ -330,6 +372,11 @@ ${buildInventoryPdfStyles(`
               ${unitRowsHtml}
             </tbody>
           </table>
+          ${
+            additionalUnits > 0
+              ? `<p class="summary-units-extra">+ ${additionalUnits} unidades adicionales</p>`
+              : ''
+          }
         </section>
 
         <section class="summary-section">
@@ -339,7 +386,7 @@ ${buildInventoryPdfStyles(`
 
         <section class="summary-section">
           <p class="summary-title">Texto comercial de promocion</p>
-          <p class="summary-body">${escapeHtml(promoText)}</p>
+          <p class="summary-body summary-commercial-text">${escapeHtml(promoText)}</p>
           <p class="summary-note">Informacion sujeta a disponibilidad y confirmacion comercial.</p>
         </section>
       </section>
