@@ -1,9 +1,4 @@
-import {
-  buildInventoryPdfFileBase,
-  buildInventoryPdfFileName,
-  buildInventoryPdfHtml,
-  buildInventoryPdfPrintPath,
-} from './inventoryPdfTemplate'
+import ExportUnitPdfButton from './ExportUnitPdfButton'
 
 function formatCurrency(value) {
   if (!Number.isFinite(value) || value <= 0) return 'Precio por confirmar'
@@ -43,97 +38,6 @@ function DetailSection({ title, children }) {
 
 function InventoryDetailModal({ unit, onClose, onCopy }) {
   if (!unit) return null
-
-  const exportUsingPrintWindow = (unitToExport, now, fileBase, html) => {
-    const printWindow = window.open('', '_blank')
-    if (!printWindow) return
-
-    printWindow.document.open()
-    printWindow.document.write(html)
-    printWindow.document.close()
-
-    try {
-      printWindow.history.replaceState({}, '', buildInventoryPdfPrintPath(unitToExport))
-    } catch (error) {
-      // Ignore history API failures in restrictive contexts.
-    }
-
-    printWindow.document.title = fileBase
-
-    printWindow.addEventListener('load', () => {
-      printWindow.document.title = fileBase
-      const imageElements = Array.from(printWindow.document.images || [])
-      const waitImagePromises = imageElements.map((image) => {
-        if (image.complete) return Promise.resolve()
-
-        return new Promise((resolve) => {
-          image.addEventListener('load', resolve, { once: true })
-          image.addEventListener('error', resolve, { once: true })
-        })
-      })
-
-      Promise.all(waitImagePromises)
-        .catch(() => null)
-        .finally(() => {
-          const closeAfterPrint = () => {
-            setTimeout(() => {
-              if (!printWindow.closed) printWindow.close()
-            }, 300)
-          }
-
-          printWindow.addEventListener('afterprint', closeAfterPrint, { once: true })
-          printWindow.focus()
-          printWindow.print()
-        })
-    })
-
-    setTimeout(() => {
-      if (!printWindow.closed) {
-        printWindow.document.title = fileBase
-      }
-    }, 150)
-  }
-
-  const handleExportPdf = async () => {
-    const now = new Date()
-    const fileName = buildInventoryPdfFileName(unit, now)
-    const fileBase = buildInventoryPdfFileBase(unit, now)
-    const html = buildInventoryPdfHtml(unit, now)
-    const generatedDate = new Intl.DateTimeFormat('es-MX', {
-      dateStyle: 'long',
-      timeStyle: 'short',
-    }).format(now)
-    const hasUnitImages =
-      Boolean(unit.imagenPortada) ||
-      (Array.isArray(unit.imagenesCompletas) && unit.imagenesCompletas.length > 0)
-
-    // Prefer print strategy when there are remote images because it has higher compatibility.
-    if (hasUnitImages) {
-      exportUsingPrintWindow(unit, now, fileBase, html)
-      return
-    }
-
-    try {
-      const [{ pdf }, { InventoryPdfReactDocument }] = await Promise.all([
-        import('@react-pdf/renderer'),
-        import('./InventoryPdfReactDocument'),
-      ])
-      const blob = await pdf(<InventoryPdfReactDocument unit={unit} generatedDate={generatedDate} />).toBlob()
-      const blobUrl = URL.createObjectURL(blob)
-      const downloadLink = document.createElement('a')
-      downloadLink.href = blobUrl
-      downloadLink.download = fileName
-      downloadLink.rel = 'noopener'
-      document.body.appendChild(downloadLink)
-      downloadLink.click()
-      document.body.removeChild(downloadLink)
-      setTimeout(() => URL.revokeObjectURL(blobUrl), 1500)
-      return
-    } catch (error) {
-      // Fallback to print-based export for environments where react-pdf fails.
-    }
-    exportUsingPrintWindow(unit, now, fileBase, html)
-  }
 
   return (
     <div
@@ -239,13 +143,7 @@ function InventoryDetailModal({ unit, onClose, onCopy }) {
         </div>
 
         <div className="flex flex-wrap gap-3 border-t border-lab-border bg-white p-5">
-          <button
-            type="button"
-            onClick={handleExportPdf}
-            className="rounded-xl border border-lab-primary/30 bg-lab-primary/5 px-4 py-2 text-sm font-semibold text-lab-primary transition-colors hover:bg-lab-primary hover:text-white"
-          >
-            Exportar PDF
-          </button>
+          <ExportUnitPdfButton unit={unit} />
           <button
             type="button"
             onClick={() => onCopy(unit)}

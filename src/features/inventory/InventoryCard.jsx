@@ -1,3 +1,5 @@
+import ExportUnitPdfButton from './ExportUnitPdfButton'
+
 function formatCurrency(value) {
   if (!Number.isFinite(value) || value <= 0) return 'Precio por confirmar'
 
@@ -109,13 +111,16 @@ function InventoryCard({ unit, onViewDetail }) {
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={() => onViewDetail(unit)}
-          className="mt-auto w-full rounded-xl border border-lab-primary/20 bg-lab-primary/5 px-4 py-2.5 text-sm font-semibold text-lab-primary transition-colors duration-200 hover:bg-lab-primary hover:text-white"
-        >
-          Ver detalle
-        </button>
+        <div className="mt-auto space-y-2">
+          <button
+            type="button"
+            onClick={() => onViewDetail(unit)}
+            className="w-full rounded-xl border border-lab-primary/20 bg-lab-primary/5 px-4 py-2.5 text-sm font-semibold text-lab-primary transition-colors duration-200 hover:bg-lab-primary hover:text-white"
+          >
+            Ver detalle
+          </button>
+          <ExportUnitPdfButton unit={unit} fullWidth />
+        </div>
       </div>
     </article>
   )
