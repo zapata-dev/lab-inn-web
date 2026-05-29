@@ -1,4 +1,4 @@
-import { Badge, Card, EmptyState } from '../../components/common'
+﻿import { Badge, Card, EmptyState } from '../../components/common'
 import { formatNumber, formatUSD } from '../../utils/formatters'
 import ExportUnitPdfButton from './ExportUnitPdfButton'
 
@@ -14,6 +14,57 @@ const normalizeStatus = (status) => {
   return String(status).replaceAll('_', ' ')
 }
 
+function getBranchId(unit) {
+  return String(unit?.branchId || unit?.sucursalId || '').trim()
+}
+
+function getBranchLabel(unit, branchesById) {
+  const branchId = getBranchId(unit)
+  const label =
+    branchesById[branchId]?.name ?? unit?.branchName ?? unit?.sucursalNombre ?? branchId ?? ''
+  return label || 'Sin sucursal'
+}
+
+function getBrand(unit) {
+  return unit?.brand || unit?.marca || 'N/D'
+}
+
+function getModel(unit) {
+  return unit?.model || unit?.modelo || 'N/D'
+}
+
+function getYear(unit) {
+  return unit?.year || unit?.anio || 'N/D'
+}
+
+function getVin(unit) {
+  return unit?.vin || unit?.id || 'N/D'
+}
+
+function getConfiguration(unit) {
+  return unit?.configuration || unit?.configuracion || 'N/D'
+}
+
+function getEngine(unit) {
+  return unit?.engine || unit?.motor || 'N/D'
+}
+
+function getTransmission(unit) {
+  return unit?.transmission || unit?.transmision || 'N/D'
+}
+
+function getMileage(unit) {
+  return Number(unit?.mileageKm ?? unit?.kilometros ?? 0) || 0
+}
+
+function getPrice(unit) {
+  return Number(unit?.priceUsd ?? unit?.precio ?? 0) || 0
+}
+
+function getDaysInInventory(unit) {
+  return Number(unit?.daysInInventory ?? 0) || 0
+}
+
 function InventoryCardGrid({ units = [], branchesById = {}, onSelectUnit }) {
   if (!units.length) {
     return (
@@ -27,14 +78,14 @@ function InventoryCardGrid({ units = [], branchesById = {}, onSelectUnit }) {
   return (
     <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
       {units.map((unit) => (
-        <Card key={unit.id} className="space-y-4">
+        <Card key={unit.id || unit.vin} className="space-y-4">
           <div className="flex items-start justify-between gap-3">
             <div>
               <h3 className="text-base font-semibold text-lab-text">
-                {unit.brand} {unit.model}
+                {getBrand(unit)} {getModel(unit)}
               </h3>
               <p className="text-xs text-lab-muted">
-                {unit.year} | {unit.id}
+                {getYear(unit)} | {getVin(unit)}
               </p>
             </div>
             <Badge variant={statusVariant[unit.status] ?? 'default'}>{normalizeStatus(unit.status)}</Badge>
@@ -43,31 +94,31 @@ function InventoryCardGrid({ units = [], branchesById = {}, onSelectUnit }) {
           <dl className="grid gap-2 text-sm text-lab-muted">
             <div className="flex items-center justify-between gap-2">
               <dt>Sucursal</dt>
-              <dd className="font-medium text-lab-text">{branchesById[unit.branchId]?.name ?? unit.branchId}</dd>
+              <dd className="font-medium text-lab-text">{getBranchLabel(unit, branchesById)}</dd>
             </div>
             <div className="flex items-center justify-between gap-2">
               <dt>Configuracion</dt>
-              <dd className="text-right font-medium text-lab-text">{unit.configuration}</dd>
+              <dd className="text-right font-medium text-lab-text">{getConfiguration(unit)}</dd>
             </div>
             <div className="flex items-center justify-between gap-2">
               <dt>Motor / Transmision</dt>
               <dd className="text-right font-medium text-lab-text">
-                {unit.engine} / {unit.transmission}
+                {getEngine(unit)} / {getTransmission(unit)}
               </dd>
             </div>
             <div className="flex items-center justify-between gap-2">
               <dt>Kilometraje</dt>
-              <dd className="font-medium text-lab-text">{formatNumber(unit.mileageKm)} km</dd>
+              <dd className="font-medium text-lab-text">{formatNumber(getMileage(unit))} km</dd>
             </div>
             <div className="flex items-center justify-between gap-2">
               <dt>Dias inventario</dt>
-              <dd className="font-medium text-lab-text">{formatNumber(unit.daysInInventory)}</dd>
+              <dd className="font-medium text-lab-text">{formatNumber(getDaysInInventory(unit))}</dd>
             </div>
           </dl>
 
           <div className="rounded-lg bg-slate-50 px-3 py-2">
             <p className="text-xs text-lab-muted">Precio USD</p>
-            <p className="text-lg font-bold text-lab-text">{formatUSD(unit.priceUsd)}</p>
+            <p className="text-lg font-bold text-lab-text">{formatUSD(getPrice(unit))}</p>
           </div>
 
           <div className="space-y-2">

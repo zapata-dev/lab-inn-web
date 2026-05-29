@@ -1,3 +1,7 @@
+import { useState } from 'react'
+import { Link } from 'react-router-dom'
+import { useAuth } from '../../context/AuthContext'
+import CreateRequestModal from '../requests/CreateRequestModal'
 import ExportUnitPdfButton from './ExportUnitPdfButton'
 
 function formatCurrency(value) {
@@ -37,15 +41,26 @@ function DetailSection({ title, children }) {
 }
 
 function InventoryDetailModal({ unit, onClose, onCopy }) {
+  const { user, isFirebaseMode, isAuthorized } = useAuth()
+  const [requestModalOpen, setRequestModalOpen] = useState(false)
+
   if (!unit) return null
 
+  const isRequestEnabled = isFirebaseMode && isAuthorized && Boolean(user)
+  const userBranchId = String(user?.sucursalId ?? '').trim()
+  const unitBranchId = String(
+    unit?.sucursalId || unit?.branchId || unit?.sucursal || unit?.centro || ''
+  ).trim()
+  const isSameBranch = userBranchId && unitBranchId && userBranchId === unitBranchId
+
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/65 p-4 backdrop-blur-[1px]"
-      role="dialog"
-      aria-modal="true"
-    >
-      <div className="max-h-[92vh] w-full max-w-4xl overflow-hidden rounded-2xl border border-lab-border bg-lab-bg shadow-2xl">
+    <>
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/65 p-4 backdrop-blur-[1px]"
+        role="dialog"
+        aria-modal="true"
+      >
+        <div className="max-h-[92vh] w-full max-w-4xl overflow-hidden rounded-2xl border border-lab-border bg-lab-bg shadow-2xl">
         <div className="flex items-start justify-between gap-3 border-b border-lab-border bg-white p-5">
           <div>
             <h2 className="text-2xl font-bold text-lab-text">
@@ -65,7 +80,7 @@ function InventoryDetailModal({ unit, onClose, onCopy }) {
           </button>
         </div>
 
-        <div className="max-h-[72vh] space-y-4 overflow-y-auto p-5">
+          <div className="max-h-[72vh] space-y-4 overflow-y-auto p-5">
           <div className="grid gap-4 md:grid-cols-2">
             <DetailSection title="Informacion general">
               <DetailRow label="Marca" value={unit.marca} />
@@ -140,30 +155,59 @@ function InventoryDetailModal({ unit, onClose, onCopy }) {
               )}
             </div>
           </section>
-        </div>
+          </div>
 
-        <div className="flex flex-wrap gap-3 border-t border-lab-border bg-white p-5">
-          <ExportUnitPdfButton unit={unit} />
-          <button
-            type="button"
-            onClick={() => onCopy(unit)}
-            className="rounded-xl border border-lab-border px-4 py-2 text-sm font-semibold text-lab-text transition-colors hover:border-lab-primary/40 hover:text-lab-primary"
-          >
-            Copiar informacion
-          </button>
-          <a
-            href={`mailto:innovaciogoon@zapata.com.mx?subject=Interes%20en%20${encodeURIComponent(`${unit.marca || ''} ${unit.modelo || ''}`.trim())}`}
-            className="rounded-xl bg-lab-primary px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90"
-          >
-            Contacto
-          </a>
-          <p className="basis-full text-xs text-lab-muted">
-            Al guardar como PDF, desactiva &quot;Encabezados y pies&quot; en el cuadro de impresion para un
-            resultado limpio.
-          </p>
+          <div className="flex flex-wrap gap-3 border-t border-lab-border bg-white p-5">
+            <ExportUnitPdfButton unit={unit} />
+            {isRequestEnabled && (
+              <button
+                type="button"
+                onClick={() => setRequestModalOpen(true)}
+                className="rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2 text-sm font-semibold text-indigo-700 transition-colors hover:bg-indigo-100"
+              >
+                Solicitar unidad
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => onCopy(unit)}
+              className="rounded-xl border border-lab-border px-4 py-2 text-sm font-semibold text-lab-text transition-colors hover:border-lab-primary/40 hover:text-lab-primary"
+            >
+              Copiar informacion
+            </button>
+            <a
+              href={`mailto:innovaciogoon@zapata.com.mx?subject=Interes%20en%20${encodeURIComponent(`${unit.marca || ''} ${unit.modelo || ''}`.trim())}`}
+              className="rounded-xl bg-lab-primary px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+            >
+              Contacto
+            </a>
+            <Link
+              to="/solicitudes"
+              className="rounded-xl border border-lab-border px-4 py-2 text-sm font-semibold text-lab-text transition-colors hover:border-lab-primary/40 hover:text-lab-primary"
+            >
+              Ver solicitudes
+            </Link>
+            {isRequestEnabled && isSameBranch && (
+              <p className="basis-full text-xs text-amber-700">
+                Esta unidad esta en tu misma sucursal. Puedes solicitarla de todos modos para registro.
+              </p>
+            )}
+            <p className="basis-full text-xs text-lab-muted">
+              Al guardar como PDF, desactiva &quot;Encabezados y pies&quot; en el cuadro de impresion para un
+              resultado limpio.
+            </p>
+          </div>
         </div>
       </div>
-    </div>
+      <CreateRequestModal
+        isOpen={requestModalOpen}
+        unit={unit}
+        onClose={() => setRequestModalOpen(false)}
+        onCreated={() => {
+          setRequestModalOpen(false)
+        }}
+      />
+    </>
   )
 }
 

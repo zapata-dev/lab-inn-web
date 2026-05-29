@@ -1,0 +1,6 @@
+{
+  "projects": {
+    "default": "TU_PROJECT_ID_FIREBASE_DEV",
+    "production": "TU_PROJECT_ID_FIREBASE_PROD"
+  }
+}
