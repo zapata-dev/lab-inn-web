@@ -92,3 +92,6 @@ La app transforma el perfil autorizado a:
 ## Referencia operativa
 Para operacion detallada de altas, bajas, cambios de rol y sucursal ver:
 `docs/USERS_ROLES_BRANCHES_OPERATIONS.md`.
+
+Para modelo de solicitudes de acceso y gestion por soporte ver:
+`docs/USERS_ADMIN_PANEL_MODEL.md`.

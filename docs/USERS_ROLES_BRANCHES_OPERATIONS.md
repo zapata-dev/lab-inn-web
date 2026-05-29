@@ -438,3 +438,8 @@ Despues de este documento:
 - `LAB-REQUESTS-001 - Diseno del flujo de solicitudes entre sucursales`
 
 FIN DEL DOCUMENTO.
+
+## Referencia de modelo de aprobacion
+
+Para el modelo de solicitudes de acceso y base de seguridad para panel de soporte ver:
+`docs/USERS_ADMIN_PANEL_MODEL.md`.

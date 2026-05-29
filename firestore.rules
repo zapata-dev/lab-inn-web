@@ -1,0 +1,243 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function userDoc() {
+      return get(/databases/$(database)/documents/usuarios/$(request.auth.uid));
+    }
+
+    function userExists() {
+      return signedIn() && exists(/databases/$(database)/documents/usuarios/$(request.auth.uid));
+    }
+
+    function isActive() {
+      return userExists() && userDoc().data.activo == true;
+    }
+
+    function role() {
+      return userExists()
+        ? (userDoc().data.rol is string
+          ? userDoc().data.rol
+          : (userDoc().data.role is string ? userDoc().data.role : ''))
+        : '';
+    }
+
+    function isSoporte() {
+      return isActive() && role() == 'soporte';
+    }
+
+    function isValidRole(userRole) {
+      return userRole in ['vendedor', 'coordinador', 'soporte'];
+    }
+
+    function isValidAccessRequestStatus(status) {
+      return status in ['pendiente', 'aprobado', 'rechazado', 'cancelado'];
+    }
+
+    function isCorporateEmail(email) {
+      return email is string && email.matches('^[^@]+@zapata\\.com\\.mx$');
+    }
+
+    function validUsuarioPayload(data, uid) {
+      return data.keys().hasAll([
+          'email',
+          'nombre',
+          'rol',
+          'role',
+          'sucursalId',
+          'sucursalNombre',
+          'activo'
+        ]) &&
+        data.keys().hasOnly([
+          'email',
+          'nombre',
+          'rol',
+          'role',
+          'sucursalId',
+          'sucursalNombre',
+          'activo',
+          'createdAt',
+          'updatedAt',
+          'notas'
+        ]) &&
+        data.email is string &&
+        isCorporateEmail(data.email) &&
+        data.nombre is string &&
+        data.rol is string &&
+        data.role is string &&
+        data.rol == data.role &&
+        isValidRole(data.rol) &&
+        data.sucursalId is string &&
+        data.sucursalId.size() > 0 &&
+        data.sucursalNombre is string &&
+        data.sucursalNombre.size() > 0 &&
+        data.activo is bool &&
+        (!('createdAt' in data) || data.createdAt is timestamp) &&
+        (!('updatedAt' in data) || data.updatedAt is timestamp) &&
+        (!('notas' in data) || data.notas is string);
+    }
+
+    function validSelfAccessRequestCreate(data, uid) {
+      return data.keys().hasAll([
+          'uid',
+          'email',
+          'status',
+          'requestedRole',
+          'requestedSucursalId',
+          'requestedSucursalNombre'
+        ]) &&
+        data.keys().hasOnly([
+          'uid',
+          'email',
+          'nombre',
+          'displayName',
+          'photoURL',
+          'domain',
+          'status',
+          'requestedRole',
+          'requestedSucursalId',
+          'requestedSucursalNombre',
+          'message',
+          'createdAt',
+          'updatedAt'
+        ]) &&
+        data.uid == uid &&
+        data.uid == request.auth.uid &&
+        data.email is string &&
+        request.auth.token.email is string &&
+        data.email == request.auth.token.email &&
+        isCorporateEmail(data.email) &&
+        (!('nombre' in data) || data.nombre is string) &&
+        (!('displayName' in data) || data.displayName is string) &&
+        (!('photoURL' in data) || data.photoURL is string) &&
+        (!('domain' in data) || data.domain == 'zapata.com.mx') &&
+        data.status == 'pendiente' &&
+        data.requestedRole is string &&
+        isValidRole(data.requestedRole) &&
+        data.requestedSucursalId is string &&
+        data.requestedSucursalId.size() > 0 &&
+        data.requestedSucursalNombre is string &&
+        data.requestedSucursalNombre.size() > 0 &&
+        (!('message' in data) || data.message is string) &&
+        (!('createdAt' in data) || data.createdAt is timestamp) &&
+        (!('updatedAt' in data) || data.updatedAt is timestamp);
+    }
+
+    function validSelfAccessRequestUpdate(data, uid) {
+      return resource.data.uid == request.auth.uid &&
+        resource.data.uid == uid &&
+        resource.data.status == 'pendiente' &&
+        data.uid == resource.data.uid &&
+        data.email == resource.data.email &&
+        data.keys().hasOnly([
+          'uid',
+          'email',
+          'nombre',
+          'displayName',
+          'photoURL',
+          'domain',
+          'status',
+          'requestedRole',
+          'requestedSucursalId',
+          'requestedSucursalNombre',
+          'message',
+          'createdAt',
+          'updatedAt'
+        ]) &&
+        data.status in ['pendiente', 'cancelado'] &&
+        data.requestedRole is string &&
+        isValidRole(data.requestedRole) &&
+        data.requestedSucursalId is string &&
+        data.requestedSucursalId.size() > 0 &&
+        data.requestedSucursalNombre is string &&
+        data.requestedSucursalNombre.size() > 0 &&
+        (!('nombre' in data) || data.nombre is string) &&
+        (!('displayName' in data) || data.displayName is string) &&
+        (!('photoURL' in data) || data.photoURL is string) &&
+        (!('domain' in data) || data.domain == 'zapata.com.mx') &&
+        (!('message' in data) || data.message is string) &&
+        (!('createdAt' in data) || data.createdAt is timestamp) &&
+        (!('updatedAt' in data) || data.updatedAt is timestamp);
+    }
+
+    function validSoporteAccessRequestUpdate(data, uid) {
+      return data.keys().hasAll([
+          'uid',
+          'email',
+          'status',
+          'requestedRole',
+          'requestedSucursalId',
+          'requestedSucursalNombre'
+        ]) &&
+        data.keys().hasOnly([
+          'uid',
+          'email',
+          'nombre',
+          'displayName',
+          'photoURL',
+          'domain',
+          'status',
+          'requestedRole',
+          'requestedSucursalId',
+          'requestedSucursalNombre',
+          'message',
+          'createdAt',
+          'updatedAt',
+          'reviewedAt',
+          'reviewedBy',
+          'decisionReason'
+        ]) &&
+        data.uid == uid &&
+        data.uid == resource.data.uid &&
+        data.email is string &&
+        isCorporateEmail(data.email) &&
+        data.status is string &&
+        isValidAccessRequestStatus(data.status) &&
+        data.requestedRole is string &&
+        isValidRole(data.requestedRole) &&
+        data.requestedSucursalId is string &&
+        data.requestedSucursalId.size() > 0 &&
+        data.requestedSucursalNombre is string &&
+        data.requestedSucursalNombre.size() > 0 &&
+        (!('nombre' in data) || data.nombre is string) &&
+        (!('displayName' in data) || data.displayName is string) &&
+        (!('photoURL' in data) || data.photoURL is string) &&
+        (!('domain' in data) || data.domain == 'zapata.com.mx') &&
+        (!('message' in data) || data.message is string) &&
+        (!('createdAt' in data) || data.createdAt is timestamp) &&
+        (!('updatedAt' in data) || data.updatedAt is timestamp) &&
+        (!('reviewedAt' in data) || data.reviewedAt is timestamp) &&
+        (!('reviewedBy' in data) || data.reviewedBy is string) &&
+        (!('decisionReason' in data) || data.decisionReason is string);
+    }
+
+    match /usuarios/{uid} {
+      allow read: if signedIn() && (request.auth.uid == uid || isSoporte());
+      allow create, update: if isSoporte() && validUsuarioPayload(request.resource.data, uid);
+      allow delete: if false;
+    }
+
+    match /accessRequests/{uid} {
+      allow read: if signedIn() && (request.auth.uid == uid || isSoporte());
+
+      allow create: if signedIn() &&
+        request.auth.uid == uid &&
+        validSelfAccessRequestCreate(request.resource.data, uid);
+
+      allow update: if signedIn() &&
+        (
+          (request.auth.uid == uid && validSelfAccessRequestUpdate(request.resource.data, uid)) ||
+          (isSoporte() && validSoporteAccessRequestUpdate(request.resource.data, uid))
+        );
+
+      allow delete: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
