@@ -18,7 +18,7 @@ const titleByPath = {
 function Topbar() {
   const location = useLocation()
   const navigate = useNavigate()
-  const { user, logout } = useAuth()
+  const { user, logout, isFirebaseMode } = useAuth()
   const toast = useToast()
   const { demoActive, start } = useDemo()
 
@@ -30,9 +30,13 @@ function Topbar() {
     year: 'numeric',
   })
 
-  const handleLogout = () => {
+  const displayName = user?.nombre || user?.name || user?.displayName || user?.email || 'Usuario'
+  const displayRole = user?.roleLabel || user?.rol || user?.role || 'Sin rol'
+  const displayBranch = user?.sucursalNombre || user?.branchName || ''
+
+  const handleLogout = async () => {
     toast.info('Sesion cerrada')
-    logout()
+    await logout()
     navigate('/login', { replace: true })
   }
 
@@ -44,8 +48,8 @@ function Topbar() {
           <div className="flex flex-wrap items-center gap-2 text-xs text-lab-muted">
             <CalendarDays className="size-4" aria-hidden="true" />
             {dateLabel}
-            <Badge variant="demo">Modo demo</Badge>
-            {!demoActive && (
+            {!isFirebaseMode ? <Badge variant="demo">Modo demo</Badge> : null}
+            {!isFirebaseMode && !demoActive ? (
               <button
                 type="button"
                 onClick={start}
@@ -54,12 +58,12 @@ function Topbar() {
                 <Play className="size-3" aria-hidden="true" />
                 Demo guiada
               </button>
-            )}
+            ) : null}
           </div>
         </div>
 
         <div className="flex flex-wrap items-center justify-end gap-2">
-          <UserSwitcher />
+          {!isFirebaseMode ? <UserSwitcher /> : null}
 
           <Link
             to="/perfil"
@@ -68,9 +72,9 @@ function Topbar() {
             <span className="inline-flex size-6 items-center justify-center rounded-full bg-lab-primary/10 text-lab-primary">
               {user?.avatar || <User className="size-3.5" />}
             </span>
-            <span className="max-w-36 truncate">{user?.name}</span>
-            <span className="hidden text-lab-muted md:inline">| {user?.roleLabel}</span>
-            <span className="hidden text-lab-muted lg:inline">| {user?.branchName}</span>
+            <span className="max-w-36 truncate">{displayName}</span>
+            <span className="hidden text-lab-muted md:inline">| {displayRole}</span>
+            {displayBranch ? <span className="hidden text-lab-muted lg:inline">| {displayBranch}</span> : null}
           </Link>
 
           <button
