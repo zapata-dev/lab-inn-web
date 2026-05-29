@@ -1,4 +1,6 @@
-import { Navigate, Outlet } from 'react-router-dom'
+import { LogOut } from 'lucide-react'
+import { useState } from 'react'
+import { Navigate, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
 const AUTHORIZATION_CODES = new Set([
@@ -11,7 +13,10 @@ const AUTHORIZATION_CODES = new Set([
 ])
 
 function ProtectedRoute({ children }) {
-  const { user, loading, authErrorCode } = useAuth()
+  const navigate = useNavigate()
+  const [logoutError, setLogoutError] = useState('')
+  const [loggingOut, setLoggingOut] = useState(false)
+  const { user, loading, authErrorCode, logout } = useAuth()
 
   if (loading) {
     return (
@@ -29,11 +34,69 @@ function ProtectedRoute({ children }) {
     return <Navigate to="/login" replace />
   }
 
-  if (children) {
-    return children
+  const handleLogout = async () => {
+    setLogoutError('')
+    setLoggingOut(true)
+
+    try {
+      await logout()
+      navigate('/login', { replace: true })
+    } catch (error) {
+      setLogoutError(error?.message || 'No fue posible cerrar sesion. Intenta de nuevo.')
+    } finally {
+      setLoggingOut(false)
+    }
   }
 
-  return <Outlet />
+  const content = children || <Outlet />
+
+  if (children) {
+    return (
+      <>
+        {content}
+        <div className="fixed right-3 top-3 z-50 flex flex-col items-end gap-2">
+          {logoutError ? (
+            <p className="max-w-xs rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700 shadow-sm">
+              {logoutError}
+            </p>
+          ) : null}
+
+          <button
+            type="button"
+            onClick={handleLogout}
+            disabled={loggingOut}
+            className="inline-flex items-center gap-1 rounded-lg bg-rose-600 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <LogOut className="size-3.5" aria-hidden="true" />
+            {loggingOut ? 'Saliendo...' : 'Salir'}
+          </button>
+        </div>
+      </>
+    )
+  }
+
+  return (
+    <>
+      {content}
+      <div className="fixed right-3 top-3 z-50 flex flex-col items-end gap-2">
+        {logoutError ? (
+          <p className="max-w-xs rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700 shadow-sm">
+            {logoutError}
+          </p>
+        ) : null}
+
+        <button
+          type="button"
+          onClick={handleLogout}
+          disabled={loggingOut}
+          className="inline-flex items-center gap-1 rounded-lg bg-rose-600 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          <LogOut className="size-3.5" aria-hidden="true" />
+          {loggingOut ? 'Saliendo...' : 'Salir'}
+        </button>
+      </div>
+    </>
+  )
 }
 
 export default ProtectedRoute

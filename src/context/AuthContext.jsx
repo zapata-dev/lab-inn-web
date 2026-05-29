@@ -204,16 +204,30 @@ function AuthProvider({ children }) {
   }, [isFirebaseMode])
 
   const logout = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    setAuthErrorCode(null)
+
     if (isFirebaseMode) {
-      await logoutFirebase()
-      setUser(null)
-      setError(null)
-      setAuthErrorCode(null)
-      return
+      try {
+        await logoutFirebase()
+        setUser(null)
+        setError(null)
+        setAuthErrorCode(null)
+        return
+      } catch (logoutError) {
+        const normalizedCode = normalizeErrorCode(logoutError)
+        setError(logoutError)
+        setAuthErrorCode(normalizedCode)
+        throw logoutError
+      } finally {
+        setLoading(false)
+      }
     }
 
     removeFromStorage('auth')
     setAuthState(null)
+    setLoading(false)
   }, [isFirebaseMode, setAuthState])
 
   const switchUser = useCallback(
