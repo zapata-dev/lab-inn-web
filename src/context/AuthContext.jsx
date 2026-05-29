@@ -57,10 +57,19 @@ function AuthProvider({ children }) {
     }
 
     let isMounted = true
+    let authStateResolved = false
     setLoading(true)
+
+    // Safety net: if Firebase listener never resolves, unblock login UI.
+    const authResolveTimeout = window.setTimeout(() => {
+      if (!isMounted || authStateResolved) return
+      setLoading(false)
+    }, 4000)
 
     const unsubscribe = subscribeToAuthChanges(async (firebaseUser) => {
       if (!isMounted) return
+      authStateResolved = true
+      window.clearTimeout(authResolveTimeout)
 
       if (!firebaseUser) {
         setUser(null)
@@ -99,6 +108,7 @@ function AuthProvider({ children }) {
 
     return () => {
       isMounted = false
+      window.clearTimeout(authResolveTimeout)
       unsubscribe()
     }
   }, [allowedDomain, authState?.userId, demoUser, isFirebaseMode, setAuthState])
@@ -128,6 +138,7 @@ function AuthProvider({ children }) {
 
     setError(null)
     setAuthErrorCode(null)
+    setLoading(true)
 
     try {
       const firebaseUser = await loginFirebaseWithGoogle()
@@ -136,6 +147,7 @@ function AuthProvider({ children }) {
       setUser(null)
       setError(loginError)
       setAuthErrorCode(normalizeErrorCode(loginError))
+      setLoading(false)
       throw loginError
     }
   }, [isFirebaseMode])
