@@ -67,3 +67,7 @@ Dar acceso controlado creando `usuarios/{uid}` despues del login Google.
 - `activo: false` => bloqueo.
 - rol invalido => bloqueo.
 - sin documento => `/unauthorized`.
+
+## Referencia operativa
+Para operacion detallada de usuarios, roles y sucursales ver:
+`docs/USERS_ROLES_BRANCHES_OPERATIONS.md`.

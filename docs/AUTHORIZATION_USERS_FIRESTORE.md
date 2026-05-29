@@ -88,3 +88,7 @@ La app transforma el perfil autorizado a:
 - Definicion de reglas (`firestore.rules`).
 - Inventario, imports, functions o notificaciones.
 - Soporte avanzado y modulos extra.
+
+## Referencia operativa
+Para operacion detallada de altas, bajas, cambios de rol y sucursal ver:
+`docs/USERS_ROLES_BRANCHES_OPERATIONS.md`.
