@@ -6,6 +6,8 @@ const AUTHORIZATION_CODES = new Set([
   'authorization/user-not-found',
   'authorization/user-inactive',
   'authorization/role-invalid',
+  'authorization/permission-denied',
+  'authorization/validation-timeout',
 ])
 
 function ProtectedRoute({ children }) {

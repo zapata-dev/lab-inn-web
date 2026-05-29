@@ -7,6 +7,8 @@ const AUTHORIZATION_ERROR_CODES = Object.freeze({
   USER_NOT_FOUND: 'authorization/user-not-found',
   USER_INACTIVE: 'authorization/user-inactive',
   ROLE_INVALID: 'authorization/role-invalid',
+  PERMISSION_DENIED: 'authorization/permission-denied',
+  UNKNOWN: 'authorization/unknown',
 })
 
 function createAuthorizationError(code, message) {
@@ -31,7 +33,22 @@ async function getAuthorizedUser(firebaseUser) {
     )
   }
 
-  const snapshot = await getDoc(doc(firebaseDb, 'usuarios', uid))
+  let snapshot = null
+  try {
+    snapshot = await getDoc(doc(firebaseDb, 'usuarios', uid))
+  } catch (firestoreError) {
+    if (String(firestoreError?.code ?? '').trim() === 'permission-denied') {
+      throw createAuthorizationError(
+        AUTHORIZATION_ERROR_CODES.PERMISSION_DENIED,
+        'Firestore rechazo la lectura de usuarios/{uid}. Revisa reglas y permisos.'
+      )
+    }
+
+    throw createAuthorizationError(
+      AUTHORIZATION_ERROR_CODES.UNKNOWN,
+      firestoreError?.message || 'No fue posible leer usuarios/{uid} en Firestore.'
+    )
+  }
   if (!snapshot.exists()) {
     throw createAuthorizationError(
       AUTHORIZATION_ERROR_CODES.USER_NOT_FOUND,

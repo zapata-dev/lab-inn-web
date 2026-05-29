@@ -10,6 +10,10 @@ const AUTH_ERROR_MESSAGES = Object.freeze({
     'Tu cuenta de Google es valida, pero no existe en usuarios/{uid}. Contacta a soporte.',
   'authorization/user-inactive': 'Tu cuenta existe pero esta inactiva. Solicita activacion.',
   'authorization/role-invalid': 'Tu cuenta tiene un rol no permitido para LAB.',
+  'authorization/permission-denied':
+    'No fue posible validar tu acceso en Firestore (permission-denied). Contacta a soporte.',
+  'authorization/validation-timeout':
+    'La validacion de acceso tardo demasiado. Revisa tu conexion e intenta de nuevo.',
   'authorization/unknown': 'No fue posible validar tu acceso. Intenta de nuevo.',
 })
 

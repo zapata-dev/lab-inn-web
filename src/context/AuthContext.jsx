@@ -8,9 +8,31 @@ import { isAllowedEmailDomain } from '../utils/authDomain'
 import { removeFromStorage } from '../services/storage'
 
 const AuthContext = createContext(null)
+const DEBUG_AUTH = import.meta.env.DEV || import.meta.env.VITE_DEBUG_AUTH === 'true'
+const AUTHORIZATION_CHECK_TIMEOUT_MS = 12000
+
+function debugAuthLog(...args) {
+  if (!DEBUG_AUTH) return
+  console.info('[auth-debug]', ...args)
+}
 
 function normalizeErrorCode(error) {
   return String(error?.code ?? '').trim() || 'authorization/unknown'
+}
+
+function createAuthTimeoutError() {
+  const timeoutError = new Error('La validacion de acceso tardo demasiado. Intenta de nuevo.')
+  timeoutError.code = 'authorization/validation-timeout'
+  return timeoutError
+}
+
+function withTimeout(promise, timeoutMs) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => {
+      window.setTimeout(() => reject(createAuthTimeoutError()), timeoutMs)
+    }),
+  ])
 }
 
 function AuthProvider({ children }) {
@@ -32,19 +54,23 @@ function AuthProvider({ children }) {
   }, [authState])
 
   useEffect(() => {
-    if (!isFirebaseMode) {
-      if (authState?.userId && !demoUser) {
-        removeFromStorage('auth')
-        setAuthState(null)
-      }
+    if (isFirebaseMode) return
 
-      setUser(demoUser)
-      setLoading(false)
-      setError(null)
-      setAuthErrorCode(null)
-      return () => {}
+    if (authState?.userId && !demoUser) {
+      removeFromStorage('auth')
+      setAuthState(null)
     }
 
+    setUser(demoUser)
+    setLoading(false)
+    setError(null)
+    setAuthErrorCode(null)
+  }, [authState?.userId, demoUser, isFirebaseMode, setAuthState])
+
+  useEffect(() => {
+    if (!isFirebaseMode) return () => {}
+
+    debugAuthLog('firebase auth effect init')
     if (!isFirebaseConfigured) {
       const firebaseConfigError = new Error('Firebase no esta configurado. Revisa las variables del entorno.')
       firebaseConfigError.code = AUTHORIZATION_ERROR_CODES.FIREBASE_NOT_CONFIGURED
@@ -53,29 +79,38 @@ function AuthProvider({ children }) {
       setError(firebaseConfigError)
       setAuthErrorCode(firebaseConfigError.code)
       setLoading(false)
+      debugAuthLog('firebase not configured')
       return () => {}
     }
 
     let isMounted = true
     let authStateResolved = false
+    let validationRequestId = 0
     setLoading(true)
 
     // Safety net: if Firebase listener never resolves, unblock login UI.
     const authResolveTimeout = window.setTimeout(() => {
       if (!isMounted || authStateResolved) return
+      debugAuthLog('auth listener timed out before first response')
       setLoading(false)
     }, 4000)
 
     const unsubscribe = subscribeToAuthChanges(async (firebaseUser) => {
       if (!isMounted) return
+      const currentRequestId = ++validationRequestId
       authStateResolved = true
       window.clearTimeout(authResolveTimeout)
+      debugAuthLog('onAuthStateChanged fired', {
+        uid: firebaseUser?.uid ?? null,
+        email: firebaseUser?.email ?? null,
+      })
 
       if (!firebaseUser) {
         setUser(null)
         setError(null)
         setAuthErrorCode(null)
         setLoading(false)
+        debugAuthLog('no firebase session, loading false')
         return
       }
 
@@ -83,26 +118,42 @@ function AuthProvider({ children }) {
 
       try {
         if (!isAllowedEmailDomain(firebaseUser.email, allowedDomain)) {
+          debugAuthLog('domain not allowed', firebaseUser.email)
           await logoutFirebase()
           const domainError = new Error(`Solo se permite acceso con correos @${allowedDomain}.`)
           domainError.code = 'authorization/domain-not-allowed'
           throw domainError
         }
 
-        const authorizedUser = await getAuthorizedUser(firebaseUser)
-        if (!isMounted) return
+        debugAuthLog('getAuthorizedUser start', firebaseUser.uid)
+        const authorizedUser = await withTimeout(
+          getAuthorizedUser(firebaseUser),
+          AUTHORIZATION_CHECK_TIMEOUT_MS
+        )
+        if (!isMounted || currentRequestId !== validationRequestId) return
+        debugAuthLog('getAuthorizedUser success', {
+          uid: authorizedUser.uid,
+          role: authorizedUser.role,
+        })
 
         setUser(authorizedUser)
         setError(null)
         setAuthErrorCode(null)
       } catch (authorizationError) {
-        if (!isMounted) return
+        if (!isMounted || currentRequestId !== validationRequestId) return
+        debugAuthLog('authorization rejected', {
+          code: normalizeErrorCode(authorizationError),
+          message: authorizationError?.message,
+        })
 
         setUser(null)
         setError(authorizationError)
         setAuthErrorCode(normalizeErrorCode(authorizationError))
       } finally {
-        if (isMounted) setLoading(false)
+        if (isMounted && currentRequestId === validationRequestId) {
+          setLoading(false)
+          debugAuthLog('loading false after authorization check')
+        }
       }
     })
 
@@ -111,7 +162,7 @@ function AuthProvider({ children }) {
       window.clearTimeout(authResolveTimeout)
       unsubscribe()
     }
-  }, [allowedDomain, authState?.userId, demoUser, isFirebaseMode, setAuthState])
+  }, [allowedDomain, isFirebaseMode])
 
   const login = useCallback(
     (userId) => {
