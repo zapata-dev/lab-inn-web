@@ -1,0 +1,251 @@
+﻿rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function userDoc() {
+      return get(/databases/$(database)/documents/usuarios/$(request.auth.uid));
+    }
+
+    function userData() {
+      return userDoc().data;
+    }
+
+    function isAuthorized() {
+      return signedIn() && userDoc().exists();
+    }
+
+    function isActive() {
+      return isAuthorized() && userData().activo == true;
+    }
+
+    function role() {
+      return isActive() ? userData().rol : '';
+    }
+
+    function isVendedor() {
+      return role() == 'vendedor';
+    }
+
+    function isCoordinador() {
+      return role() == 'coordinador';
+    }
+
+    function isSoporte() {
+      return role() == 'soporte';
+    }
+
+    function userSucursalId() {
+      return isActive() ? userData().sucursalId : '';
+    }
+
+    function isOwnUser(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    function isSolicitudOwner() {
+      return signedIn() && resource.data.vendedorId == request.auth.uid;
+    }
+
+    function isSolicitudSucursalParticipant() {
+      return isCoordinador() && (
+        resource.data.sucursalSolicitanteId == userSucursalId() ||
+        resource.data.sucursalDuenaId == userSucursalId()
+      );
+    }
+
+    function isValidSolicitudEstado(estado) {
+      return estado == 'nueva' ||
+        estado == 'en_negociacion' ||
+        estado == 'aprobada' ||
+        estado == 'rechazada' ||
+        estado == 'cancelada' ||
+        estado == 'cerrada';
+    }
+
+    function changedOnlyAllowedFields(allowedFields) {
+      return request.resource.data.diff(resource.data).changedKeys().hasOnly(allowedFields);
+    }
+
+    function canReadSolicitudData(data) {
+      return isActive() && (
+        isSoporte() ||
+        (isVendedor() && data.vendedorId == request.auth.uid) ||
+        (isCoordinador() && (
+          data.sucursalSolicitanteId == userSucursalId() ||
+          data.sucursalDuenaId == userSucursalId()
+        ))
+      );
+    }
+
+    function isValidSolicitudCreate() {
+      return isActive() &&
+        (isVendedor() || isCoordinador() || isSoporte()) &&
+        request.resource.data.keys().hasAll([
+          'vendedorId',
+          'estado',
+          'unitVin',
+          'unitSnapshot',
+          'sucursalSolicitanteId',
+          'sucursalDuenaId',
+          'createdAt',
+          'updatedAt'
+        ]) &&
+        request.resource.data.estado == 'nueva' &&
+        isValidSolicitudEstado(request.resource.data.estado) &&
+        request.resource.data.unitVin is string &&
+        request.resource.data.unitVin.size() > 0 &&
+        request.resource.data.unitSnapshot is map &&
+        request.resource.data.sucursalSolicitanteId is string &&
+        request.resource.data.sucursalSolicitanteId.size() > 0 &&
+        request.resource.data.sucursalDuenaId is string &&
+        request.resource.data.sucursalDuenaId.size() > 0 &&
+        (isSoporte() || request.resource.data.vendedorId == request.auth.uid);
+    }
+
+    function isAllowedSolicitudUpdate() {
+      return isActive() && (
+        (
+          isSoporte() &&
+          isValidSolicitudEstado(request.resource.data.estado)
+        ) ||
+        (
+          isCoordinador() &&
+          isSolicitudSucursalParticipant() &&
+          isValidSolicitudEstado(request.resource.data.estado) &&
+          changedOnlyAllowedFields([
+            'estado',
+            'updatedAt',
+            'lastActivityAt',
+            'closedAt',
+            'lastStatusChangedBy',
+            'lastStatusChangedByName'
+          ])
+        ) ||
+        (
+          isVendedor() &&
+          isSolicitudOwner() &&
+          (resource.data.estado == 'nueva' || resource.data.estado == 'en_negociacion') &&
+          request.resource.data.estado == 'cancelada' &&
+          changedOnlyAllowedFields([
+            'estado',
+            'updatedAt',
+            'lastActivityAt',
+            'closedAt',
+            'lastStatusChangedBy',
+            'lastStatusChangedByName'
+          ])
+        )
+      );
+    }
+
+    function solicitudDoc(solicitudId) {
+      return get(/databases/$(database)/documents/solicitudes/$(solicitudId));
+    }
+
+    function canReadSolicitudById(solicitudId) {
+      return solicitudDoc(solicitudId).exists() && canReadSolicitudData(solicitudDoc(solicitudId).data);
+    }
+
+    function isOwnNotification() {
+      return signedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    function isValidCommentCreate() {
+      return request.resource.data.keys().hasAll(['autorId', 'texto', 'createdAt']) &&
+        request.resource.data.autorId == request.auth.uid &&
+        request.resource.data.texto is string &&
+        request.resource.data.texto.size() > 0;
+    }
+
+    match /usuarios/{uid} {
+      allow read: if (isOwnUser(uid) && resource.data.activo == true) || isSoporte();
+      allow create, update: if isSoporte();
+      allow delete: if false;
+    }
+
+    match /sucursales/{sucursalId} {
+      allow read: if isActive() && (resource.data.activa == true || isSoporte());
+      allow create, update: if isSoporte();
+      allow delete: if false;
+    }
+
+    match /inventario/{vin} {
+      allow read: if isActive();
+      allow create, update: if isSoporte();
+      allow delete: if false;
+    }
+
+    match /solicitudes/{solicitudId} {
+      allow read: if canReadSolicitudData(resource.data);
+      allow create: if isValidSolicitudCreate();
+      allow update: if isAllowedSolicitudUpdate();
+      allow delete: if false;
+
+      match /comentarios/{comentarioId} {
+        allow read: if canReadSolicitudById(solicitudId);
+        allow create: if canReadSolicitudById(solicitudId) && isValidCommentCreate();
+        allow update, delete: if false;
+      }
+
+      match /historial/{eventoId} {
+        allow read: if canReadSolicitudById(solicitudId);
+        // TODO V1.1: endurecer tipoEvento y transiciones permitidas por actor.
+        allow create: if canReadSolicitudById(solicitudId) &&
+          request.resource.data.keys().hasAll(['actorId', 'tipoEvento', 'createdAt']) &&
+          request.resource.data.actorId == request.auth.uid;
+        allow update, delete: if false;
+      }
+    }
+
+    match /notificaciones/{notificacionId} {
+      allow read: if isOwnNotification() || isSoporte();
+      allow create: if isSoporte();
+      allow update: if
+        (
+          isOwnNotification() &&
+          changedOnlyAllowedFields(['leida', 'readAt'])
+        ) ||
+        (
+          isSoporte() &&
+          changedOnlyAllowedFields(['leida', 'readAt', 'enviada', 'sentAt', 'error'])
+        );
+      allow delete: if false;
+    }
+
+    match /notificationDeliveries/{deliveryId} {
+      allow read: if isSoporte();
+      allow create, update, delete: if false;
+
+      match /attempts/{attemptId} {
+        allow read: if isSoporte();
+        allow create, update, delete: if false;
+      }
+    }
+
+    match /auditoria/{auditId} {
+      allow read: if isSoporte();
+      allow create: if isActive() &&
+        request.resource.data.keys().hasAll(['actorId', 'accion', 'entidad', 'createdAt']) &&
+        request.resource.data.actorId == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    match /importsInventario/{importId} {
+      allow read, create, update: if isSoporte();
+      allow delete: if false;
+    }
+
+    match /systemConfig/{configId} {
+      allow read: if isActive();
+      allow write: if isSoporte();
+      allow delete: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
