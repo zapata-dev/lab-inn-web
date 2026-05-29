@@ -28,11 +28,3 @@ Thumbs.db
 # Coverage / cache
 coverage/
 .cache/
-
-# Firebase local config (contiene projectId real - no commitear)
-.firebaserc
-
-# Temporal / herramientas de desarrollo
-tmp_pdf_preview/
-.agents/
-skills-lock.json

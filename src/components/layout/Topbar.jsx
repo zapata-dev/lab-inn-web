@@ -1,17 +1,14 @@
-﻿import { CalendarDays, LogOut, Play, User } from 'lucide-react'
+import { CalendarDays, LogOut, Play, User } from 'lucide-react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Badge } from '../common'
 import { useAuth } from '../../context/AuthContext'
 import { useDemo } from '../../context/DemoContext'
 import useToast from '../../hooks/useToast'
-import { getProductionRoleLabel } from '../../utils/productionRoles'
-import NotificationBell from '../../features/notifications/NotificationBell'
 import UserSwitcher from './UserSwitcher'
 
 const titleByPath = {
   '/inicio': 'Inicio',
   '/inventario': 'Inventario Nacional',
-  '/solicitudes': 'Solicitudes',
   '/herramientas': 'Herramientas Comerciales',
   '/capacitacion': 'Capacitacion y Soporte',
   '/salesforce': 'Salesforce',
@@ -21,7 +18,7 @@ const titleByPath = {
 function Topbar() {
   const location = useLocation()
   const navigate = useNavigate()
-  const { user, logout, isFirebaseMode } = useAuth()
+  const { user, logout } = useAuth()
   const toast = useToast()
   const { demoActive, start } = useDemo()
 
@@ -33,15 +30,9 @@ function Topbar() {
     year: 'numeric',
   })
 
-  const userName = user?.name || user?.nombre || user?.email || 'Usuario'
-  const userRole = isFirebaseMode
-    ? getProductionRoleLabel(user?.rol || user?.role)
-    : user?.roleLabel || user?.role || 'Sin rol'
-  const userBranch = user?.sucursalNombre || user?.branchName || ''
-
-  const handleLogout = async () => {
+  const handleLogout = () => {
     toast.info('Sesion cerrada')
-    await logout()
+    logout()
     navigate('/login', { replace: true })
   }
 
@@ -53,8 +44,8 @@ function Topbar() {
           <div className="flex flex-wrap items-center gap-2 text-xs text-lab-muted">
             <CalendarDays className="size-4" aria-hidden="true" />
             {dateLabel}
-            {isFirebaseMode ? <Badge variant="info">Firebase Auth</Badge> : <Badge variant="demo">Modo demo</Badge>}
-            {!isFirebaseMode && !demoActive && (
+            <Badge variant="demo">Modo demo</Badge>
+            {!demoActive && (
               <button
                 type="button"
                 onClick={start}
@@ -68,27 +59,18 @@ function Topbar() {
         </div>
 
         <div className="flex flex-wrap items-center justify-end gap-2">
-          {!isFirebaseMode && <UserSwitcher />}
-          {isFirebaseMode && user ? <NotificationBell user={user} /> : null}
+          <UserSwitcher />
 
           <Link
             to="/perfil"
             className="inline-flex items-center gap-2 rounded-lg border border-lab-border bg-white px-3 py-1.5 text-xs font-medium text-lab-text hover:bg-slate-50"
           >
-            <span className="inline-flex size-6 items-center justify-center overflow-hidden rounded-full bg-lab-primary/10 text-lab-primary">
-              {user?.avatar || user?.photoURL ? (
-                user?.photoURL ? (
-                  <img src={user.photoURL} alt="Avatar" className="size-full object-cover" />
-                ) : (
-                  user?.avatar
-                )
-              ) : (
-                <User className="size-3.5" />
-              )}
+            <span className="inline-flex size-6 items-center justify-center rounded-full bg-lab-primary/10 text-lab-primary">
+              {user?.avatar || <User className="size-3.5" />}
             </span>
-            <span className="max-w-36 truncate">{userName}</span>
-            <span className="hidden text-lab-muted md:inline">| {userRole}</span>
-            {userBranch && <span className="hidden text-lab-muted lg:inline">| {userBranch}</span>}
+            <span className="max-w-36 truncate">{user?.name}</span>
+            <span className="hidden text-lab-muted md:inline">| {user?.roleLabel}</span>
+            <span className="hidden text-lab-muted lg:inline">| {user?.branchName}</span>
           </Link>
 
           <button

@@ -1,7 +1,4 @@
-import { useState } from 'react'
 import { Badge, Card, Modal } from '../../components/common'
-import { useAuth } from '../../context/AuthContext'
-import CreateRequestModal from '../requests/CreateRequestModal'
 import { formatNumber, formatUSD } from '../../utils/formatters'
 import ExportUnitPdfButton from './ExportUnitPdfButton'
 
@@ -32,65 +29,50 @@ function UnitDetailModal({
   onCreateOpportunity,
   onShare,
 }) {
-  const { user, isFirebaseMode, isAuthorized } = useAuth()
-  const [requestModalOpen, setRequestModalOpen] = useState(false)
-
   if (!isOpen || !unit) {
     return null
   }
 
-  const isRequestEnabled = isFirebaseMode && isAuthorized && Boolean(user)
-
   return (
-    <>
-      <Modal
-        isOpen={isOpen}
-        onClose={onClose}
-        title={`${unit.brand} ${unit.model} ${unit.year}`}
-        footer={
-          <div className="flex flex-wrap justify-end gap-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-lg border border-lab-border px-3 py-2 text-sm font-semibold text-lab-text"
-            >
-              Cerrar
-            </button>
-            <button
-              type="button"
-              onClick={() => onShare?.(unit)}
-              className="rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-sm font-semibold text-sky-700"
-            >
-              Compartir ficha tecnica
-            </button>
-            <ExportUnitPdfButton unit={unit} />
-            {isRequestEnabled && (
-              <button
-                type="button"
-                onClick={() => setRequestModalOpen(true)}
-                className="rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-sm font-semibold text-indigo-700"
-              >
-                Solicitar unidad
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={() => onCreateOpportunity?.(unit)}
-              className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-700"
-            >
-              Crear oportunidad Salesforce
-            </button>
-            <button
-              type="button"
-              onClick={() => onAddToQuote?.(unit)}
-              className="rounded-lg bg-lab-primary px-3 py-2 text-sm font-semibold text-white"
-            >
-              Agregar a cotizacion
-            </button>
-          </div>
-        }
-      >
-        <div className="max-h-[70vh] space-y-4 overflow-y-auto pr-1">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={`${unit.brand} ${unit.model} ${unit.year}`}
+      footer={
+        <div className="flex flex-wrap justify-end gap-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg border border-lab-border px-3 py-2 text-sm font-semibold text-lab-text"
+          >
+            Cerrar
+          </button>
+          <button
+            type="button"
+            onClick={() => onShare?.(unit)}
+            className="rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-sm font-semibold text-sky-700"
+          >
+            Compartir ficha tecnica
+          </button>
+          <ExportUnitPdfButton unit={unit} />
+          <button
+            type="button"
+            onClick={() => onCreateOpportunity?.(unit)}
+            className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-700"
+          >
+            Crear oportunidad Salesforce
+          </button>
+          <button
+            type="button"
+            onClick={() => onAddToQuote?.(unit)}
+            className="rounded-lg bg-lab-primary px-3 py-2 text-sm font-semibold text-white"
+          >
+            Agregar a cotizacion
+          </button>
+        </div>
+      }
+    >
+      <div className="max-h-[70vh] space-y-4 overflow-y-auto pr-1">
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant={statusVariant[unit.status] ?? 'default'}>{normalizeStatus(unit.status)}</Badge>
           <Badge variant="info">{branch?.name ?? unit.branchId}</Badge>
@@ -164,15 +146,8 @@ function UnitDetailModal({
             ))}
           </ul>
         </div>
-        </div>
-      </Modal>
-      <CreateRequestModal
-        isOpen={requestModalOpen}
-        unit={unit}
-        onClose={() => setRequestModalOpen(false)}
-        onCreated={() => setRequestModalOpen(false)}
-      />
-    </>
+      </div>
+    </Modal>
   )
 }
 

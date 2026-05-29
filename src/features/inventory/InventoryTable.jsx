@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Badge, Card, EmptyState } from '../../components/common'
 import { formatNumber, formatUSD } from '../../utils/formatters'
 import ExportUnitPdfButton from './ExportUnitPdfButton'
@@ -13,49 +13,6 @@ const statusVariant = {
 const normalizeStatus = (status) => {
   if (!status) return 'Sin status'
   return String(status).replaceAll('_', ' ')
-}
-
-function getBranchId(unit) {
-  return String(unit?.branchId || unit?.sucursalId || '').trim()
-}
-
-function getBranchLabel(unit, branchesById) {
-  const branchId = getBranchId(unit)
-  const label =
-    branchesById[branchId]?.name ?? unit?.branchName ?? unit?.sucursalNombre ?? branchId ?? ''
-  return label || 'Sin sucursal'
-}
-
-function getBrand(unit) {
-  return unit?.brand || unit?.marca || 'N/D'
-}
-
-function getModel(unit) {
-  return unit?.model || unit?.modelo || 'N/D'
-}
-
-function getYear(unit) {
-  return unit?.year || unit?.anio || 'N/D'
-}
-
-function getVin(unit) {
-  return unit?.vin || unit?.id || 'N/D'
-}
-
-function getConfiguration(unit) {
-  return unit?.configuration || unit?.configuracion || 'N/D'
-}
-
-function getMileage(unit) {
-  return Number(unit?.mileageKm ?? unit?.kilometros ?? 0) || 0
-}
-
-function getPrice(unit) {
-  return Number(unit?.priceUsd ?? unit?.precio ?? 0) || 0
-}
-
-function getDaysInInventory(unit) {
-  return Number(unit?.daysInInventory ?? 0) || 0
 }
 
 function InventoryTable({ units = [], branchesById = {}, pageSize = 20, onSelectUnit }) {
@@ -102,21 +59,21 @@ function InventoryTable({ units = [], branchesById = {}, pageSize = 20, onSelect
           </thead>
           <tbody className="divide-y divide-slate-100 bg-white text-lab-text">
             {pageUnits.map((unit) => (
-              <tr key={unit.id || unit.vin} className="align-top hover:bg-slate-50/70">
+              <tr key={unit.id} className="align-top hover:bg-slate-50/70">
                 <td className="px-4 py-3">
-                  <p className="font-semibold">{getModel(unit)}</p>
-                  <p className="text-xs text-lab-muted">{getVin(unit)}</p>
+                  <p className="font-semibold">{unit.model}</p>
+                  <p className="text-xs text-lab-muted">{unit.id}</p>
                 </td>
-                <td className="px-4 py-3">{getBrand(unit)}</td>
-                <td className="px-4 py-3">{getYear(unit)}</td>
-                <td className="px-4 py-3">{getBranchLabel(unit, branchesById)}</td>
+                <td className="px-4 py-3">{unit.brand}</td>
+                <td className="px-4 py-3">{unit.year}</td>
+                <td className="px-4 py-3">{branchesById[unit.branchId]?.name ?? unit.branchId}</td>
                 <td className="px-4 py-3">
                   <Badge variant={statusVariant[unit.status] ?? 'default'}>{normalizeStatus(unit.status)}</Badge>
                 </td>
-                <td className="px-4 py-3 text-xs text-lab-muted">{getConfiguration(unit)}</td>
-                <td className="px-4 py-3">{formatNumber(getMileage(unit))} km</td>
-                <td className="px-4 py-3 font-semibold">{formatUSD(getPrice(unit))}</td>
-                <td className="px-4 py-3">{formatNumber(getDaysInInventory(unit))}</td>
+                <td className="px-4 py-3 text-xs text-lab-muted">{unit.configuration}</td>
+                <td className="px-4 py-3">{formatNumber(unit.mileageKm)} km</td>
+                <td className="px-4 py-3 font-semibold">{formatUSD(unit.priceUsd)}</td>
+                <td className="px-4 py-3">{formatNumber(unit.daysInInventory)}</td>
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
                     <button
