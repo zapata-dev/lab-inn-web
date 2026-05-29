@@ -11,6 +11,7 @@ import {
   Tags,
   Truck,
 } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 const iconMap = {
@@ -27,6 +28,8 @@ const iconMap = {
 }
 
 const FALLBACK_ICON = Link2
+const SIMPLE_ICONS_DENYLIST = new Set(['freightliner', 'canva', 'adobe'])
+const failedBrandLogoUrls = new Set()
 const delayClassMap = [
   '[animation-delay:0ms]',
   '[animation-delay:40ms]',
@@ -89,6 +92,7 @@ function QuickAccessCard({
   disabled = false,
 }) {
   const navigate = useNavigate()
+  const [showBrandLogo, setShowBrandLogo] = useState(Boolean(logoUrl))
   const Icon = iconMap[icon] ?? FALLBACK_ICON
   const hasInternalRoute = Boolean(to)
   const hasExternalLink = Boolean(url)
@@ -98,6 +102,26 @@ function QuickAccessCard({
     ring: 'ring-lab-border hover:ring-lab-primary/30',
     iconWrap: 'bg-lab-primary/10 text-lab-primary group-hover:bg-lab-primary group-hover:text-white',
   }
+  const simpleIconsSlug = useMemo(() => {
+    if (!logoUrl || !logoUrl.includes('cdn.simpleicons.org/')) return ''
+    const match = logoUrl.match(/cdn\.simpleicons\.org\/([^/?#]+)/i)
+    return (match?.[1] || '').toLowerCase()
+  }, [logoUrl])
+  const isDenylistedSimpleIcon = SIMPLE_ICONS_DENYLIST.has(simpleIconsSlug)
+
+  useEffect(() => {
+    if (!logoUrl) {
+      setShowBrandLogo(false)
+      return
+    }
+
+    if (isDenylistedSimpleIcon || failedBrandLogoUrls.has(logoUrl)) {
+      setShowBrandLogo(false)
+      return
+    }
+
+    setShowBrandLogo(true)
+  }, [isDenylistedSimpleIcon, logoUrl])
 
   const handleOpenLink = () => {
     if (isDisabled) return
@@ -130,7 +154,7 @@ function QuickAccessCard({
         }`}
       >
         <Icon className="size-5" aria-hidden="true" />
-        {logoUrl ? (
+        {logoUrl && showBrandLogo ? (
           <img
             src={logoUrl}
             alt={logoAlt || title}
@@ -138,8 +162,9 @@ function QuickAccessCard({
               isDisabled ? 'opacity-60 grayscale' : ''
             } ${logoClassName || ''}`}
             loading="lazy"
-            onError={(event) => {
-              event.currentTarget.style.display = 'none'
+            onError={() => {
+              failedBrandLogoUrls.add(logoUrl)
+              setShowBrandLogo(false)
             }}
           />
         ) : null}
