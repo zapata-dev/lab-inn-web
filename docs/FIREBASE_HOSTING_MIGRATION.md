@@ -1,7 +1,7 @@
 # Migracion de Hosting: Render -> Firebase Hosting
 
 ## Objetivo
-Documentar migracion controlada para servir LAB desde Firebase Hosting cuando se decida.
+Documentar la migracion y operacion de LAB en Firebase Hosting como destino principal.
 
 ## Alcance
 - Hosting frontend SPA
@@ -13,6 +13,7 @@ Documentar migracion controlada para servir LAB desde Firebase Hosting cuando se
 - Web app creada
 - Variables reales validadas
 - Build local en verde (`lint` y `build`)
+- Proyecto activo en CLI: `lab-inn-web-dev`
 
 ## Configuracion esperada de `firebase.json`
 ```json
@@ -50,8 +51,8 @@ npx firebase-tools deploy --only hosting
 - Modo demo sigue operativo con `VITE_AUTH_MODE=demo`.
 
 ## Rollback
-- Si falla Firebase Hosting, mantener Render como origen primario.
-- Revertir DNS/canonical target solo cuando exista estrategia formal de corte.
+- Si falla Firebase Hosting, usar Render solo como contingencia temporal.
+- No considerar Render como destino primario despues de la migracion.
 
 ## Pendientes antes de corte final
 - Dominio futuro definido

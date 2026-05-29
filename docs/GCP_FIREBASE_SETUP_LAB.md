@@ -26,8 +26,9 @@ No tocar:
 
 ## Estado actual
 - Codigo auth/roles ya implementado en frontend.
-- Falta crear/validar recursos reales en Firebase.
-- Render opera con placeholders mientras no se carguen variables reales.
+- Proyecto dev y app web ya creados en Firebase.
+- Hosting objetivo activo: Firebase Hosting (`lab-inn-web-dev`).
+- Render queda en estado deprecado para este flujo.
 
 ## Comandos de referencia (no ejecutar sin aprobacion)
 1. Verificar CLI:

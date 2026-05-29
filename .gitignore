@@ -9,6 +9,8 @@ build/
 .env
 .env.local
 .env.*.local
+.env.production.local
+.firebaserc
 
 # Logs
 npm-debug.log*

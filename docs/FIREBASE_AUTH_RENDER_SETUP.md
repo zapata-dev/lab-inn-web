@@ -1,7 +1,11 @@
-# Firebase Auth en Render
+# Firebase Auth en Render (Deprecated)
 
 ## Objetivo
-Conectar Render con Firebase real para habilitar login Google y autorizacion Firestore.
+Documentar el setup historico de Render con Firebase real. El destino activo del proyecto ahora es Firebase Hosting.
+
+## Estado
+- Render queda como entorno temporal/deprecado.
+- Hosting objetivo: `https://lab-inn-web-dev.web.app`.
 
 ## Variables requeridas en Render
 Configurar en `Environment` del servicio:
@@ -41,6 +45,9 @@ Agregar al menos:
 1. Guardar variables.
 2. Ejecutar `Clear build cache & deploy`.
 3. Probar `/login`.
+
+## Nota de migracion
+Para despliegues nuevos, usar Firebase Hosting y tomar Render solo como respaldo temporal.
 
 ## Errores comunes
 - `firebase-not-configured`: faltan variables en Render.
