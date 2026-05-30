@@ -11,6 +11,7 @@ const titleByPath = {
   '/inventario': 'Inventario Nacional',
   '/herramientas': 'Herramientas Comerciales',
   '/capacitacion': 'Capacitacion y Soporte',
+  '/soporte/usuarios': 'Soporte de usuarios',
   '/salesforce': 'Salesforce',
   '/perfil': 'Perfil',
 }

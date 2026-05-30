@@ -1,0 +1,334 @@
+import {
+  collection,
+  doc,
+  getDoc,
+  onSnapshot,
+  serverTimestamp,
+  setDoc,
+  writeBatch,
+} from 'firebase/firestore'
+import { firebaseDb, isFirebaseConfigured } from './firebase'
+
+const ROLE_OPTIONS = ['vendedor', 'coordinador', 'soporte']
+
+const BRANCH_OPTIONS = [
+  { id: 'suc-qro', nombre: 'Queretaro' },
+  { id: 'suc-leon', nombre: 'Leon' },
+  { id: 'suc-gdl', nombre: 'Guadalajara' },
+  { id: 'suc-cdmx', nombre: 'Ciudad de Mexico' },
+  { id: 'suc-mty', nombre: 'Monterrey' },
+  { id: 'suc-default', nombre: 'Sin asignar' },
+]
+
+const ACCESS_REQUEST_STATUS = ['pendiente', 'aprobado', 'rechazado', 'cancelado']
+
+function ensureFirebaseReady() {
+  if (!isFirebaseConfigured || !firebaseDb) {
+    const error = new Error('Firebase no esta configurado para administrar usuarios.')
+    error.code = 'firebase-not-configured'
+    throw error
+  }
+}
+
+function normalizeString(value) {
+  return String(value ?? '').trim()
+}
+
+function normalizeEmail(value) {
+  return normalizeString(value).toLowerCase()
+}
+
+function toDate(value) {
+  if (!value) return null
+  if (typeof value?.toDate === 'function') return value.toDate()
+  if (value instanceof Date) return value
+  return null
+}
+
+function toMillis(value) {
+  const date = toDate(value)
+  return date ? date.getTime() : 0
+}
+
+function sortByUpdatedAtDesc(items) {
+  return [...items].sort((left, right) => {
+    const rightValue = toMillis(right.updatedAt) || toMillis(right.createdAt)
+    const leftValue = toMillis(left.updatedAt) || toMillis(left.createdAt)
+    return rightValue - leftValue
+  })
+}
+
+function normalizeAccessRequest(snapshotDoc) {
+  const data = snapshotDoc.data() ?? {}
+  const normalizedStatus = normalizeString(data.status).toLowerCase()
+
+  return {
+    id: snapshotDoc.id,
+    uid: normalizeString(data.uid || snapshotDoc.id),
+    email: normalizeEmail(data.email),
+    nombre: normalizeString(data.nombre),
+    displayName: normalizeString(data.displayName),
+    photoURL: normalizeString(data.photoURL) || null,
+    domain: normalizeString(data.domain).toLowerCase(),
+    status: ACCESS_REQUEST_STATUS.includes(normalizedStatus) ? normalizedStatus : 'pendiente',
+    requestedRole: normalizeString(data.requestedRole).toLowerCase(),
+    requestedSucursalId: normalizeString(data.requestedSucursalId),
+    requestedSucursalNombre: normalizeString(data.requestedSucursalNombre),
+    message: normalizeString(data.message),
+    createdAt: toDate(data.createdAt),
+    updatedAt: toDate(data.updatedAt),
+    reviewedAt: toDate(data.reviewedAt),
+    reviewedBy: normalizeString(data.reviewedBy),
+    decisionReason: normalizeString(data.decisionReason),
+  }
+}
+
+function normalizeUser(snapshotDoc) {
+  const data = snapshotDoc.data() ?? {}
+  const role = normalizeString(data.rol || data.role).toLowerCase()
+
+  return {
+    id: snapshotDoc.id,
+    uid: snapshotDoc.id,
+    email: normalizeEmail(data.email),
+    nombre: normalizeString(data.nombre),
+    rol: role,
+    role,
+    sucursalId: normalizeString(data.sucursalId),
+    sucursalNombre: normalizeString(data.sucursalNombre),
+    activo: data.activo === true,
+    createdAt: toDate(data.createdAt),
+    updatedAt: toDate(data.updatedAt),
+    notas: normalizeString(data.notas),
+  }
+}
+
+function ensureValidRole(role) {
+  const normalizedRole = normalizeString(role).toLowerCase()
+  if (!ROLE_OPTIONS.includes(normalizedRole)) {
+    const error = new Error('Rol invalido. Usa vendedor, coordinador o soporte.')
+    error.code = 'invalid-role'
+    throw error
+  }
+
+  return normalizedRole
+}
+
+function ensureValidBranch(branchId, branchName) {
+  const normalizedId = normalizeString(branchId)
+  const normalizedName = normalizeString(branchName)
+
+  if (!normalizedId || !normalizedName) {
+    const error = new Error('Sucursal invalida. Debes indicar sucursalId y sucursalNombre.')
+    error.code = 'invalid-branch'
+    throw error
+  }
+
+  return {
+    sucursalId: normalizedId,
+    sucursalNombre: normalizedName,
+  }
+}
+
+function getReviewerValue(reviewer) {
+  const uid = normalizeString(reviewer?.uid)
+  if (uid) return uid
+
+  const email = normalizeEmail(reviewer?.email)
+  if (email) return email
+
+  return 'soporte'
+}
+
+function subscribeAccessRequests({ status = 'todos' } = {}, callback, onError) {
+  ensureFirebaseReady()
+  const normalizedStatus = normalizeString(status).toLowerCase()
+  const requestsRef = collection(firebaseDb, 'accessRequests')
+
+  return onSnapshot(
+    requestsRef,
+    (snapshot) => {
+      const normalizedRequests = snapshot.docs.map(normalizeAccessRequest)
+      const filteredRequests =
+        normalizedStatus === 'todos'
+          ? normalizedRequests
+          : normalizedRequests.filter((request) => request.status === normalizedStatus)
+
+      callback(sortByUpdatedAtDesc(filteredRequests))
+    },
+    (error) => {
+      if (onError) onError(error)
+    }
+  )
+}
+
+function subscribeUsers(callback, onError) {
+  ensureFirebaseReady()
+  const usersRef = collection(firebaseDb, 'usuarios')
+
+  return onSnapshot(
+    usersRef,
+    (snapshot) => {
+      const normalizedUsers = snapshot.docs.map(normalizeUser)
+      const sortedUsers = [...normalizedUsers].sort((left, right) =>
+        left.nombre.localeCompare(right.nombre, 'es')
+      )
+      callback(sortedUsers)
+    },
+    (error) => {
+      if (onError) onError(error)
+    }
+  )
+}
+
+async function approveAccessRequest(request, payload, reviewer) {
+  ensureFirebaseReady()
+  const uid = normalizeString(request?.uid || request?.id)
+  if (!uid) {
+    const error = new Error('Solicitud invalida: falta UID.')
+    error.code = 'invalid-request'
+    throw error
+  }
+
+  const role = ensureValidRole(payload?.rol || request?.requestedRole)
+  const branch = ensureValidBranch(
+    payload?.sucursalId || request?.requestedSucursalId,
+    payload?.sucursalNombre || request?.requestedSucursalNombre
+  )
+  const reviewerValue = getReviewerValue(reviewer)
+  const reason = normalizeString(payload?.decisionReason || payload?.notas || 'Solicitud aprobada')
+
+  const userRef = doc(firebaseDb, 'usuarios', uid)
+  const requestRef = doc(firebaseDb, 'accessRequests', uid)
+  const now = serverTimestamp()
+  const batch = writeBatch(firebaseDb)
+
+  batch.set(userRef, {
+    email: normalizeEmail(request?.email),
+    nombre: normalizeString(payload?.nombre || request?.nombre || request?.displayName || request?.email),
+    rol: role,
+    role,
+    sucursalId: branch.sucursalId,
+    sucursalNombre: branch.sucursalNombre,
+    activo: payload?.activo !== false,
+    createdAt: now,
+    updatedAt: now,
+    notas: normalizeString(payload?.notas || reason),
+  })
+
+  batch.set(
+    requestRef,
+    {
+      status: 'aprobado',
+      updatedAt: now,
+      reviewedAt: now,
+      reviewedBy: reviewerValue,
+      decisionReason: reason || 'Solicitud aprobada',
+      requestedRole: role,
+      requestedSucursalId: branch.sucursalId,
+      requestedSucursalNombre: branch.sucursalNombre,
+    },
+    { merge: true }
+  )
+
+  await batch.commit()
+}
+
+async function rejectAccessRequest(request, reason, reviewer) {
+  ensureFirebaseReady()
+  const uid = normalizeString(request?.uid || request?.id)
+  if (!uid) {
+    const error = new Error('Solicitud invalida: falta UID.')
+    error.code = 'invalid-request'
+    throw error
+  }
+
+  const reviewerValue = getReviewerValue(reviewer)
+  const decisionReason = normalizeString(reason || 'Solicitud rechazada')
+  const requestRef = doc(firebaseDb, 'accessRequests', uid)
+
+  await setDoc(
+    requestRef,
+    {
+      status: 'rechazado',
+      updatedAt: serverTimestamp(),
+      reviewedAt: serverTimestamp(),
+      reviewedBy: reviewerValue,
+      decisionReason,
+    },
+    { merge: true }
+  )
+}
+
+async function updateUser(uid, payload) {
+  ensureFirebaseReady()
+  const normalizedUid = normalizeString(uid)
+  if (!normalizedUid) {
+    const error = new Error('UID invalido para actualizar usuario.')
+    error.code = 'invalid-uid'
+    throw error
+  }
+
+  const role = ensureValidRole(payload?.rol || payload?.role)
+  const branch = ensureValidBranch(payload?.sucursalId, payload?.sucursalNombre)
+  const email = normalizeEmail(payload?.email)
+  const nombre = normalizeString(payload?.nombre)
+
+  if (!email || !nombre) {
+    const error = new Error('Usuario invalido: email y nombre son obligatorios.')
+    error.code = 'invalid-user-data'
+    throw error
+  }
+
+  await setDoc(doc(firebaseDb, 'usuarios', normalizedUid), {
+    email,
+    nombre,
+    rol: role,
+    role,
+    sucursalId: branch.sucursalId,
+    sucursalNombre: branch.sucursalNombre,
+    activo: payload?.activo === true,
+    createdAt: payload?.createdAt || serverTimestamp(),
+    updatedAt: serverTimestamp(),
+    notas: normalizeString(payload?.notas),
+  })
+}
+
+async function deactivateUser(uid) {
+  ensureFirebaseReady()
+  const normalizedUid = normalizeString(uid)
+  if (!normalizedUid) {
+    const error = new Error('UID invalido para desactivar usuario.')
+    error.code = 'invalid-uid'
+    throw error
+  }
+
+  const userRef = doc(firebaseDb, 'usuarios', normalizedUid)
+  const snapshot = await getDoc(userRef)
+
+  if (!snapshot.exists()) {
+    const error = new Error('No se encontro el usuario para desactivar.')
+    error.code = 'user-not-found'
+    throw error
+  }
+
+  const currentUser = normalizeUser(snapshot)
+  await updateUser(normalizedUid, {
+    ...currentUser,
+    activo: false,
+  })
+}
+
+export {
+  ACCESS_REQUEST_STATUS,
+  BRANCH_OPTIONS,
+  ROLE_OPTIONS,
+  approveAccessRequest,
+  deactivateUser,
+  normalizeAccessRequest,
+  normalizeUser,
+  rejectAccessRequest,
+  subscribeAccessRequests,
+  subscribeUsers,
+  updateUser,
+}
