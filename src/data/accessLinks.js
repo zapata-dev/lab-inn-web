@@ -90,4 +90,13 @@ export const accessLinks = [
     brandColor: 'amber',
     url: 'mailto:innovaciogoon@zapata.com.mx',
   },
+  {
+    id: 'soporte-usuarios',
+    title: 'Administracion de usuarios',
+    description: 'Gestiona solicitudes de acceso, roles y sucursales.',
+    icon: 'Users',
+    brandColor: 'indigo',
+    to: '/soporte/usuarios',
+    supportOnly: true,
+  },
 ]

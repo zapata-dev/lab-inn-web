@@ -1,8 +1,23 @@
+import { useMemo } from 'react'
 import { Building2 } from 'lucide-react'
 import QuickAccessCard from '../components/QuickAccessCard'
+import { useAuth } from '../context/AuthContext'
 import { accessLinks } from '../data/accessLinks'
 
 function Home() {
+  const { user, isFirebaseMode } = useAuth()
+  const userRole = String(user?.rol || user?.role || '').trim().toLowerCase()
+  const isSupportUser = isFirebaseMode && userRole === 'soporte'
+
+  const visibleAccessLinks = useMemo(
+    () =>
+      accessLinks.filter((access) => {
+        if (!access.supportOnly) return true
+        return isSupportUser
+      }),
+    [isSupportUser]
+  )
+
   return (
     <main className="min-h-screen bg-gradient-to-b from-white via-lab-bg to-white px-4 py-10 sm:px-6 lg:px-8">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-10">
@@ -23,7 +38,7 @@ function Home() {
         </header>
 
         <section className="grid grid-cols-3 gap-3 sm:grid-cols-3 md:grid-cols-2 md:gap-4 lg:grid-cols-3">
-          {accessLinks.map((access, index) => (
+          {visibleAccessLinks.map((access, index) => (
             <QuickAccessCard
               key={access.id}
               title={access.title}
