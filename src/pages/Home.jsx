@@ -123,8 +123,8 @@ const defaultToolVisual = {
 
 const roleFeaturedToolIds = {
   vendedor: ['inventario', 'promociones'],
-  coordinador: ['inventario', 'catalogoPortadas'],
-  soporte: ['adminUsuarios', 'promociones'],
+  coordinador: ['inventario', 'catalogo-portadas'],
+  soporte: ['soporte-usuarios', 'promociones'],
 }
 
 function normalizeText(value) {
