@@ -5,9 +5,9 @@ import { useAuth } from '../context/AuthContext'
 import { accessLinks } from '../data/accessLinks'
 
 function Home() {
-  const { user, isFirebaseMode } = useAuth()
+  const { user } = useAuth()
   const userRole = String(user?.rol || user?.role || '').trim().toLowerCase()
-  const isSupportUser = isFirebaseMode && userRole === 'soporte'
+  const isSupportUser = userRole === 'soporte'
 
   const visibleAccessLinks = useMemo(
     () =>
