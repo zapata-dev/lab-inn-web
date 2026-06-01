@@ -20,13 +20,12 @@ export const accessLinks = [
     disabled: false,
   },
   {
-    id: 'portadas',
-    title: 'Generador de Portadas',
-    description: 'Disponible proximamente.',
+    id: 'catalogo-portadas',
+    title: 'Catalogo de Publicidad',
+    description: 'Material publicitario listo para compartir y publicar.',
     icon: 'ImagePlus',
     brandColor: 'red',
-    url: '',
-    disabled: true,
+    to: '/catalogo-portadas',
   },
   {
     id: 'camiones',
