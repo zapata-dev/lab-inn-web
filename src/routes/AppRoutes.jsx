@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
+import CatalogoPortadas from '../pages/CatalogoPortadas'
 import { AuthProvider } from '../context/AuthContext'
 import Home from '../pages/Home'
 import Inventario from '../pages/Inventario'
@@ -18,6 +19,7 @@ function AppRoutes() {
 
         <Route element={<ProtectedRoute />}>
           <Route path="/" element={<Home />} />
+          <Route path="/catalogo-portadas" element={<CatalogoPortadas />} />
           <Route path="/inventario" element={<Inventario />} />
           <Route path="/promociones" element={<Promociones />} />
           <Route path="/perfil" element={<Perfil />} />
