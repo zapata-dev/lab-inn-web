@@ -1,215 +1,178 @@
-import { useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { Badge, Card, EmptyState } from '../components/common'
+import { useMemo } from 'react'
+import { Link } from 'react-router-dom'
+import { Badge, Card } from '../components/common'
 import { useAuth } from '../context/AuthContext'
-import AdminDataSummary from '../features/admin/AdminDataSummary'
-import AdminStoragePanel from '../features/admin/AdminStoragePanel'
-import AdminUsersTable from '../features/admin/AdminUsersTable'
-import useToast from '../hooks/useToast'
-import { clearDemoStorage, getStorageSnapshot } from '../services/adminService'
-import { dataService } from '../services/dataService'
+
+function toDisplayDate(value) {
+  if (!value) return 'No disponible'
+  if (value instanceof Date) {
+    return value.toLocaleString('es-MX', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+  }
+  if (typeof value?.toDate === 'function') {
+    return toDisplayDate(value.toDate())
+  }
+  if (typeof value === 'string') {
+    const parsed = new Date(value)
+    if (!Number.isNaN(parsed.getTime())) return toDisplayDate(parsed)
+  }
+  return 'No disponible'
+}
+
+function getDisplayName(user) {
+  return String(user?.nombre || user?.displayName || user?.name || user?.email || 'Usuario').trim()
+}
+
+function getDisplayEmail(user) {
+  return String(user?.email || 'Sin correo').trim()
+}
+
+function getDisplayRole(user, normalizedRole) {
+  const fromProfile = String(user?.roleLabel || '').trim()
+  if (fromProfile) return fromProfile
+  if (normalizedRole === 'soporte') return 'Soporte'
+  if (normalizedRole === 'coordinador') return 'Coordinador'
+  if (normalizedRole === 'vendedor') return 'Vendedor'
+  return 'Sin rol'
+}
+
+function getDisplayBranch(user) {
+  return String(user?.sucursalNombre || user?.sucursal || user?.branchName || 'Sin sucursal asignada').trim()
+}
+
+function getDisplayStatus(user) {
+  if (typeof user?.activo === 'boolean') return user.activo ? 'Activo' : 'Inactivo'
+  return 'No disponible'
+}
+
+function getDisplayPhoto(user) {
+  return String(user?.photoURL || '').trim()
+}
+
+function getInitials(name) {
+  const normalized = String(name || '').trim()
+  if (!normalized) return 'US'
+  const parts = normalized.split(/\s+/).filter(Boolean)
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
+  return `${parts[0][0] || ''}${parts[1][0] || ''}`.toUpperCase()
+}
 
 function Perfil() {
-  const navigate = useNavigate()
-  const { user, logout } = useAuth()
-  const toast = useToast()
-  const isAdmin = user?.role === 'admin'
+  const { user } = useAuth()
+  const normalizedRole = String(user?.rol || user?.role || '').trim().toLowerCase()
+  const isSupportUser = normalizedRole === 'soporte'
+  const displayName = getDisplayName(user)
+  const displayEmail = getDisplayEmail(user)
+  const displayRole = getDisplayRole(user, normalizedRole)
+  const displayBranch = getDisplayBranch(user)
+  const displayStatus = getDisplayStatus(user)
+  const displayPhoto = getDisplayPhoto(user)
+  const initials = getInitials(displayName)
+  const createdAtLabel = toDisplayDate(user?.createdAt)
+  const updatedAtLabel = toDisplayDate(user?.updatedAt)
+  const authModeLabel = String(user?.authMode || 'No disponible').trim()
 
-  const [resetting, setResetting] = useState(false)
-
-  const [adminLoading, setAdminLoading] = useState(false)
-  const [adminError, setAdminError] = useState('')
-  const [adminData, setAdminData] = useState(null)
-  const [storageSnapshot, setStorageSnapshot] = useState(() => getStorageSnapshot())
-
-  useEffect(() => {
-    if (!isAdmin) return
-    let isActive = true
-
-    const load = async () => {
-      try {
-        setAdminLoading(true)
-        const [users, branches, inventory, leads, opps, orders, invoices, training, support] =
-          await Promise.all([
-            dataService.getUsers(),
-            dataService.getBranches(),
-            dataService.getInventory(),
-            dataService.getLeads(),
-            dataService.getOpportunities(),
-            dataService.getOrders(),
-            dataService.getInvoices(),
-            dataService.getTraining(),
-            dataService.getSupport(),
-          ])
-        if (!isActive) return
-        setAdminData({ users, branches, inventory, leads, opps, orders, invoices, training, support })
-      } catch (err) {
-        if (isActive) setAdminError(err?.message ?? 'Error al cargar datos de admin.')
-      } finally {
-        if (isActive) setAdminLoading(false)
-      }
-    }
-
-    load()
-    return () => { isActive = false }
-  }, [isAdmin])
-
-  const branchesById = useMemo(
-    () => Object.fromEntries((adminData?.branches ?? []).map((b) => [b.id, b])),
-    [adminData]
+  const identityRows = useMemo(
+    () => [
+      { label: 'Nombre', value: displayName },
+      { label: 'Correo', value: displayEmail },
+    ],
+    [displayEmail, displayName]
   )
 
-  const counts = useMemo(() => {
-    if (!adminData) return {}
-    return {
-      usuarios: adminData.users.length,
-      sucursales: adminData.branches.length,
-      inventario: adminData.inventory.length,
-      leads: adminData.leads.length,
-      oportunidades: adminData.opps.length,
-      pedidos: adminData.orders.length,
-      facturas: adminData.invoices.length,
-      videos: adminData.training?.videos?.length ?? 0,
-      tickets: adminData.support?.tickets?.length ?? 0,
-      faqs: adminData.support?.faqs?.length ?? 0,
+  const operationRows = useMemo(
+    () => [
+      { label: 'Rol', value: displayRole },
+      { label: 'Sucursal', value: displayBranch },
+      { label: 'Estatus', value: displayStatus },
+    ],
+    [displayBranch, displayRole, displayStatus]
+  )
+
+  const accountRows = useMemo(() => {
+    const rows = [
+      { label: 'Fecha de alta', value: createdAtLabel },
+      { label: 'Ultima actualizacion', value: updatedAtLabel },
+      { label: 'Metodo de acceso', value: authModeLabel },
+    ]
+    if (isSupportUser) {
+      rows.unshift({ label: 'UID', value: String(user?.uid || 'No disponible').trim() || 'No disponible' })
     }
-  }, [adminData])
-
-  const handleLogout = () => {
-    toast.info('Sesion cerrada')
-    logout()
-    navigate('/login', { replace: true })
-  }
-
-  const handleResetDemo = () => {
-    if (!resetting) {
-      setResetting(true)
-      return
-    }
-    clearDemoStorage({ keepAuth: false })
-    toast.warning('Demo reseteada')
-    logout()
-    navigate('/login', { replace: true })
-  }
-
-  const handleAdminClearStorage = () => {
-    const newSnapshot = clearDemoStorage({ keepAuth: true })
-    setStorageSnapshot(newSnapshot)
-    toast.success('Datos demo limpiados. Sesion activa.')
-  }
-
-  const handleRefreshSnapshot = () => {
-    setStorageSnapshot(getStorageSnapshot())
-  }
+    return rows
+  }, [authModeLabel, createdAtLabel, isSupportUser, updatedAtLabel, user?.uid])
 
   return (
-    <section className="mx-auto w-full max-w-5xl space-y-6">
-      <Card className="space-y-3">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="space-y-1">
-            <h2 className="text-2xl font-bold text-lab-text">Perfil</h2>
-            <p className="text-sm text-lab-muted">Gestion de sesion y configuracion demo.</p>
-          </div>
-          {isAdmin && <Badge variant="info">Admin LAB</Badge>}
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Badge variant="success">{user?.name}</Badge>
-          <Badge variant="info">{user?.roleLabel}</Badge>
-          <Badge>{user?.email}</Badge>
-          {user?.branchName && <Badge>{user?.branchName}</Badge>}
-        </div>
-      </Card>
+    <main className="mx-auto w-full max-w-4xl space-y-5">
+      <header className="space-y-2">
+        <h1 className="text-3xl font-bold text-lab-text">Mi Perfil</h1>
+        <p className="text-sm text-lab-muted">Informacion de tu cuenta en LAB.</p>
+      </header>
 
-      <Card className="space-y-3">
-        <h3 className="text-lg font-semibold text-lab-text">Sesion</h3>
-        <div className="flex flex-wrap items-center gap-3">
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="rounded-lg bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700"
-          >
-            Cerrar sesion
-          </button>
-          {!isAdmin && (
-            <>
-              <button
-                type="button"
-                onClick={handleResetDemo}
-                className={`rounded-lg border px-4 py-2 text-sm font-semibold transition ${
-                  resetting
-                    ? 'border-rose-400 bg-rose-50 text-rose-600 hover:bg-rose-100'
-                    : 'border-lab-border bg-white text-lab-text hover:bg-slate-50'
-                }`}
-              >
-                {resetting ? 'Confirmar reset completo' : 'Resetear demo'}
-              </button>
-              {resetting && (
-                <button
-                  type="button"
-                  onClick={() => setResetting(false)}
-                  className="rounded-lg border border-lab-border px-4 py-2 text-sm font-semibold text-lab-text hover:bg-slate-50"
-                >
-                  Cancelar
-                </button>
-              )}
-            </>
-          )}
-        </div>
-        {resetting && !isAdmin && (
-          <p className="text-xs text-rose-600">Esto cerrara la sesion y limpiara todos los datos demo.</p>
-        )}
-      </Card>
-
-      {isAdmin && (
-        <>
-          <Card className="space-y-1">
-            <h3 className="text-lg font-semibold text-lab-text">Panel Admin LAB</h3>
-            <p className="text-sm text-lab-muted">
-              Sala de control del MVP: usuarios demo, resumen de datos y estado del storage local.
-            </p>
-          </Card>
-
-          {adminLoading && (
-            <Card>
-              <p className="text-sm text-lab-muted">Cargando datos de admin...</p>
-            </Card>
-          )}
-
-          {adminError && !adminLoading && (
-            <EmptyState title="Error al cargar admin" description={adminError} />
-          )}
-
-          {!adminLoading && !adminError && adminData && (
-            <>
-              <div className="space-y-2">
-                <h4 className="text-xs font-semibold uppercase tracking-wide text-lab-muted">
-                  Resumen de datos
-                </h4>
-                <AdminDataSummary counts={counts} />
-              </div>
-
-              <div className="space-y-2">
-                <h4 className="text-xs font-semibold uppercase tracking-wide text-lab-muted">
-                  Usuarios demo
-                </h4>
-                <AdminUsersTable users={adminData.users} branchesById={branchesById} />
-              </div>
-            </>
-          )}
-
-          <div className="space-y-2">
-            <h4 className="text-xs font-semibold uppercase tracking-wide text-lab-muted">
-              Storage local
-            </h4>
-            <AdminStoragePanel
-              snapshot={storageSnapshot}
-              onRefresh={handleRefreshSnapshot}
-              onClearDemoStorage={handleAdminClearStorage}
+      <Card className="space-y-4">
+        <h2 className="text-lg font-semibold text-lab-text">Identidad</h2>
+        <div className="flex items-center gap-3">
+          {displayPhoto ? (
+            <img
+              src={displayPhoto}
+              alt={`Foto de ${displayName}`}
+              className="size-14 rounded-full border border-lab-border object-cover"
+              referrerPolicy="no-referrer"
             />
-          </div>
-        </>
-      )}
-    </section>
+          ) : (
+            <span className="inline-flex size-14 items-center justify-center rounded-full border border-lab-border bg-lab-primary/10 text-base font-semibold text-lab-primary">
+              {initials}
+            </span>
+          )}
+          <Badge variant="info">{displayRole}</Badge>
+        </div>
+        <dl className="grid gap-3 sm:grid-cols-2">
+          {identityRows.map((row) => (
+            <div key={row.label} className="rounded-lg border border-lab-border bg-slate-50 px-3 py-2">
+              <dt className="text-xs font-semibold uppercase tracking-wide text-lab-muted">{row.label}</dt>
+              <dd className="mt-1 text-sm text-lab-text">{row.value}</dd>
+            </div>
+          ))}
+        </dl>
+      </Card>
+
+      <Card className="space-y-4">
+        <h2 className="text-lg font-semibold text-lab-text">Operacion</h2>
+        <dl className="grid gap-3 sm:grid-cols-2">
+          {operationRows.map((row) => (
+            <div key={row.label} className="rounded-lg border border-lab-border bg-slate-50 px-3 py-2">
+              <dt className="text-xs font-semibold uppercase tracking-wide text-lab-muted">{row.label}</dt>
+              <dd className="mt-1 text-sm text-lab-text">{row.value}</dd>
+            </div>
+          ))}
+        </dl>
+      </Card>
+
+      <Card className="space-y-4">
+        <h2 className="text-lg font-semibold text-lab-text">Cuenta</h2>
+        <dl className="grid gap-3 sm:grid-cols-2">
+          {accountRows.map((row) => (
+            <div key={row.label} className="rounded-lg border border-lab-border bg-slate-50 px-3 py-2">
+              <dt className="text-xs font-semibold uppercase tracking-wide text-lab-muted">{row.label}</dt>
+              <dd className="mt-1 text-sm text-lab-text">{row.value}</dd>
+            </div>
+          ))}
+        </dl>
+      </Card>
+
+      <div>
+        <Link
+          to="/"
+          className="inline-flex items-center rounded-lg border border-lab-border bg-white px-4 py-2 text-sm font-semibold text-lab-text hover:bg-slate-50"
+        >
+          Volver a Mi Oficina Virtual
+        </Link>
+      </div>
+    </main>
   )
 }
 

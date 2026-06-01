@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { Building2 } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { Badge, Card } from '../components/common'
 import QuickAccessCard from '../components/QuickAccessCard'
 import { useAuth } from '../context/AuthContext'
@@ -113,6 +114,15 @@ function Home() {
             <div className="flex flex-wrap gap-2 text-sm">
               <Badge variant="info">Rol: {displayRole}</Badge>
               <Badge>Sucursal: {displayBranch}</Badge>
+            </div>
+
+            <div>
+              <Link
+                to="/perfil"
+                className="inline-flex items-center rounded-lg border border-lab-border bg-white px-3 py-2 text-sm font-medium text-lab-text hover:bg-slate-50"
+              >
+                Mi perfil
+              </Link>
             </div>
           </Card>
         </section>

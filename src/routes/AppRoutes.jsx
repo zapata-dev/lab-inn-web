@@ -3,6 +3,7 @@ import { AuthProvider } from '../context/AuthContext'
 import Home from '../pages/Home'
 import Inventario from '../pages/Inventario'
 import Login from '../pages/Login'
+import Perfil from '../pages/Perfil'
 import Promociones from '../pages/Promociones'
 import SoporteUsuarios from '../pages/SoporteUsuarios'
 import Unauthorized from '../pages/Unauthorized'
@@ -19,6 +20,7 @@ function AppRoutes() {
           <Route path="/" element={<Home />} />
           <Route path="/inventario" element={<Inventario />} />
           <Route path="/promociones" element={<Promociones />} />
+          <Route path="/perfil" element={<Perfil />} />
           <Route path="/soporte/usuarios" element={<SoporteUsuarios />} />
         </Route>
 
