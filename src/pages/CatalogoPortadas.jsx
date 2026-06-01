@@ -87,6 +87,27 @@ function getUnitVin(unit) {
   return value || String(unit?.id || 'UNIDAD')
 }
 
+function getPromotionValue(unit) {
+  const candidates = [
+    unit?.promocion,
+    unit?.Promocion,
+    unit?.Promoción,
+    unit?.promotion,
+    unit?.raw?.Promoción,
+    unit?.raw?.Promocion,
+    unit?.raw?.promocion,
+    unit?.raw?.promotion,
+  ]
+
+  const firstCandidate = candidates.find((value) => String(value ?? '').trim().length > 0)
+  return String(firstCandidate ?? '').trim()
+}
+
+function isPromotionalUnit(unit) {
+  const normalized = normalizeText(getPromotionValue(unit))
+  return normalized === 'si' || normalized === 'sí' || normalized === 's'
+}
+
 function resolveBranchFromUnit(unit) {
   const branchLabel = String(getUnitAgency(unit) || '').trim()
   if (!branchLabel) {
@@ -163,9 +184,16 @@ function CatalogoPortadas() {
   const [currentPage, setCurrentPage] = useState(1)
   const [message, setMessage] = useState({ type: '', text: '' })
 
+  const promotionalUnits = useMemo(() => units.filter(isPromotionalUnit), [units])
+
+  const promotionalUnitsWithCover = useMemo(
+    () => promotionalUnits.filter((unit) => Boolean(getCoverFromPortadaColumn(unit))),
+    [promotionalUnits]
+  )
+
   const normalizedCoverUnits = useMemo(
     () =>
-      units
+      promotionalUnitsWithCover
         .map((unit, index) => {
           const coverImage = getCoverFromPortadaColumn(unit)
           if (!coverImage) return null
@@ -186,7 +214,7 @@ function CatalogoPortadas() {
           }
         })
         .filter(Boolean),
-    [units]
+    [promotionalUnitsWithCover]
   )
 
   const dedupeSummary = useMemo(() => {
@@ -294,14 +322,22 @@ function CatalogoPortadas() {
 
     return {
       totalUnits: units.length,
-      totalWithCover: normalizedCoverUnits.length,
+      totalPromotional: promotionalUnits.length,
+      totalPromotionalWithCover: promotionalUnitsWithCover.length,
       totalUniqueImages: uniqueCoverUnits.length,
       duplicateCount: dedupeSummary.duplicateCount,
       coverUrlsBefore,
       duplicateSamples: dedupeSummary.duplicateSamples,
       unassignedExamples,
     }
-  }, [units.length, normalizedCoverUnits, uniqueCoverUnits, dedupeSummary])
+  }, [
+    units.length,
+    promotionalUnits.length,
+    promotionalUnitsWithCover.length,
+    normalizedCoverUnits,
+    uniqueCoverUnits,
+    dedupeSummary,
+  ])
 
   const rangeStart = filteredUnits.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1
   const rangeEnd = filteredUnits.length === 0 ? 0 : Math.min(currentPage * PAGE_SIZE, filteredUnits.length)
@@ -402,7 +438,7 @@ function CatalogoPortadas() {
               </Link>
               <h1 className="text-3xl font-bold text-lab-text">Catalogo de Publicidad</h1>
               <p className="text-sm text-lab-muted">
-                Consulta y exporta material publicitario por sucursal.
+                Consulta y descarga material publicitario de unidades en promocion por sucursal.
               </p>
               <p className="text-sm text-lab-muted">
                 Ultima actualizacion: {formatLastUpdated(lastUpdated)}
@@ -431,8 +467,12 @@ function CatalogoPortadas() {
             <p className="text-lg font-semibold text-lab-text">{diagnostics.totalUnits}</p>
           </div>
           <div className="rounded-xl bg-lab-bg/60 px-3 py-2">
-            <p className="text-xs text-lab-muted">Con Imagen Portada</p>
-            <p className="text-lg font-semibold text-lab-text">{diagnostics.totalWithCover}</p>
+            <p className="text-xs text-lab-muted">Con Promocion = Si</p>
+            <p className="text-lg font-semibold text-lab-text">{diagnostics.totalPromotional}</p>
+          </div>
+          <div className="rounded-xl bg-lab-bg/60 px-3 py-2">
+            <p className="text-xs text-lab-muted">Promocion + Imagen Portada</p>
+            <p className="text-lg font-semibold text-lab-text">{diagnostics.totalPromotionalWithCover}</p>
           </div>
           <div className="rounded-xl bg-lab-bg/60 px-3 py-2">
             <p className="text-xs text-lab-muted">Cards unicas (imagen)</p>
