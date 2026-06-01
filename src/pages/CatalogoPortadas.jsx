@@ -6,8 +6,11 @@ import {
   getInventoryCache,
   saveInventoryCache,
 } from '../services/inventoryService'
+import { getCodigo, getUnitAgency } from '../utils/inventoryUnitUtils'
 
-const BRANCH_FILTERS = [
+const PAGE_SIZE = 24
+
+const BASE_BRANCH_FILTERS = [
   { id: 'all', label: 'Todas' },
   { id: 'qro', label: 'Queretaro' },
   { id: 'leon', label: 'Leon' },
@@ -25,6 +28,32 @@ function normalizeText(value) {
     .replace(/[\u0300-\u036f]/g, '')
 }
 
+function normalizeUrl(value) {
+  return String(value || '').trim()
+}
+
+function normalizeCoverUrlForKey(value) {
+  const rawUrl = normalizeUrl(value)
+  if (!rawUrl) return ''
+
+  try {
+    const parsed = new URL(rawUrl)
+    parsed.search = ''
+    parsed.hash = ''
+    const pathname = parsed.pathname.replace(/\/+$/, '') || '/'
+    return `${parsed.origin.toLowerCase()}${pathname}`
+  } catch {
+    return rawUrl.split('#')[0].split('?')[0].trim().toLowerCase()
+  }
+}
+
+function toSafeIdToken(value, fallback = 'otro') {
+  const token = normalizeText(value)
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+  return token || fallback
+}
+
 function formatLastUpdated(dateString) {
   if (!dateString) return 'Sin registro de actualizacion'
   const date = new Date(dateString)
@@ -37,14 +66,14 @@ function formatLastUpdated(dateString) {
 }
 
 function getCoverFromPortadaColumn(unit) {
-  const rawPortadaValue = String(unit?.raw?.imagenPortadaRaw ?? unit?.imagenPortadaRaw ?? '').trim()
+  const rawPortadaValue = normalizeUrl(unit?.raw?.imagenPortadaRaw ?? unit?.imagenPortadaRaw ?? '')
   if (!rawPortadaValue) return ''
   const match = rawPortadaValue.match(/https?:\/\/[^\s,"]+/i)
-  return match ? match[0] : ''
+  return match ? normalizeUrl(match[0]) : ''
 }
 
 function getUnitYear(unit) {
-  const value = String(unit?.anio || unit?.year || unit?.Ano || unit?.Año || '').trim()
+  const value = String(unit?.anio || unit?.year || unit?.Ano || unit?.raw?.['A\u00f1o'] || '').trim()
   return value || 'N/D'
 }
 
@@ -58,40 +87,46 @@ function getUnitVin(unit) {
   return value || String(unit?.id || 'UNIDAD')
 }
 
-function getRawBranchValue(unit) {
-  const candidates = [
-    unit?.Centro,
-    unit?.centro,
-    unit?.Sucursal,
-    unit?.sucursalNombre,
-    unit?.['Ubicación Física'],
-    unit?.ubicacionFisica,
-    unit?.ubicacion,
-  ]
-  return String(candidates.find((value) => String(value ?? '').trim()) ?? '').trim()
-}
+function resolveBranchFromUnit(unit) {
+  const branchLabel = String(getUnitAgency(unit) || '').trim()
+  if (!branchLabel) {
+    return { id: 'none', label: 'Sin asignar' }
+  }
 
-function mapBranchFilter(rawBranch) {
-  const normalized = normalizeText(rawBranch)
-  if (!normalized || normalized.includes('sin asignar')) return { id: 'none', label: 'Sin asignar' }
+  const normalized = normalizeText(branchLabel)
+
   if (normalized.includes('queretaro') || normalized.includes('qro')) {
     return { id: 'qro', label: 'Queretaro' }
   }
-  if (normalized.includes('leon')) return { id: 'leon', label: 'Leon' }
-  if (normalized.includes('guadalajara')) return { id: 'gdl', label: 'Guadalajara' }
-  if (normalized.includes('monterrey') || normalized.includes('mty')) {
+  if (normalized.includes('leon')) {
+    return { id: 'leon', label: 'Leon' }
+  }
+  if (normalized.includes('guadalajara') || normalized === 'gdl' || normalized.includes('otero')) {
+    return { id: 'gdl', label: 'Guadalajara' }
+  }
+  if (normalized.includes('monterrey') || normalized === 'mty') {
     return { id: 'mty', label: 'Monterrey' }
   }
   if (
     normalized.includes('ciudad de mexico') ||
     normalized.includes('cdmx') ||
     normalized.includes('mexico') ||
-    normalized.includes('tlanepantla') ||
+    normalized.includes('tlalnepantla') ||
     normalized.includes('aeropuerto')
   ) {
     return { id: 'cdmx', label: 'Ciudad de Mexico' }
   }
-  return { id: 'none', label: 'Sin asignar' }
+
+  return {
+    id: `custom-${toSafeIdToken(branchLabel)}`,
+    label: branchLabel,
+  }
+}
+
+function buildDedupeKey(coverImage) {
+  const normalizedCoverUrl = normalizeCoverUrlForKey(coverImage)
+  if (normalizedCoverUrl) return `cover:${normalizedCoverUrl}`
+  return 'cover:sin-url'
 }
 
 function toSafeFileToken(value, fallback) {
@@ -125,6 +160,7 @@ function CatalogoPortadas() {
   const [activeBranch, setActiveBranch] = useState('all')
   const [lastUpdated, setLastUpdated] = useState(null)
   const [loading, setLoading] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
   const [message, setMessage] = useState({ type: '', text: '' })
 
   const normalizedCoverUnits = useMemo(
@@ -134,42 +170,152 @@ function CatalogoPortadas() {
           const coverImage = getCoverFromPortadaColumn(unit)
           if (!coverImage) return null
 
-          const branch = mapBranchFilter(getRawBranchValue(unit))
+          const branch = resolveBranchFromUnit(unit)
           return {
             id: unit.id || `${getUnitVin(unit)}-${index}`,
+            dedupeKey: buildDedupeKey(coverImage),
             coverImage,
             year: getUnitYear(unit),
             model: getUnitModel(unit),
             vin: getUnitVin(unit),
+            promotionCode: String(getCodigo(unit) || '').trim(),
             branchId: branch.id,
             branchLabel: branch.label,
+            centerRaw: String(unit?.centro || unit?.raw?.centro || '').trim(),
+            locationRaw: String(unit?.ubicacion || unit?.ubicacionFisica || unit?.raw?.ubicacionFisica || '').trim(),
           }
         })
         .filter(Boolean),
     [units]
   )
 
-  const branchCounts = useMemo(() => {
-    const counters = {
-      all: normalizedCoverUnits.length,
-      qro: 0,
-      leon: 0,
-      gdl: 0,
-      cdmx: 0,
-      mty: 0,
-      none: 0,
-    }
+  const dedupeSummary = useMemo(() => {
+    const byImageKey = new Map()
+    const duplicateSamples = []
 
     normalizedCoverUnits.forEach((unit) => {
-      counters[unit.branchId] = (counters[unit.branchId] ?? 0) + 1
+      const existingUnit = byImageKey.get(unit.dedupeKey)
+      if (existingUnit) {
+        if (unit.promotionCode) {
+          existingUnit.codeSet.add(unit.promotionCode)
+        }
+        if (duplicateSamples.length < 10) {
+          duplicateSamples.push({
+            key: unit.dedupeKey,
+            code: unit.promotionCode || 'SIN_CODIGO',
+            coverImage: unit.coverImage,
+          })
+        }
+        return
+      }
+
+      byImageKey.set(unit.dedupeKey, {
+        ...unit,
+        codeSet: new Set(unit.promotionCode ? [unit.promotionCode] : []),
+      })
     })
-    return counters
+
+    const uniqueUnits = [...byImageKey.values()].map((unit) => ({
+      ...unit,
+      associatedCodes: [...unit.codeSet].sort((left, right) => left.localeCompare(right, 'es')),
+      associatedCodeCount: unit.codeSet.size,
+    }))
+
+    return {
+      uniqueUnits,
+      duplicateSamples,
+      duplicateCount: Math.max(0, normalizedCoverUnits.length - uniqueUnits.length),
+    }
   }, [normalizedCoverUnits])
 
+  const uniqueCoverUnits = dedupeSummary.uniqueUnits
+
+  const branchFilters = useMemo(() => {
+    const customBranchesById = new Map()
+
+    uniqueCoverUnits.forEach((unit) => {
+      if (!unit.branchId.startsWith('custom-')) return
+      if (!customBranchesById.has(unit.branchId)) {
+        customBranchesById.set(unit.branchId, { id: unit.branchId, label: unit.branchLabel })
+      }
+    })
+
+    const customBranches = [...customBranchesById.values()].sort((left, right) =>
+      left.label.localeCompare(right.label, 'es')
+    )
+
+    const baseWithoutNone = BASE_BRANCH_FILTERS.filter((branch) => branch.id !== 'none')
+    const noneBranch = BASE_BRANCH_FILTERS.find((branch) => branch.id === 'none')
+    return [...baseWithoutNone, ...customBranches, noneBranch].filter(Boolean)
+  }, [uniqueCoverUnits])
+
+  const branchCounts = useMemo(() => {
+    const counters = {}
+    branchFilters.forEach((branch) => {
+      counters[branch.id] = 0
+    })
+    counters.all = uniqueCoverUnits.length
+
+    uniqueCoverUnits.forEach((unit) => {
+      counters[unit.branchId] = (counters[unit.branchId] ?? 0) + 1
+    })
+
+    return counters
+  }, [branchFilters, uniqueCoverUnits])
+
   const filteredUnits = useMemo(() => {
-    if (activeBranch === 'all') return normalizedCoverUnits
-    return normalizedCoverUnits.filter((unit) => unit.branchId === activeBranch)
-  }, [activeBranch, normalizedCoverUnits])
+    if (activeBranch === 'all') return uniqueCoverUnits
+    return uniqueCoverUnits.filter((unit) => unit.branchId === activeBranch)
+  }, [activeBranch, uniqueCoverUnits])
+
+  const totalPages = useMemo(
+    () => Math.max(1, Math.ceil(filteredUnits.length / PAGE_SIZE)),
+    [filteredUnits.length]
+  )
+
+  const paginatedUnits = useMemo(() => {
+    const startIndex = (currentPage - 1) * PAGE_SIZE
+    return filteredUnits.slice(startIndex, startIndex + PAGE_SIZE)
+  }, [currentPage, filteredUnits])
+
+  const diagnostics = useMemo(() => {
+    const coverUrlsBefore = normalizedCoverUnits.slice(0, 10).map((unit) => unit.coverImage)
+    const unassignedExamples = uniqueCoverUnits
+      .filter((unit) => unit.branchId === 'none')
+      .slice(0, 20)
+      .map((unit) => ({
+        id: unit.id,
+        model: unit.model,
+        year: unit.year,
+        code: unit.promotionCode || 'SIN_CODIGO',
+        centerRaw: unit.centerRaw || '(vacio)',
+        locationRaw: unit.locationRaw || '(vacio)',
+      }))
+
+    return {
+      totalUnits: units.length,
+      totalWithCover: normalizedCoverUnits.length,
+      totalUniqueImages: uniqueCoverUnits.length,
+      duplicateCount: dedupeSummary.duplicateCount,
+      coverUrlsBefore,
+      duplicateSamples: dedupeSummary.duplicateSamples,
+      unassignedExamples,
+    }
+  }, [units.length, normalizedCoverUnits, uniqueCoverUnits, dedupeSummary])
+
+  const rangeStart = filteredUnits.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1
+  const rangeEnd = filteredUnits.length === 0 ? 0 : Math.min(currentPage * PAGE_SIZE, filteredUnits.length)
+
+  useEffect(() => {
+    const branchExists = branchFilters.some((branch) => branch.id === activeBranch)
+    if (!branchExists) {
+      setActiveBranch('all')
+    }
+  }, [activeBranch, branchFilters])
+
+  useEffect(() => {
+    setCurrentPage((previousPage) => Math.min(previousPage, totalPages))
+  }, [totalPages])
 
   const refreshCatalog = async (showSuccessMessage = false) => {
     setLoading(true)
@@ -181,6 +327,7 @@ function CatalogoPortadas() {
       const cache = getInventoryCache()
       setUnits(items)
       setLastUpdated(cache.lastUpdated)
+      setCurrentPage(1)
       if (showSuccessMessage) {
         setMessage({ type: 'success', text: 'Catalogo de publicidad actualizado correctamente.' })
       }
@@ -189,6 +336,7 @@ function CatalogoPortadas() {
       if (cache.items.length > 0) {
         setUnits(cache.items)
         setLastUpdated(cache.lastUpdated)
+        setCurrentPage(1)
         setMessage({
           type: 'warning',
           text: 'No se pudo actualizar. Mostrando ultima version guardada.',
@@ -277,16 +425,38 @@ function CatalogoPortadas() {
           <p className={`rounded-xl border px-4 py-3 text-sm font-medium ${messageClass}`}>{message.text}</p>
         ) : null}
 
+        <section className="grid gap-3 rounded-2xl border border-lab-border bg-white p-4 shadow-sm sm:grid-cols-2 xl:grid-cols-4">
+          <div className="rounded-xl bg-lab-bg/60 px-3 py-2">
+            <p className="text-xs text-lab-muted">Total unidades</p>
+            <p className="text-lg font-semibold text-lab-text">{diagnostics.totalUnits}</p>
+          </div>
+          <div className="rounded-xl bg-lab-bg/60 px-3 py-2">
+            <p className="text-xs text-lab-muted">Con Imagen Portada</p>
+            <p className="text-lg font-semibold text-lab-text">{diagnostics.totalWithCover}</p>
+          </div>
+          <div className="rounded-xl bg-lab-bg/60 px-3 py-2">
+            <p className="text-xs text-lab-muted">Cards unicas (imagen)</p>
+            <p className="text-lg font-semibold text-lab-text">{diagnostics.totalUniqueImages}</p>
+          </div>
+          <div className="rounded-xl bg-lab-bg/60 px-3 py-2">
+            <p className="text-xs text-lab-muted">Duplicados removidos</p>
+            <p className="text-lg font-semibold text-lab-text">{diagnostics.duplicateCount}</p>
+          </div>
+        </section>
+
         <section className="rounded-2xl border border-lab-border bg-white p-5 shadow-sm">
           <div className="flex flex-wrap gap-2">
-            {BRANCH_FILTERS.map((branch) => {
+            {branchFilters.map((branch) => {
               const isActive = activeBranch === branch.id
               const count = branchCounts[branch.id] ?? 0
               return (
                 <button
                   key={branch.id}
                   type="button"
-                  onClick={() => setActiveBranch(branch.id)}
+                  onClick={() => {
+                    setActiveBranch(branch.id)
+                    setCurrentPage(1)
+                  }}
                   className={`rounded-lg border px-3 py-2 text-sm font-semibold transition-colors ${
                     isActive
                       ? 'border-lab-primary bg-lab-primary text-white'
@@ -300,7 +470,11 @@ function CatalogoPortadas() {
           </div>
         </section>
 
-        {filteredUnits.length === 0 ? (
+        <section className="rounded-2xl border border-lab-border bg-white px-4 py-3 text-sm text-lab-muted shadow-sm">
+          Mostrando {rangeStart}-{rangeEnd} de {filteredUnits.length} publicidades
+        </section>
+
+        {paginatedUnits.length === 0 ? (
           <section className="rounded-2xl border border-dashed border-lab-border bg-white p-10 text-center shadow-sm">
             <h2 className="text-xl font-semibold text-lab-text">
               No hay material publicitario para esta sucursal.
@@ -311,7 +485,7 @@ function CatalogoPortadas() {
           </section>
         ) : (
           <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {filteredUnits.map((unit) => (
+            {paginatedUnits.map((unit) => (
               <article
                 key={unit.id}
                 className="overflow-hidden rounded-2xl border border-lab-border bg-white shadow-sm"
@@ -335,6 +509,13 @@ function CatalogoPortadas() {
                     </p>
                     <p>
                       <span className="font-semibold text-lab-text">Sucursal:</span> {unit.branchLabel}
+                    </p>
+                    <p>
+                      <span className="font-semibold text-lab-text">Codigo:</span> {unit.promotionCode || 'Sin codigo'}
+                    </p>
+                    <p>
+                      <span className="font-semibold text-lab-text">Codigos asociados:</span>{' '}
+                      {unit.associatedCodeCount || 0}
                     </p>
                   </div>
 
@@ -362,6 +543,30 @@ function CatalogoPortadas() {
             ))}
           </section>
         )}
+
+        {totalPages > 1 ? (
+          <section className="flex items-center justify-between rounded-2xl border border-lab-border bg-white px-4 py-3 text-sm shadow-sm">
+            <button
+              type="button"
+              onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+              disabled={currentPage === 1}
+              className="rounded-lg border border-lab-border px-3 py-1.5 font-semibold text-lab-text hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Anterior
+            </button>
+            <p className="font-medium text-lab-muted">
+              Pagina {currentPage} de {totalPages}
+            </p>
+            <button
+              type="button"
+              onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+              disabled={currentPage === totalPages}
+              className="rounded-lg border border-lab-border px-3 py-1.5 font-semibold text-lab-text hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Siguiente
+            </button>
+          </section>
+        ) : null}
       </div>
     </main>
   )
