@@ -1,13 +1,62 @@
 import { useMemo } from 'react'
 import { Building2 } from 'lucide-react'
+import { Badge, Card } from '../components/common'
 import QuickAccessCard from '../components/QuickAccessCard'
 import { useAuth } from '../context/AuthContext'
 import { accessLinks } from '../data/accessLinks'
+
+function getDisplayName(user) {
+  return String(user?.nombre || user?.displayName || user?.name || user?.email || 'Usuario').trim()
+}
+
+function getDisplayPhoto(user) {
+  return String(user?.photoURL || '').trim()
+}
+
+function getNameInitials(name) {
+  const normalized = String(name || '').trim()
+  if (!normalized) return 'US'
+  const parts = normalized.split(/\s+/).filter(Boolean)
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
+  return `${parts[0][0] || ''}${parts[1][0] || ''}`.toUpperCase()
+}
+
+function getDisplayRole(user, normalizedRole) {
+  const fromProfile = String(user?.roleLabel || '').trim()
+  if (fromProfile) return fromProfile
+  if (normalizedRole === 'soporte') return 'Soporte'
+  if (normalizedRole === 'coordinador') return 'Coordinador'
+  if (normalizedRole === 'vendedor') return 'Vendedor'
+  return 'Sin rol'
+}
+
+function getDisplayBranch(user) {
+  return String(user?.sucursalNombre || user?.sucursal || user?.branchName || 'Sin sucursal asignada').trim()
+}
+
+function getRoleContextMessage(normalizedRole) {
+  if (normalizedRole === 'soporte') {
+    return 'Desde aqui puedes administrar accesos, consultar herramientas internas y apoyar a los equipos comerciales.'
+  }
+  if (normalizedRole === 'vendedor') {
+    return 'Todo listo para consultar inventario, promociones y herramientas comerciales.'
+  }
+  if (normalizedRole === 'coordinador') {
+    return 'Administra tu operacion y manten a tu equipo conectado.'
+  }
+  return 'Accede rapidamente a las herramientas disponibles para tu operacion.'
+}
 
 function Home() {
   const { user } = useAuth()
   const userRole = String(user?.rol || user?.role || '').trim().toLowerCase()
   const isSupportUser = userRole === 'soporte'
+  const displayName = getDisplayName(user)
+  const displayRole = getDisplayRole(user, userRole)
+  const displayBranch = getDisplayBranch(user)
+  const displayPhoto = getDisplayPhoto(user)
+  const nameInitials = getNameInitials(displayName)
+  const contextualMessage = getRoleContextMessage(userRole)
 
   const visibleAccessLinks = useMemo(
     () =>
@@ -30,12 +79,43 @@ function Home() {
           </div>
 
           <div className="space-y-2">
-            <h1 className="text-3xl font-bold text-lab-text sm:text-4xl">Mi Oficina Virtual</h1>
+            <h1 className="text-3xl font-bold text-lab-text sm:text-4xl">LAB</h1>
             <p className="mx-auto max-w-2xl text-sm text-lab-muted sm:text-base">
-              Centro de accesos y herramientas comerciales
+              Plataforma de trabajo Zapata
             </p>
           </div>
         </header>
+
+        <section className="mx-auto w-full max-w-5xl">
+          <Card className="space-y-4 border-lab-border bg-white/90 p-6">
+            <div className="flex items-center gap-3">
+              {displayPhoto ? (
+                <img
+                  src={displayPhoto}
+                  alt={`Foto de ${displayName}`}
+                  className="size-12 rounded-full border border-lab-border object-cover"
+                  referrerPolicy="no-referrer"
+                />
+              ) : (
+                <span className="inline-flex size-12 items-center justify-center rounded-full border border-lab-border bg-lab-primary/10 text-sm font-semibold text-lab-primary">
+                  {nameInitials}
+                </span>
+              )}
+
+              <p className="text-xl font-semibold text-lab-text sm:text-2xl">Hola, {displayName}</p>
+            </div>
+
+            <div className="space-y-1">
+              <h2 className="text-lg font-bold text-lab-text sm:text-xl">Bienvenido a tu Oficina Virtual</h2>
+              <p className="text-sm text-lab-muted">{contextualMessage}</p>
+            </div>
+
+            <div className="flex flex-wrap gap-2 text-sm">
+              <Badge variant="info">Rol: {displayRole}</Badge>
+              <Badge>Sucursal: {displayBranch}</Badge>
+            </div>
+          </Card>
+        </section>
 
         <section className="grid grid-cols-3 gap-3 sm:grid-cols-3 md:grid-cols-2 md:gap-4 lg:grid-cols-3">
           {visibleAccessLinks.map((access, index) => (
