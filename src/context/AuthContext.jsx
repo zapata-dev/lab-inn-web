@@ -20,6 +20,24 @@ function normalizeErrorCode(error) {
   return String(error?.code ?? '').trim() || 'authorization/unknown'
 }
 
+function normalizeAuthIdentity(firebaseUser) {
+  if (!firebaseUser) return null
+
+  const uid = String(firebaseUser?.uid ?? '').trim()
+  const email = String(firebaseUser?.email ?? '').trim().toLowerCase()
+  const displayName = String(firebaseUser?.displayName ?? '').trim()
+  const photoURL = String(firebaseUser?.photoURL ?? '').trim()
+
+  if (!uid) return null
+
+  return {
+    uid,
+    email,
+    displayName,
+    photoURL: photoURL || null,
+  }
+}
+
 function createAuthTimeoutError() {
   const timeoutError = new Error('La validacion de acceso tardo demasiado. Intenta de nuevo.')
   timeoutError.code = 'authorization/validation-timeout'
@@ -38,6 +56,7 @@ function withTimeout(promise, timeoutMs) {
 function AuthProvider({ children }) {
   const [authState, setAuthState] = useLocalStorage('auth', null)
   const [user, setUser] = useState(null)
+  const [authIdentity, setAuthIdentity] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [authErrorCode, setAuthErrorCode] = useState(null)
@@ -62,6 +81,7 @@ function AuthProvider({ children }) {
     }
 
     setUser(demoUser)
+    setAuthIdentity(null)
     setLoading(false)
     setError(null)
     setAuthErrorCode(null)
@@ -76,6 +96,7 @@ function AuthProvider({ children }) {
       firebaseConfigError.code = AUTHORIZATION_ERROR_CODES.FIREBASE_NOT_CONFIGURED
 
       setUser(null)
+      setAuthIdentity(null)
       setError(firebaseConfigError)
       setAuthErrorCode(firebaseConfigError.code)
       setLoading(false)
@@ -107,6 +128,7 @@ function AuthProvider({ children }) {
 
       if (!firebaseUser) {
         setUser(null)
+        setAuthIdentity(null)
         setError(null)
         setAuthErrorCode(null)
         setLoading(false)
@@ -114,6 +136,7 @@ function AuthProvider({ children }) {
         return
       }
 
+      setAuthIdentity(normalizeAuthIdentity(firebaseUser))
       setLoading(true)
 
       try {
@@ -193,9 +216,11 @@ function AuthProvider({ children }) {
 
     try {
       const firebaseUser = await loginFirebaseWithGoogle()
+      setAuthIdentity(normalizeAuthIdentity(firebaseUser))
       return firebaseUser
     } catch (loginError) {
       setUser(null)
+      setAuthIdentity(null)
       setError(loginError)
       setAuthErrorCode(normalizeErrorCode(loginError))
       setLoading(false)
@@ -212,6 +237,7 @@ function AuthProvider({ children }) {
       try {
         await logoutFirebase()
         setUser(null)
+        setAuthIdentity(null)
         setError(null)
         setAuthErrorCode(null)
         return
@@ -245,6 +271,7 @@ function AuthProvider({ children }) {
 
   const value = {
     user,
+    authIdentity,
     loading,
     error,
     authErrorCode,

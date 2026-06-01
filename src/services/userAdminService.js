@@ -140,6 +140,100 @@ function getReviewerValue(reviewer) {
   return 'soporte'
 }
 
+async function getMyAccessRequest(uid) {
+  ensureFirebaseReady()
+  const normalizedUid = normalizeString(uid)
+  if (!normalizedUid) {
+    const error = new Error('UID invalido para consultar solicitud.')
+    error.code = 'invalid-uid'
+    throw error
+  }
+
+  const snapshot = await getDoc(doc(firebaseDb, 'accessRequests', normalizedUid))
+  if (!snapshot.exists()) return null
+  return normalizeAccessRequest(snapshot)
+}
+
+function getDomainFromEmail(email) {
+  const normalizedEmail = normalizeEmail(email)
+  const atIndex = normalizedEmail.indexOf('@')
+  if (atIndex <= 0) return ''
+  return normalizedEmail.slice(atIndex + 1)
+}
+
+async function createAccessRequest(firebaseUser, payload = {}) {
+  ensureFirebaseReady()
+
+  const uid = normalizeString(firebaseUser?.uid)
+  const email = normalizeEmail(firebaseUser?.email)
+  if (!uid) {
+    const error = new Error('No existe UID de Firebase para crear la solicitud.')
+    error.code = 'invalid-uid'
+    throw error
+  }
+
+  if (!email) {
+    const error = new Error('No existe email valido para crear la solicitud.')
+    error.code = 'invalid-email'
+    throw error
+  }
+
+  const requestedRole = ensureValidRole(payload?.requestedRole)
+  const branch = ensureValidBranch(payload?.requestedSucursalId, payload?.requestedSucursalNombre)
+  const accessRequestRef = doc(firebaseDb, 'accessRequests', uid)
+  const currentSnapshot = await getDoc(accessRequestRef)
+
+  if (currentSnapshot.exists()) {
+    const currentRequest = normalizeAccessRequest(currentSnapshot)
+    if (currentRequest.status === 'pendiente') {
+      const error = new Error('Ya existe una solicitud pendiente para este usuario.')
+      error.code = 'request-already-pending'
+      throw error
+    }
+
+    if (currentRequest.status === 'aprobado') {
+      const error = new Error('Tu solicitud ya fue aprobada. Inicia sesion de nuevo para continuar.')
+      error.code = 'request-already-approved'
+      throw error
+    }
+
+    if (currentRequest.status === 'rechazado' || currentRequest.status === 'cancelado') {
+      const error = new Error(
+        'No se puede reenviar la solicitud actual por restricciones de seguridad en reglas de Firestore.'
+      )
+      error.code = 'request-resubmit-not-allowed'
+      throw error
+    }
+  }
+
+  const displayName = normalizeString(firebaseUser?.displayName)
+  const message = normalizeString(payload?.message)
+  const domain = getDomainFromEmail(email)
+  const now = serverTimestamp()
+  const allowedPayload = {
+    uid,
+    email,
+    nombre: normalizeString(payload?.nombre || displayName || email),
+    displayName,
+    photoURL: normalizeString(firebaseUser?.photoURL),
+    domain,
+    status: 'pendiente',
+    requestedRole,
+    requestedSucursalId: branch.sucursalId,
+    requestedSucursalNombre: branch.sucursalNombre,
+    message,
+    updatedAt: now,
+  }
+
+  if (!currentSnapshot.exists()) {
+    allowedPayload.createdAt = now
+  }
+
+  await setDoc(accessRequestRef, allowedPayload, { merge: true })
+  const nextSnapshot = await getDoc(accessRequestRef)
+  return nextSnapshot.exists() ? normalizeAccessRequest(nextSnapshot) : null
+}
+
 function subscribeAccessRequests({ status = 'todos' } = {}, callback, onError) {
   ensureFirebaseReady()
   const normalizedStatus = normalizeString(status).toLowerCase()
@@ -324,7 +418,9 @@ export {
   BRANCH_OPTIONS,
   ROLE_OPTIONS,
   approveAccessRequest,
+  createAccessRequest,
   deactivateUser,
+  getMyAccessRequest,
   normalizeAccessRequest,
   normalizeUser,
   rejectAccessRequest,
