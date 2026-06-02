@@ -30,3 +30,10 @@ Thumbs.db
 # Coverage / cache
 coverage/
 .cache/
+
+# Local tool artifacts
+.agents/
+.firebase/
+firebase-debug.log
+tmp_pdf_preview/
+skills-lock.json
