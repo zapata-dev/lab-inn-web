@@ -65,8 +65,7 @@ const iconMap = {
 
 const toolVisuals = {
   inventario: {
-    image:
-      'https://images.unsplash.com/photo-1556122071-e404cb6f31f5?auto=format&fit=crop&w=1400&q=80',
+    image: heroTruckImage,
     categoryLabel: 'Inventario',
   },
   promociones: {
