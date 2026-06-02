@@ -47,7 +47,7 @@ const sidebarItems = [
   { id: 'oficina', label: 'Mi Oficina', icon: HomeIcon },
   { id: 'inventario', label: 'Inventario', icon: Truck },
   { id: 'favoritos', label: 'Favoritos', icon: Heart },
-  { id: 'usuarios', label: 'Usuarios', icon: Users, to: '/usuarios' },
+  { id: 'usuarios', label: 'Directorio', icon: Users, to: '/usuarios' },
 ]
 
 const categories = [

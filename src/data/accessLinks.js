@@ -84,13 +84,13 @@ export const accessLinks = [
   },
   {
     id: 'youtube',
-    title: 'Acceso Canal Youtube',
-    description: 'Visualiza contenido comercial y tutoriales.',
+    title: 'Acceso Playlist Youtube',
+    description: 'Visualiza la playlist comercial y los tutoriales específicos.',
     icon: 'PlayCircle',
     brandColor: 'rose',
     category: 'comunidad',
-    cta: 'Ver canal',
-    url: 'https://www.youtube.com/@LABCOMERCIAL-ZAPATA',
+    cta: 'Ver playlist',
+    url: 'https://www.youtube.com/playlist?list=PL2W1hGWz_2scsontjyuroiFs6uKnXE3la',
   },
   {
     id: 'whatsapp',
