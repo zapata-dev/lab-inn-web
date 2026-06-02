@@ -10,11 +10,11 @@ function QuoteConfirmModal({ isOpen, onClose, onConfirm, draft }) {
     : 'Sin unidad seleccionada'
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Confirmar cotizacion">
+    <Modal isOpen={isOpen} onClose={onClose} title="Confirmar cotización">
       <div className="space-y-4">
         <p className="text-sm text-lab-muted">
-          Al confirmar se generara un folio oficial y se creara una oportunidad simulada en Salesforce.
-          Esta accion no puede deshacerse.
+          Al confirmar se generará un folio oficial y se creará una oportunidad simulada en Salesforce.
+          Esta acción no puede deshacerse.
         </p>
 
         <dl className="space-y-2 rounded-lg border border-lab-border bg-lab-surface p-4 text-sm">
@@ -50,7 +50,7 @@ function QuoteConfirmModal({ isOpen, onClose, onConfirm, draft }) {
 
         <div className="flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-700">
           <Link2 className="size-3.5 shrink-0" />
-          Se creara una oportunidad en etapa <strong className="mx-1">Cotizacion</strong> vinculada al folio generado.
+          Se creará una oportunidad en etapa <strong className="mx-1">Cotización</strong> vinculada al folio generado.
         </div>
 
         <div className="flex justify-end gap-2 pt-2">

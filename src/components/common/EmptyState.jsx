@@ -4,7 +4,7 @@ import { Inbox } from 'lucide-react'
 function EmptyState({
   icon: Icon = Inbox,
   title = 'Sin resultados',
-  description = 'Todavia no hay informacion para mostrar aqui.',
+  description = 'Todavía no hay información para mostrar aquí.',
   actionLabel,
   onAction,
   className,

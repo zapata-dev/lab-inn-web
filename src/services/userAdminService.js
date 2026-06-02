@@ -2,7 +2,10 @@ import {
   collection,
   doc,
   getDoc,
+  limit,
   onSnapshot,
+  orderBy,
+  query,
   serverTimestamp,
   setDoc,
   writeBatch,
@@ -83,6 +86,32 @@ function normalizeAccessRequest(snapshotDoc) {
   }
 }
 
+function normalizeAuditLog(snapshotDoc) {
+  const data = snapshotDoc.data() ?? {}
+
+  return {
+    id: snapshotDoc.id,
+    action: normalizeString(data.action),
+    targetUid: normalizeString(data.targetUid),
+    targetEmail: normalizeEmail(data.targetEmail),
+    targetName: normalizeString(data.targetName),
+    performedByUid: normalizeString(data.performedByUid),
+    performedByEmail: normalizeEmail(data.performedByEmail),
+    performedByName: normalizeString(data.performedByName),
+    assignedRole: normalizeString(data.assignedRole).toLowerCase(),
+    assignedBranch: normalizeString(data.assignedBranch),
+    requestId: normalizeString(data.requestId),
+    decisionNote: normalizeString(data.decisionNote),
+    createdAt: toDate(data.createdAt),
+    source: normalizeString(data.source),
+    emailStatus: normalizeString(data.emailStatus).toLowerCase(),
+    emailProvider: normalizeString(data.emailProvider).toLowerCase(),
+    emailSentAt: toDate(data.emailSentAt),
+    emailMessageId: normalizeString(data.emailMessageId),
+    emailError: normalizeString(data.emailError),
+  }
+}
+
 function normalizeUser(snapshotDoc) {
   const data = snapshotDoc.data() ?? {}
   const role = normalizeString(data.rol || data.role).toLowerCase()
@@ -138,6 +167,74 @@ function getReviewerValue(reviewer) {
   if (email) return email
 
   return 'soporte'
+}
+
+function getReviewerDetails(reviewer) {
+  const uid = normalizeString(reviewer?.uid)
+  const email = normalizeEmail(reviewer?.email)
+  const name = normalizeString(reviewer?.nombre || reviewer?.displayName || reviewer?.name)
+
+  return {
+    uid,
+    email,
+    name,
+  }
+}
+
+function buildAccessDecisionAuditEvent({
+  action,
+  request,
+  assignedRole,
+  assignedBranch,
+  decisionNote,
+  reviewer,
+}) {
+  const reviewerDetails = getReviewerDetails(reviewer)
+  const targetUid = normalizeString(request?.uid || request?.id)
+  const targetEmail = normalizeEmail(request?.email)
+  const targetName = normalizeString(
+    request?.nombre || request?.displayName || request?.name || request?.email
+  )
+  const normalizedRole = ensureValidRole(assignedRole || request?.requestedRole)
+
+  return {
+    action,
+    targetUid,
+    targetEmail,
+    targetName,
+    performedByUid: reviewerDetails.uid,
+    performedByEmail: reviewerDetails.email,
+    performedByName: reviewerDetails.name || reviewerDetails.email || reviewerDetails.uid || 'Soporte',
+    assignedRole: normalizedRole,
+    assignedBranch: normalizeString(assignedBranch || request?.requestedSucursalNombre),
+    requestId: targetUid,
+    decisionNote: normalizeString(decisionNote || ''),
+    createdAt: serverTimestamp(),
+    source: 'support_panel',
+  }
+}
+
+async function createAuditLog(event) {
+  ensureFirebaseReady()
+
+  const logRef = doc(collection(firebaseDb, 'auditLogs'))
+  await setDoc(logRef, {
+    action: normalizeString(event?.action),
+    targetUid: normalizeString(event?.targetUid),
+    targetEmail: normalizeEmail(event?.targetEmail),
+    targetName: normalizeString(event?.targetName),
+    performedByUid: normalizeString(event?.performedByUid),
+    performedByEmail: normalizeEmail(event?.performedByEmail),
+    performedByName: normalizeString(event?.performedByName),
+    assignedRole: ensureValidRole(event?.assignedRole),
+    assignedBranch: normalizeString(event?.assignedBranch),
+    requestId: normalizeString(event?.requestId),
+    decisionNote: normalizeString(event?.decisionNote),
+    createdAt: event?.createdAt || serverTimestamp(),
+    source: 'support_panel',
+  })
+
+  return logRef.id
 }
 
 async function getMyAccessRequest(uid) {
@@ -275,6 +372,27 @@ function subscribeUsers(callback, onError) {
   )
 }
 
+function listAuditLogs({ limitCount = 50 } = {}, callback, onError) {
+  ensureFirebaseReady()
+  const normalizedLimitCount = Number.isFinite(Number(limitCount)) ? Number(limitCount) : 50
+  const auditLogsQuery = query(
+    collection(firebaseDb, 'auditLogs'),
+    orderBy('createdAt', 'desc'),
+    limit(Math.max(1, normalizedLimitCount))
+  )
+
+  return onSnapshot(
+    auditLogsQuery,
+    (snapshot) => {
+      const normalizedAuditLogs = snapshot.docs.map(normalizeAuditLog)
+      callback(normalizedAuditLogs)
+    },
+    (error) => {
+      if (onError) onError(error)
+    }
+  )
+}
+
 async function approveAccessRequest(request, payload, reviewer) {
   ensureFirebaseReady()
   const uid = normalizeString(request?.uid || request?.id)
@@ -326,6 +444,25 @@ async function approveAccessRequest(request, payload, reviewer) {
   )
 
   await batch.commit()
+
+  let auditLogWarning = ''
+  try {
+    await createAuditLog(
+      buildAccessDecisionAuditEvent({
+        action: 'access_approved',
+        request,
+        assignedRole: role,
+        assignedBranch: branch.sucursalNombre,
+        decisionNote: reason || 'Solicitud aprobada',
+        reviewer,
+      })
+    )
+  } catch (auditError) {
+    console.warn('No se pudo registrar auditLogs para la aprobación de acceso.', auditError)
+    auditLogWarning = 'La solicitud se aprobó, pero no se pudo registrar la auditoría.'
+  }
+
+  return { auditLogWarning }
 }
 
 async function rejectAccessRequest(request, reason, reviewer) {
@@ -352,6 +489,25 @@ async function rejectAccessRequest(request, reason, reviewer) {
     },
     { merge: true }
   )
+
+  let auditLogWarning = ''
+  try {
+    await createAuditLog(
+      buildAccessDecisionAuditEvent({
+        action: 'access_rejected',
+        request,
+        assignedRole: request?.requestedRole,
+        assignedBranch: request?.requestedSucursalNombre,
+        decisionNote: decisionReason || 'Solicitud rechazada',
+        reviewer,
+      })
+    )
+  } catch (auditError) {
+    console.warn('No se pudo registrar auditLogs para el rechazo de acceso.', auditError)
+    auditLogWarning = 'La solicitud se rechazó, pero no se pudo registrar la auditoría.'
+  }
+
+  return { auditLogWarning }
 }
 
 async function updateUser(uid, payload) {
@@ -419,9 +575,12 @@ export {
   ROLE_OPTIONS,
   approveAccessRequest,
   createAccessRequest,
+  createAuditLog,
   deactivateUser,
   getMyAccessRequest,
+  listAuditLogs,
   normalizeAccessRequest,
+  normalizeAuditLog,
   normalizeUser,
   rejectAccessRequest,
   subscribeAccessRequests,

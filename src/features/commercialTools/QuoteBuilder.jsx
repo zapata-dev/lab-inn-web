@@ -155,7 +155,7 @@ function QuoteBuilder() {
 
   const handleSaveDraft = () => {
     saveQuoteDraft(buildDraft())
-    toast.success('Borrador de cotizacion guardado')
+    toast.success('Borrador de cotización guardado')
   }
 
   const handleClearContext = () => {
@@ -213,7 +213,7 @@ function QuoteBuilder() {
           <div className="flex items-start gap-3">
             <CheckCircle2 className="mt-0.5 size-7 shrink-0 text-green-600" />
             <div className="space-y-0.5">
-              <h3 className="text-xl font-semibold text-lab-text">Cotizacion confirmada</h3>
+              <h3 className="text-xl font-semibold text-lab-text">Cotización confirmada</h3>
               <p className="text-sm text-lab-muted">
                 Se genero el folio y se creo la oportunidad simulada en Salesforce.
               </p>
@@ -228,7 +228,7 @@ function QuoteBuilder() {
             <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
               <p className="text-xs font-semibold uppercase tracking-wide text-blue-600">Oportunidad Salesforce</p>
               <p className="mt-1 font-mono text-sm font-bold text-lab-text">{opportunity.id}</p>
-              <p className="mt-0.5 text-xs text-lab-muted">Etapa: Cotizacion · Prob. 45%</p>
+              <p className="mt-0.5 text-xs text-lab-muted">Etapa: Cotización · Prob. 45%</p>
             </div>
           </div>
 
@@ -260,7 +260,7 @@ function QuoteBuilder() {
               className="inline-flex items-center gap-2 rounded-lg border border-lab-border px-4 py-2 text-sm font-semibold text-lab-text"
             >
               <RotateCcw className="size-4" />
-              Iniciar nueva cotizacion
+              Iniciar nueva cotización
             </button>
           </div>
         </Card>
@@ -395,7 +395,7 @@ function QuoteBuilder() {
               className="inline-flex items-center gap-2 rounded-lg bg-lab-primary px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
             >
               <CheckCircle2 className="size-4" />
-              Confirmar cotizacion
+              Confirmar cotización
             </button>
           )}
         </div>

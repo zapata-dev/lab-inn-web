@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+﻿import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import {
@@ -38,15 +38,15 @@ function mapRoleLabel(role) {
 
 function getRequestStatusMessage(status) {
   const normalized = String(status || '').trim().toLowerCase()
-  if (normalized === 'pendiente') return 'Tu solicitud esta en revision.'
+  if (normalized === 'pendiente') return 'Tu solicitud está en revisión.'
   if (normalized === 'rechazado') {
-    return 'Tu solicitud fue rechazada. Contacta a soporte si necesitas reenviar.'
+    return 'Tu solicitud fue rechazada. Contacta a soporte si necesitas reenviarla.'
   }
   if (normalized === 'cancelado') return 'Tu solicitud fue cancelada. Contacta a soporte.'
   if (normalized === 'aprobado') {
-    return 'Tu solicitud fue aprobada. Cierra sesion e inicia de nuevo.'
+    return 'Tu solicitud fue aprobada. Cierra sesión e inicia de nuevo.'
   }
-  return 'El equipo de soporte revisara tu solicitud.'
+  return 'El equipo de soporte revisará tu solicitud.'
 }
 
 function Unauthorized() {
@@ -126,8 +126,8 @@ function Unauthorized() {
     setRequestError('')
     setRequestSuccess('')
 
-    if (!authIdentity?.uid || !authIdentity?.email) {
-      setRequestError('No encontramos una sesion valida. Vuelve a iniciar sesion con Google Zapata.')
+  if (!authIdentity?.uid || !authIdentity?.email) {
+      setRequestError('No encontramos una sesión válida. Vuelve a iniciar sesión con Google Zapata.')
       return
     }
 
@@ -163,7 +163,7 @@ function Unauthorized() {
       } else if (code === 'request-already-pending') {
         setRequestError('Ya tienes una solicitud pendiente.')
       } else if (code === 'request-already-approved') {
-        setRequestError('Tu solicitud ya fue aprobada. Vuelve a iniciar sesion para entrar a LAB.')
+        setRequestError('Tu solicitud ya fue aprobada. Vuelve a iniciar sesión para entrar a LAB.')
       } else if (code === 'request-resubmit-not-allowed') {
         setRequestError(
           'No se puede reenviar una solicitud rechazada o cancelada con las reglas actuales. Contacta a soporte.'
@@ -183,7 +183,7 @@ function Unauthorized() {
     <main className="min-h-screen bg-lab-bg px-5 py-8 md:px-8">
       <section className="mx-auto flex w-full max-w-2xl flex-col gap-5 rounded-xl border border-lab-border bg-white p-8 shadow-sm">
         <header className="space-y-2">
-          <h1 className="text-3xl font-bold text-lab-text">No tienes acceso a LAB todavia</h1>
+          <h1 className="text-3xl font-bold text-lab-text">No tienes acceso a LAB todavía</h1>
           <p className="text-sm text-lab-muted">
             Tu correo fue autenticado con Google, pero aun no tienes permisos asignados en Mi Oficina
             Virtual.
@@ -192,14 +192,14 @@ function Unauthorized() {
 
         {authErrorCode ? (
           <p className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
-            Codigo: {authErrorCode}
+            Código: {authErrorCode}
             {error?.message ? ` - ${error.message}` : ''}
           </p>
         ) : null}
 
         {noValidSession ? (
           <p className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-            No encontramos una sesion valida. Vuelve a iniciar sesion con Google Zapata.
+            No encontramos una sesión válida. Vuelve a iniciar sesión con Google Zapata.
           </p>
         ) : (
           <section className="space-y-3 rounded-lg border border-lab-border bg-slate-50 px-4 py-3">
@@ -264,7 +264,7 @@ function Unauthorized() {
 
             {requestedRole === 'soporte' ? (
               <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
-                Nota: solicitar rol soporte no garantiza aprobacion automatica.
+                Nota: solicitar rol soporte no garantiza aprobación automática.
               </p>
             ) : null}
 
@@ -332,7 +332,7 @@ function Unauthorized() {
               onClick={handleLogout}
               className="rounded-lg bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700"
             >
-              Cerrar sesion
+              Cerrar sesión
             </button>
           ) : null}
         </div>
@@ -342,3 +342,4 @@ function Unauthorized() {
 }
 
 export default Unauthorized
+

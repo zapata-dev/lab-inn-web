@@ -171,7 +171,7 @@ function ExecutiveDashboard() {
         <MetricCard
           title="Usuarios activos"
           value={formatNumber(data.users.length)}
-          description="Perfiles demo en operacion"
+          description="Perfiles demo en operación"
           icon={UsersRound}
           tone="default"
         />

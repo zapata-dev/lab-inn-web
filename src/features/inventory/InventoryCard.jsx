@@ -46,7 +46,7 @@ function getPromotionBadge(promotionText) {
   if (normalized.includes('bono')) return 'Bono disponible'
   if (normalized.includes('regalo')) return 'Incluye regalo'
   if (normalized.includes('financiamiento')) return 'Financiamiento especial...'
-  return truncateText(promotionText, 40) || 'Promocion'
+  return truncateText(promotionText, 40) || 'Promoción'
 }
 
 function InventoryCard({ unit, onViewDetail }) {
@@ -80,7 +80,7 @@ function InventoryCard({ unit, onViewDetail }) {
 
       <div className="flex flex-1 flex-col gap-4 p-5">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="text-sm font-medium text-lab-muted">{toSafeText(unit.anio, 'Ano no especificado')}</p>
+          <p className="text-sm font-medium text-lab-muted">{toSafeText(unit.anio, 'Año no especificado')}</p>
           <span className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${getStatusStyle(unit.status)}`}>
             {toSafeText(unit.status, 'Disponible')}
           </span>
@@ -99,15 +99,15 @@ function InventoryCard({ unit, onViewDetail }) {
         </div>
 
         <div className="grid min-h-[116px] gap-1.5 text-sm text-lab-muted">
-          <p className="truncate" title={toSafeText(unit.ubicacion, 'Sin ubicacion')}>
-            Ubicacion: {toSafeText(unit.ubicacion, 'Sin ubicacion')}
+          <p className="truncate" title={toSafeText(unit.ubicacion, 'Sin ubicación')}>
+            Ubicación: {toSafeText(unit.ubicacion, 'Sin ubicación')}
           </p>
           <p>Kilometraje: {formatKilometers(unit.kilometros)}</p>
           <p className="truncate" title={toSafeText(unit.motor, 'No especificado')}>
             Motor: {toSafeText(unit.motor, 'No especificado')}
           </p>
           <p className="truncate" title={toSafeText(unit.transmision, 'No especificada')}>
-            Transmision: {toSafeText(unit.transmision, 'No especificada')}
+            Transmisión: {toSafeText(unit.transmision, 'No especificada')}
           </p>
         </div>
 

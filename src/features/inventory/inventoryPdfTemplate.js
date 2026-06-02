@@ -152,7 +152,7 @@ function buildCatalogCoverHtml(unitsCount, generatedDate, activeFilters) {
             <span class="brand-mark">LAB</span>
             <div>
               <h1 class="brand-title">Mi Oficina Virtual</h1>
-              <p class="brand-subtitle">Catalogo de inventario nacional</p>
+              <p class="brand-subtitle">Catálogo de inventario nacional</p>
             </div>
           </div>
           <div class="meta">
@@ -160,7 +160,7 @@ function buildCatalogCoverHtml(unitsCount, generatedDate, activeFilters) {
           </div>
         </header>
 
-        <h2 class="catalog-title">Catalogo comercial de unidades</h2>
+        <h2 class="catalog-title">Catálogo comercial de unidades</h2>
 
         <div class="catalog-meta-grid">
           <article class="catalog-meta-card">
@@ -179,7 +179,7 @@ function buildCatalogCoverHtml(unitsCount, generatedDate, activeFilters) {
         </section>
 
         <footer class="catalog-disclaimer">
-          Informacion sujeta a disponibilidad y confirmacion comercial.
+          Información sujeta a disponibilidad y confirmación comercial.
         </footer>
       </section>
   `
@@ -645,8 +645,8 @@ export function buildUnitCommercialSheetHtml(unit, now = new Date(), options = {
   const keyCards = [
     { label: 'Kilometraje', value: getKilometers(unit || {}) },
     { label: 'Motor', value: toText(unit?.motor) },
-    { label: 'Transmision', value: toText(unit?.transmision) },
-    { label: 'Ubicacion', value: location },
+    { label: 'Transmisión', value: toText(unit?.transmision) },
+    { label: 'Ubicación', value: location },
     { label: 'Paso', value: toText(unit?.paso) },
     { label: 'Rodada', value: toText(unit?.rodada) },
   ]
@@ -664,7 +664,7 @@ export function buildUnitCommercialSheetHtml(unit, now = new Date(), options = {
     specRow('Centro', unit?.centro),
     specRow('VIN corto', vinShort),
     specRow('VIN completo', unit?.vinCompleto),
-    specRow('Promocion', unit?.promocion),
+    specRow('Promoción', unit?.promocion),
   ].join('')
 
   const galleryHtml = gallery
@@ -709,7 +709,7 @@ export function buildUnitCommercialSheetHtml(unit, now = new Date(), options = {
             <div class="hero-shade"></div>
             <div class="hero-title-wrap">
               <h2 class="hero-title">${escapeHtml(`${brand} ${model}`)}</h2>
-              <p class="hero-subtitle">Ano ${escapeHtml(year)} | ${escapeHtml(location)}</p>
+              <p class="hero-subtitle">Año ${escapeHtml(year)} | ${escapeHtml(location)}</p>
             </div>
           `
               : '<div class="hero-placeholder">Imagen principal por confirmar</div>'
@@ -736,7 +736,7 @@ export function buildUnitCommercialSheetHtml(unit, now = new Date(), options = {
         </div>
 
         <section class="cta">
-          <p class="cta-title">Para mas informacion, contacta al equipo comercial.</p>
+          <p class="cta-title">Para más información, contacta al equipo comercial.</p>
           <p class="cta-email">${escapeHtml(CONTACT_EMAIL)}</p>
         </section>
       </section>
@@ -763,7 +763,7 @@ export function buildUnitCommercialSheetHtml(unit, now = new Date(), options = {
           </div>
           <div class="corp-right">
             <div>Generado: ${escapeHtml(generatedDate)}</div>
-            <div>Informacion sujeta a disponibilidad y confirmacion comercial.</div>
+            <div>Información sujeta a disponibilidad y confirmación comercial.</div>
           </div>
         </footer>
       </section>

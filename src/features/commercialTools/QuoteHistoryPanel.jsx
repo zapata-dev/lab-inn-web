@@ -5,8 +5,8 @@ import { formatDate, formatUSD } from '../../utils/formatters'
 
 const stageConfig = {
   prospecto: { label: 'Prospecto', className: 'bg-slate-100 text-slate-700' },
-  cotizacion: { label: 'Cotizacion', className: 'bg-blue-100 text-blue-700' },
-  negociacion: { label: 'Negociacion', className: 'bg-amber-100 text-amber-700' },
+  cotizacion: { label: 'Cotización', className: 'bg-blue-100 text-blue-700' },
+  negociacion: { label: 'Negociación', className: 'bg-amber-100 text-amber-700' },
   ganada: { label: 'Ganada', className: 'bg-emerald-100 text-emerald-700' },
   perdida: { label: 'Perdida', className: 'bg-rose-100 text-rose-700' },
 }
@@ -106,7 +106,7 @@ function QuoteHistoryPanel({ onGoToCotizador }) {
       <EmptyState
         icon={FileText}
         title="Sin cotizaciones guardadas"
-        description="Confirma una cotizacion desde el Cotizador para verla aqui con su oportunidad Salesforce vinculada."
+        description="Confirma una cotización desde el Cotizador para verla aquí con su oportunidad Salesforce vinculada."
         actionLabel="Ir al Cotizador"
         onAction={onGoToCotizador}
       />
@@ -120,7 +120,7 @@ function QuoteHistoryPanel({ onGoToCotizador }) {
           icon={FileText}
           label="Cotizaciones confirmadas"
           value={quotes.length}
-          sub="En este periodo de sesion"
+          sub="En este período de sesión"
         />
         <KpiCard
           icon={Link2}

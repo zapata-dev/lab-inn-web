@@ -4,16 +4,16 @@ import { Badge, Card } from '../components/common'
 import { useAuth } from '../context/AuthContext'
 
 const AUTH_ERROR_MESSAGES = Object.freeze({
-  'firebase-not-configured': 'Firebase no esta configurado. Revisa .env.local.',
+  'firebase-not-configured': 'Firebase no está configurado. Revisa .env.local.',
   'authorization/domain-not-allowed': 'Solo se permite acceso con correo @zapata.com.mx.',
   'authorization/user-not-found':
-    'Tu cuenta de Google es valida, pero no existe en usuarios/{uid}. Contacta a soporte.',
-  'authorization/user-inactive': 'Tu cuenta existe pero esta inactiva. Solicita activacion.',
+    'Tu cuenta de Google es válida, pero no existe en usuarios/{uid}. Contacta a soporte.',
+  'authorization/user-inactive': 'Tu cuenta existe pero está inactiva. Solicita activación.',
   'authorization/role-invalid': 'Tu cuenta tiene un rol no permitido para LAB.',
   'authorization/permission-denied':
     'No fue posible validar tu acceso en Firestore (permission-denied). Contacta a soporte.',
   'authorization/validation-timeout':
-    'La validacion de acceso tardo demasiado. Revisa tu conexion e intenta de nuevo.',
+    'La validación de acceso tardó demasiado. Revisa tu conexión e intenta de nuevo.',
   'authorization/unknown': 'No fue posible validar tu acceso. Intenta de nuevo.',
 })
 
@@ -66,7 +66,7 @@ function Login() {
           <Badge variant="demo">{isFirebaseMode ? 'Modo firebase' : 'Modo demo'}</Badge>
           <h1 className="text-3xl font-bold text-lab-text">LAB MVP</h1>
           <p className="text-sm text-lab-muted">
-            {isFirebaseMode ? 'Inicia sesion con Google Zapata' : 'Selecciona un perfil demo'}
+            {isFirebaseMode ? 'Inicia sesión con Google Zapata' : 'Selecciona un perfil demo'}
           </p>
         </header>
 
@@ -80,7 +80,7 @@ function Login() {
           <Card className="mx-auto max-w-md space-y-4 p-6">
             <h2 className="text-lg font-semibold text-lab-text">Acceso con Google</h2>
             <p className="text-sm text-lab-muted">
-              Usa tu cuenta corporativa para autenticarte y validar autorizacion por Firestore.
+              Usa tu cuenta corporativa para autenticarte y validar autorización por Firestore.
             </p>
             <button
               type="button"

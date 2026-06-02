@@ -5,8 +5,8 @@ import { formatDate, formatUSD } from '../../utils/formatters'
 
 const stageConfig = {
   prospecto: { label: 'Prospecto', className: 'bg-slate-100 text-slate-700' },
-  cotizacion: { label: 'Cotizacion', className: 'bg-blue-100 text-blue-700' },
-  negociacion: { label: 'Negociacion', className: 'bg-amber-100 text-amber-700' },
+  cotizacion: { label: 'Cotización', className: 'bg-blue-100 text-blue-700' },
+  negociacion: { label: 'Negociación', className: 'bg-amber-100 text-amber-700' },
   ganada: { label: 'Ganada', className: 'bg-emerald-100 text-emerald-700' },
   perdida: { label: 'Perdida', className: 'bg-rose-100 text-rose-700' },
   nuevo: { label: 'Nuevo', className: 'bg-slate-100 text-slate-700' },

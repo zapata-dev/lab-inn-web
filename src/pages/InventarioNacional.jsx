@@ -8,12 +8,14 @@ import InventoryFilters from '../features/inventory/InventoryFilters'
 import InventoryHeaderKpis from '../features/inventory/InventoryHeaderKpis'
 import InventoryTable from '../features/inventory/InventoryTable'
 import UnitDetailModal from '../features/inventory/UnitDetailModal'
+import heroTruckImage from '../assets/home/truck-hero.png'
 import useToast from '../hooks/useToast'
 import { dataService } from '../services/dataService'
 import {
   createSimulatedOpportunityFromUnit,
   saveQuoteContext,
 } from '../services/inventoryActionsService'
+import { mixInventoryForDisplay } from '../utils/inventoryMixUtils'
 
 const scopeModeByRole = {
   admin: 'global',
@@ -71,6 +73,7 @@ function InventarioNacional() {
   const [inventory, setInventory] = useState([])
   const [branches, setBranches] = useState([])
   const [viewMode, setViewMode] = useState('table')
+  const [displayOrderMode, setDisplayOrderMode] = useState('mixed')
   const [filters, setFilters] = useState(getInitialFilters(user))
   const [selectedUnit, setSelectedUnit] = useState(null)
   const [isDetailOpen, setIsDetailOpen] = useState(false)
@@ -136,6 +139,14 @@ function InventarioNacional() {
     [filters, scopedInventory]
   )
 
+  const orderedVisibleInventory = useMemo(
+    () =>
+      displayOrderMode === 'mixed'
+        ? mixInventoryForDisplay(visibleInventory)
+        : visibleInventory,
+    [displayOrderMode, visibleInventory]
+  )
+
   const filterBranchOptions = useMemo(() => {
     if (scopeMode === 'branch') {
       return branches.filter((branch) => branch.id === user?.branchId)
@@ -180,11 +191,11 @@ function InventarioNacional() {
   const handleAddToQuote = (unit) => {
     const saved = saveQuoteContext(unit, user)
     if (!saved) {
-      toast.error('No fue posible preparar la cotizacion')
+      toast.error('No fue posible preparar la cotización')
       return
     }
 
-    toast.success('Unidad agregada a cotizacion')
+    toast.success('Unidad agregada a cotización')
     handleCloseDetail()
     navigate('/herramientas?tab=cotizador')
   }
@@ -224,23 +235,70 @@ function InventarioNacional() {
 
   return (
     <section className="mx-auto w-full max-w-7xl space-y-6">
-      <Card className="space-y-3">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="space-y-1">
-            <h2 className="text-2xl font-bold text-lab-text">Inventario Nacional</h2>
-            <p className="text-sm text-lab-muted">
-              Base nacional de unidades disponibles para analisis comercial.
-            </p>
+      <section className="relative overflow-hidden rounded-3xl border border-white/15 shadow-[0_22px_50px_rgba(15,23,42,0.22)]">
+        <img
+          src={heroTruckImage}
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-0 size-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-black/40" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent" />
+
+        <div className="relative z-10 p-6 sm:p-7 lg:p-8">
+          <div className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/10 px-3 py-1 text-[11px] font-semibold tracking-[0.14em] text-white backdrop-blur">
+            Inventario Nacional
           </div>
-          <div className="flex flex-wrap items-center gap-2 text-sm">
-            <Badge variant="success">{user?.name}</Badge>
-            <Badge variant="info">{user?.roleLabel}</Badge>
-            <Badge>{user?.branchName}</Badge>
+
+          <div className="mt-4 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-2xl space-y-3 text-white">
+              <h1 className="text-3xl font-semibold leading-tight sm:text-4xl">
+                Inventario Nacional
+              </h1>
+              <p className="text-sm text-slate-100 sm:text-base">
+                Vista ejecutiva de disponibilidad nacional, cobertura operativa y unidades listas para análisis comercial.
+              </p>
+
+              <div className="flex flex-wrap gap-2">
+                <Badge className="border-white/30 bg-white/15 text-white backdrop-blur">
+                  Disponibilidad en tiempo real
+                </Badge>
+                <Badge className="border-white/30 bg-white/15 text-white backdrop-blur">
+                  Cobertura nacional
+                </Badge>
+                <Badge className="border-white/30 bg-white/15 text-white backdrop-blur">
+                  Herramienta comercial estratégica
+                </Badge>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-white/20 bg-white/10 p-4 text-white shadow-lg backdrop-blur-md lg:max-w-sm">
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-white/70">
+                Cabina comercial
+              </p>
+              <p className="mt-2 text-sm leading-relaxed text-slate-100">
+                Filtra, compara y abre detalle de unidades con una lectura visual de alto impacto sobre la operación nacional.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-5 flex flex-wrap items-center gap-2 text-sm">
+            <Badge variant="success" className="border-white/25 bg-white/15 text-white backdrop-blur">
+              {user?.name}
+            </Badge>
+            <Badge variant="info" className="border-white/25 bg-white/15 text-white backdrop-blur">
+              {user?.roleLabel}
+            </Badge>
+            <Badge className="border-white/25 bg-white/15 text-white backdrop-blur">
+              {user?.branchName}
+            </Badge>
           </div>
         </div>
-      </Card>
+      </section>
 
-      <InventoryHeaderKpis units={visibleInventory} branches={branches} />
+      <div className="relative z-10 -mt-4">
+        <InventoryHeaderKpis units={visibleInventory} branches={branches} />
+      </div>
 
       <InventoryFilters
         filters={filters}
@@ -257,41 +315,68 @@ function InventarioNacional() {
           <p className="text-sm text-lab-muted">
             Vista actual: {viewMode === 'table' ? 'Tabla' : 'Tarjetas'} | Resultados: {visibleInventory.length}
           </p>
-          <div className="inline-flex rounded-lg border border-lab-border bg-white p-1">
-            <button
-              type="button"
-              onClick={() => setViewMode('table')}
-              className={`inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-semibold transition ${
-                viewMode === 'table' ? 'bg-lab-primary text-white' : 'text-lab-muted hover:text-lab-text'
-              }`}
-            >
-              <Table2 className="size-4" aria-hidden="true" />
-              Tabla
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode('cards')}
-              className={`inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-semibold transition ${
-                viewMode === 'cards' ? 'bg-lab-primary text-white' : 'text-lab-muted hover:text-lab-text'
-              }`}
-            >
-              <LayoutGrid className="size-4" aria-hidden="true" />
-              Tarjetas
-            </button>
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="inline-flex rounded-lg border border-lab-border bg-white p-1">
+              <button
+                type="button"
+                onClick={() => setViewMode('table')}
+                className={`inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-semibold transition ${
+                  viewMode === 'table' ? 'bg-lab-primary text-white' : 'text-lab-muted hover:text-lab-text'
+                }`}
+              >
+                <Table2 className="size-4" aria-hidden="true" />
+                Tabla
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('cards')}
+                className={`inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-semibold transition ${
+                  viewMode === 'cards' ? 'bg-lab-primary text-white' : 'text-lab-muted hover:text-lab-text'
+                }`}
+              >
+                <LayoutGrid className="size-4" aria-hidden="true" />
+                Tarjetas
+              </button>
+            </div>
+
+            <div className="inline-flex rounded-lg border border-lab-border bg-white p-1">
+              <button
+                type="button"
+                onClick={() => setDisplayOrderMode('mixed')}
+                className={`rounded-md px-3 py-1.5 text-sm font-semibold transition ${
+                  displayOrderMode === 'mixed'
+                    ? 'bg-lab-primary text-white'
+                    : 'text-lab-muted hover:text-lab-text'
+                }`}
+              >
+                Mixto recomendado
+              </button>
+              <button
+                type="button"
+                onClick={() => setDisplayOrderMode('original')}
+                className={`rounded-md px-3 py-1.5 text-sm font-semibold transition ${
+                  displayOrderMode === 'original'
+                    ? 'bg-lab-primary text-white'
+                    : 'text-lab-muted hover:text-lab-text'
+                }`}
+              >
+                CSV original
+              </button>
+            </div>
           </div>
         </div>
       </Card>
 
       {viewMode === 'table' ? (
         <InventoryTable
-          units={visibleInventory}
+          units={orderedVisibleInventory}
           branchesById={branchesById}
           pageSize={20}
           onSelectUnit={handleSelectUnit}
         />
       ) : (
         <InventoryCardGrid
-          units={visibleInventory}
+          units={orderedVisibleInventory}
           branchesById={branchesById}
           onSelectUnit={handleSelectUnit}
         />

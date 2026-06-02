@@ -8,6 +8,7 @@ import Perfil from '../pages/Perfil'
 import Promociones from '../pages/Promociones'
 import SoporteUsuarios from '../pages/SoporteUsuarios'
 import Unauthorized from '../pages/Unauthorized'
+import Usuarios from '../pages/Usuarios'
 import ProtectedRoute from './ProtectedRoute'
 
 function AppRoutes() {
@@ -23,6 +24,7 @@ function AppRoutes() {
           <Route path="/inventario" element={<Inventario />} />
           <Route path="/promociones" element={<Promociones />} />
           <Route path="/perfil" element={<Perfil />} />
+          <Route path="/usuarios" element={<Usuarios />} />
           <Route path="/soporte/usuarios" element={<SoporteUsuarios />} />
         </Route>
 

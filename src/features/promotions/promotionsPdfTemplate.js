@@ -57,12 +57,12 @@ function buildCoverHtml(unitsCount, generatedDate, activeFilters) {
             <span class="brand-mark">LAB</span>
             <div>
               <h1 class="brand-title">Mi Oficina Virtual</h1>
-              <p class="brand-subtitle">Catalogo comercial de promociones</p>
+              <p class="brand-subtitle">Catálogo comercial de promociones</p>
             </div>
           </div>
         </header>
 
-        <h2 class="booklet-title">Catalogo de promociones</h2>
+        <h2 class="booklet-title">Catálogo de promociones</h2>
 
         <div class="booklet-meta-grid">
           <article class="booklet-meta-card">
@@ -81,7 +81,7 @@ function buildCoverHtml(unitsCount, generatedDate, activeFilters) {
         </section>
 
         <footer class="booklet-disclaimer">
-          Informacion sujeta a disponibilidad y confirmacion comercial.
+          Información sujeta a disponibilidad y confirmación comercial.
         </footer>
       </section>
   `
@@ -318,7 +318,7 @@ ${buildInventoryPdfStyles(`
             <span class="brand-mark">LAB</span>
             <div>
               <h1 class="brand-title">Mi Oficina Virtual</h1>
-              <p class="brand-subtitle">Resumen de promocion</p>
+              <p class="brand-subtitle">Resumen de promoción</p>
             </div>
           </div>
           <div class="meta">
@@ -329,7 +329,7 @@ ${buildInventoryPdfStyles(`
         <section class="summary-cover">
           ${
             coverImage
-              ? `<img src="${escapeHtml(coverImage)}" alt="Portada de promocion ${escapeHtml(String(group?.code ?? ''))}" loading="lazy" />`
+              ? `<img src="${escapeHtml(coverImage)}" alt="Portada de promoción ${escapeHtml(String(group?.code ?? ''))}" loading="lazy" />`
               : '<div class="summary-cover-placeholder">Imagen de portada por confirmar</div>'
           }
         </section>
@@ -340,7 +340,7 @@ ${buildInventoryPdfStyles(`
             <p class="summary-value">${escapeHtml(String(group?.agency ?? 'Por confirmar'))}</p>
           </article>
           <article class="summary-card">
-            <p class="summary-label">Codigo</p>
+            <p class="summary-label">Código</p>
             <p class="summary-value">${escapeHtml(String(group?.code ?? 'Por confirmar'))}</p>
           </article>
           <article class="summary-card">
@@ -386,9 +386,9 @@ ${buildInventoryPdfStyles(`
         </section>
 
         <section class="summary-section">
-          <p class="summary-title">Texto comercial de promocion</p>
+          <p class="summary-title">Texto comercial de promoción</p>
           <p class="summary-body summary-commercial-text">${escapeHtml(promoText)}</p>
-          <p class="summary-note">Informacion sujeta a disponibilidad y confirmacion comercial.</p>
+          <p class="summary-note">Información sujeta a disponibilidad y confirmación comercial.</p>
         </section>
       </section>
     </main>

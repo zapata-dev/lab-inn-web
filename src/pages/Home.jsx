@@ -19,10 +19,20 @@ import {
   Truck,
   Users,
 } from 'lucide-react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { Badge, Card } from '../components/common'
+import UserMenu from '../components/layout/UserMenu'
 import { useAuth } from '../context/AuthContext'
 import { accessLinks } from '../data/accessLinks'
+import heroTruckImage from '../assets/home/truck-hero.png'
+import promocionesHeroImage from '../assets/promociones-hero.jpeg'
+import catalogoPublicidadHeroImage from '../assets/catalogo-publicidad-home.png'
+import salesforceHeroImage from '../assets/salesforce-hero.png'
+import krinoHeroImage from '../assets/krino-hero.png'
+import youtubeHeroImage from '../assets/youtube-hero.png'
+import whatsappHeroImage from '../assets/whatsapp-hero.png'
+import btpHeroImage from '../assets/btp-hero.png'
+import contactoHeroImage from '../assets/contacto-hero.png'
 import {
   fetchInventoryFromCsv,
   getInventoryCache,
@@ -64,18 +74,15 @@ const iconMap = {
 
 const toolVisuals = {
   inventario: {
-    image:
-      'https://images.unsplash.com/photo-1556122071-e404cb6f31f5?auto=format&fit=crop&w=1400&q=80',
+    image: heroTruckImage,
     categoryLabel: 'Inventario',
   },
   promociones: {
-    image:
-      'https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?auto=format&fit=crop&w=1400&q=80',
+    image: promocionesHeroImage,
     categoryLabel: 'Promociones',
   },
-  catalogoPortadas: {
-    image:
-      'https://images.unsplash.com/photo-1609521263047-f8f205293f24?auto=format&fit=crop&w=1400&q=80',
+  'catalogo-portadas': {
+    image: catalogoPublicidadHeroImage,
     categoryLabel: 'Publicidad',
   },
   directorioSeminuevos: {
@@ -84,33 +91,27 @@ const toolVisuals = {
     categoryLabel: 'Seminuevos',
   },
   salesforce: {
-    image:
-      'https://images.unsplash.com/photo-1551281044-8b6f8d8e27b5?auto=format&fit=crop&w=1400&q=80',
+    image: salesforceHeroImage,
     categoryLabel: 'Plataforma',
   },
   krino: {
-    image:
-      'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?auto=format&fit=crop&w=1400&q=80',
+    image: krinoHeroImage,
     categoryLabel: 'Datos',
   },
   btp: {
-    image:
-      'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1400&q=80',
+    image: btpHeroImage,
     categoryLabel: 'Sistemas',
   },
   youtube: {
-    image:
-      'https://images.unsplash.com/photo-1611162616305-c69b3fa7fbe0?auto=format&fit=crop&w=1400&q=80',
+    image: youtubeHeroImage,
     categoryLabel: 'Comunidad',
   },
   whatsapp: {
-    image:
-      'https://images.unsplash.com/photo-1614680376573-df3480f0c6ff?auto=format&fit=crop&w=1400&q=80',
+    image: whatsappHeroImage,
     categoryLabel: 'Comunidad',
   },
   contacto: {
-    image:
-      'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=1400&q=80',
+    image: contactoHeroImage,
     categoryLabel: 'Soporte',
   },
 }
@@ -160,19 +161,6 @@ function getDisplayBranch(user) {
   return String(user?.sucursalNombre || user?.sucursal || user?.branchName || 'Sin sucursal asignada').trim()
 }
 
-function getRoleContextMessage(normalizedRole) {
-  if (normalizedRole === 'soporte') {
-    return 'Desde aqui puedes administrar accesos, consultar herramientas internas y apoyar a los equipos comerciales.'
-  }
-  if (normalizedRole === 'vendedor') {
-    return 'Todo listo para consultar inventario, promociones y herramientas comerciales.'
-  }
-  if (normalizedRole === 'coordinador') {
-    return 'Administra tu operacion y manten a tu equipo conectado.'
-  }
-  return 'Accede rapidamente a las herramientas disponibles para tu operacion.'
-}
-
 function getUserStorageKey(user) {
   return String(user?.uid || user?.email || user?.id || 'anon').trim().toLowerCase()
 }
@@ -195,7 +183,7 @@ function buildHomeMetrics(inventoryItems = []) {
 
 function getGreetingByHour() {
   const hour = new Date().getHours()
-  if (hour < 12) return 'Buenos dias'
+  if (hour < 12) return 'Buenos días'
   if (hour < 19) return 'Buenas tardes'
   return 'Buenas noches'
 }
@@ -322,7 +310,6 @@ function Home() {
   const displayBranch = getDisplayBranch(user)
   const displayPhoto = getDisplayPhoto(user)
   const nameInitials = getNameInitials(displayName)
-  const contextualMessage = getRoleContextMessage(userRole)
   const greeting = getGreetingByHour()
 
   const [query, setQuery] = useState('')
@@ -415,8 +402,8 @@ function Home() {
 
     const roleToolPool = accessLinks.filter((tool) => {
       if (tool.supportOnly && !isSupportUser) return false
-      if (!tool.hiddenFromHome) return true
-      return userRole === 'soporte' && tool.id === 'adminUsuarios'
+      if (tool.hiddenFromHome) return userRole === 'soporte'
+      return true
     })
 
     const toolsWithUiFilters = roleToolPool.filter((tool) => {
@@ -438,12 +425,6 @@ function Home() {
     () => filteredTools.filter((tool) => !featuredTools.some((featured) => featured.id === tool.id)),
     [filteredTools, featuredTools]
   )
-
-  const operationalSummary = `${formatCompactNumber(homeMetrics.totalUnits)} unidades • ${formatCompactNumber(homeMetrics.activePromotions)} promociones • ${formatCompactNumber(homeMetrics.availableAds)} publicidades`
-  const contextualLiveLine =
-    homeMetrics.activePromotions > 0
-      ? `Hay ${formatCompactNumber(homeMetrics.activePromotions)} promociones activas disponibles para compartir.`
-      : `Actualmente hay ${formatCompactNumber(homeMetrics.totalUnits)} unidades disponibles para consulta.`
 
   const handleToggleFavorite = (toolId) => {
     setFavoriteIds((previous) => {
@@ -533,11 +514,7 @@ function Home() {
             })}
           </nav>
 
-          <div className="mt-auto rounded-2xl border border-slate-200 bg-white/90 p-3 text-xs text-slate-600">
-            <p className="font-semibold text-slate-900">{displayName}</p>
-            <p>{displayRole}</p>
-            <p>{displayBranch}</p>
-          </div>
+          <UserMenu variant="sidebar" className="mt-auto" />
         </aside>
 
         <div className="space-y-5">
@@ -555,12 +532,13 @@ function Home() {
 
           <section className="relative overflow-hidden rounded-3xl border border-white/15 shadow-[0_22px_50px_rgba(15,23,42,0.22)]">
             <img
-              src="https://images.unsplash.com/photo-1710911652269-7e5bb8d65b1b?auto=format&fit=crop&w=1800&q=80"
-              alt="Flota comercial"
+              src={heroTruckImage}
+              alt=""
+              aria-hidden="true"
               className="absolute inset-0 size-full object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-slate-950/85 via-blue-900/60 to-slate-900/35" />
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/30 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/55 to-black/35" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent" />
 
             <div className="relative z-10 p-6 sm:p-7 lg:p-8">
               <div className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/10 px-3 py-1 text-[11px] font-semibold tracking-[0.14em] text-white backdrop-blur">
@@ -574,9 +552,6 @@ function Home() {
                   <br />
                   Esta es tu oficina virtual.
                 </h1>
-                <p className="text-sm text-slate-200 sm:text-base">Todas tus herramientas comerciales en un solo lugar.</p>
-                <p className="text-sm text-slate-200 sm:text-base">{contextualLiveLine}</p>
-                <p className="text-xs text-slate-300 sm:text-sm">{contextualMessage}</p>
               </div>
 
               <div className="mt-4 flex flex-wrap items-center gap-2 text-sm">
@@ -596,12 +571,6 @@ function Home() {
                   Rol: {displayRole}
                 </Badge>
                 <Badge className="border-white/30 bg-white/15 text-white backdrop-blur">Sucursal: {displayBranch}</Badge>
-                <Link
-                  to="/perfil"
-                  className="inline-flex items-center rounded-full border border-white/35 bg-white/15 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur transition hover:bg-white/25"
-                >
-                  Mi perfil
-                </Link>
               </div>
 
               <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -619,9 +588,6 @@ function Home() {
                 </Card>
               </div>
 
-              <p className="mt-3 text-xs font-medium uppercase tracking-wide text-slate-100/90">
-                {operationalSummary}
-              </p>
             </div>
           </section>
 

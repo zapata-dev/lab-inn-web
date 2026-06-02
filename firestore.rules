@@ -41,7 +41,7 @@ service cloud.firestore {
       return email is string && email.matches('^[^@]+@zapata\\.com\\.mx$');
     }
 
-    function validUsuarioPayload(data, uid) {
+    function validUsuarioPayload(data) {
       return data.keys().hasAll([
           'email',
           'nombre',
@@ -214,9 +214,68 @@ service cloud.firestore {
         (!('decisionReason' in data) || data.decisionReason is string);
     }
 
+    function validAuditLogCreate(data) {
+      return data.keys().hasAll([
+          'action',
+          'targetUid',
+          'targetEmail',
+          'targetName',
+          'performedByUid',
+          'performedByEmail',
+          'performedByName',
+          'assignedRole',
+          'assignedBranch',
+          'requestId',
+          'decisionNote',
+          'createdAt',
+          'source'
+        ]) &&
+        data.keys().hasOnly([
+          'action',
+          'targetUid',
+          'targetEmail',
+          'targetName',
+          'performedByUid',
+          'performedByEmail',
+          'performedByName',
+          'assignedRole',
+          'assignedBranch',
+          'requestId',
+          'decisionNote',
+          'createdAt',
+          'source'
+        ]) &&
+        data.action in ['access_approved', 'access_rejected'] &&
+        data.targetUid is string &&
+        data.targetUid.size() > 0 &&
+        data.targetEmail is string &&
+        data.targetEmail.size() > 0 &&
+        data.targetName is string &&
+        data.targetName.size() > 0 &&
+        data.performedByUid == request.auth.uid &&
+        data.performedByUid is string &&
+        data.performedByUid.size() > 0 &&
+        request.auth.token.email is string &&
+        data.performedByEmail == request.auth.token.email &&
+        data.performedByEmail is string &&
+        data.performedByEmail.size() > 0 &&
+        data.performedByName is string &&
+        data.performedByName.size() > 0 &&
+        data.assignedRole is string &&
+        isValidRole(data.assignedRole) &&
+        data.assignedBranch is string &&
+        data.assignedBranch.size() > 0 &&
+        data.requestId is string &&
+        data.requestId.size() > 0 &&
+        data.decisionNote is string &&
+        data.decisionNote.size() > 0 &&
+        data.createdAt is timestamp &&
+        data.source == 'support_panel';
+    }
+
     match /usuarios/{uid} {
       allow read: if signedIn() && (request.auth.uid == uid || isSoporte());
-      allow create, update: if isSoporte() && validUsuarioPayload(request.resource.data, uid);
+      allow create, update: if isSoporte() && validUsuarioPayload(request.resource.data);
       allow delete: if false;
     }
 
@@ -234,6 +293,12 @@ service cloud.firestore {
         );
 
       allow delete: if false;
+    }
+
+    match /auditLogs/{logId} {
+      allow read: if isSoporte();
+      allow create: if isSoporte() && validAuditLogCreate(request.resource.data);
+      allow update, delete: if false;
     }
 
     match /{document=**} {

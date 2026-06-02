@@ -106,7 +106,7 @@ function AdminStoragePanel({ snapshot, onRefresh, onClearDemoStorage }) {
               Limpiar datos demo
             </button>
           )}
-          <p className="text-xs text-lab-muted">No borra la sesion actual.</p>
+          <p className="text-xs text-lab-muted">No borra la sesión actual.</p>
         </div>
       </div>
     </Card>

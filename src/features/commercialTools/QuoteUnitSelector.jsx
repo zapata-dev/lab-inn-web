@@ -8,7 +8,7 @@ function QuoteUnitSelector({ units = [], branchesById = {}, selectedUnitId = '',
     <Card className="space-y-4">
       <div className="space-y-1">
         <h3 className="text-base font-semibold text-lab-text">1. Seleccion de unidad</h3>
-        <p className="text-sm text-lab-muted">Selecciona la unidad base para la cotizacion.</p>
+        <p className="text-sm text-lab-muted">Selecciona la unidad base para la cotización.</p>
       </div>
 
       <label className="space-y-1">
@@ -41,7 +41,7 @@ function QuoteUnitSelector({ units = [], branchesById = {}, selectedUnitId = '',
               <dd className="font-semibold text-lab-text">{formatUSD(selectedUnit.priceUsd)}</dd>
             </div>
             <div>
-              <dt className="text-lab-muted">Configuracion</dt>
+              <dt className="text-lab-muted">Configuración</dt>
               <dd className="font-semibold text-lab-text">{selectedUnit.configuration}</dd>
             </div>
             <div>

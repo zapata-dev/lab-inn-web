@@ -362,8 +362,8 @@ export function InventoryPdfReactDocument({ unit, generatedDate }) {
   const keyCards = [
     { label: 'Kilometraje', value: getKilometers(unit) },
     { label: 'Motor', value: toText(unit.motor) },
-    { label: 'Transmision', value: toText(unit.transmision) },
-    { label: 'Ubicacion', value: location },
+    { label: 'Transmisión', value: toText(unit.transmision) },
+    { label: 'Ubicación', value: location },
     { label: 'Paso', value: toText(unit.paso) },
     { label: 'Rodada', value: toText(unit.rodada) },
   ]
@@ -378,7 +378,7 @@ export function InventoryPdfReactDocument({ unit, generatedDate }) {
     ['Centro', unit.centro],
     ['VIN corto', vinShort],
     ['VIN completo', unit.vinCompleto],
-    ['Promocion', unit.promocion],
+    ['Promoción', unit.promocion],
   ]
 
   return (
@@ -405,7 +405,7 @@ export function InventoryPdfReactDocument({ unit, generatedDate }) {
               <View style={styles.heroShade} />
               <View style={styles.heroCopy}>
                 <Text style={styles.heroTitle}>{`${brand} ${model}`}</Text>
-                <Text style={styles.heroSubtitle}>{`Ano ${year} | ${location}`}</Text>
+                <Text style={styles.heroSubtitle}>{`Año ${year} | ${location}`}</Text>
               </View>
             </>
           ) : (
@@ -431,7 +431,7 @@ export function InventoryPdfReactDocument({ unit, generatedDate }) {
         </View>
 
         <View style={styles.cta}>
-          <Text style={styles.ctaTitle}>Para mas informacion, contacta al equipo comercial.</Text>
+          <Text style={styles.ctaTitle}>Para más información, contacta al equipo comercial.</Text>
           <Text style={styles.ctaEmail}>{CONTACT_EMAIL}</Text>
         </View>
       </Page>
@@ -471,7 +471,7 @@ export function InventoryPdfReactDocument({ unit, generatedDate }) {
             <Text style={styles.footerLeftText}>Documento comercial para cliente</Text>
           </View>
           <Text style={styles.footerRight}>
-            {`Generado: ${generatedDate}\nInformacion sujeta a disponibilidad y confirmacion comercial.`}
+            {`Generado: ${generatedDate}\nInformación sujeta a disponibilidad y confirmación comercial.`}
           </Text>
         </View>
       </Page>

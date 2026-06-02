@@ -1,4 +1,4 @@
-import { FileDown } from 'lucide-react'
+﻿import { FileDown } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import ConfirmModal from '../../components/common/ConfirmModal'
 import {
@@ -46,7 +46,7 @@ function ExportPromotionsPdfButton({ units, activeChips, disabled = false }) {
       const printWindow = window.open('', '_blank')
 
       if (!printWindow) {
-        setExportMessage('No se pudo abrir la ventana de impresion. Revisa el bloqueador de ventanas.')
+        setExportMessage('No se pudo abrir la ventana de impresión. Revisa el bloqueador de ventanas.')
         setIsExporting(false)
         return
       }
@@ -94,17 +94,17 @@ function ExportPromotionsPdfButton({ units, activeChips, disabled = false }) {
   }
 
   const confirmDescription = showLargeWarning
-    ? `Se generara un PDF con fichas completas de ${totalUnits} unidades filtradas. Este archivo puede tener varias paginas. Deseas continuar?\n\nEste PDF puede tardar en generarse por la cantidad de unidades.`
-    : `Se generara un PDF con fichas completas de ${totalUnits} unidades filtradas. Este archivo puede tener varias paginas. Deseas continuar?`
+    ? `Se generará un PDF con fichas completas de ${totalUnits} unidades filtradas. Este archivo puede tener varias páginas. ¿Deseas continuar?\n\nEste PDF puede tardar en generarse por la cantidad de unidades.`
+    : `Se generará un PDF con fichas completas de ${totalUnits} unidades filtradas. Este archivo puede tener varias páginas. ¿Deseas continuar?`
 
   return (
     <>
-      <div className="flex flex-col items-start gap-1">
+      <div className="flex w-full flex-col items-stretch gap-1">
         <button
           type="button"
           onClick={() => setIsConfirmOpen(true)}
           disabled={isDisabled}
-          className="inline-flex items-center gap-2 rounded-xl border border-lab-primary/25 bg-lab-primary/10 px-4 py-2.5 text-sm font-semibold text-lab-primary transition-all hover:-translate-y-0.5 hover:bg-lab-primary hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-lab-primary px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-lab-primary/20 transition-all hover:-translate-y-0.5 hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <FileDown className="size-4" aria-hidden="true" />
           Exportar fichas PDF
@@ -119,7 +119,7 @@ function ExportPromotionsPdfButton({ units, activeChips, disabled = false }) {
 
       <ConfirmModal
         open={isConfirmOpen}
-        title="Exportar catalogo de promociones"
+        title="Exportar catálogo de promociones"
         description={confirmDescription}
         confirmText="Generar fichas PDF"
         cancelText="Cancelar"
@@ -134,3 +134,4 @@ function ExportPromotionsPdfButton({ units, activeChips, disabled = false }) {
 }
 
 export default ExportPromotionsPdfButton
+

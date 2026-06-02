@@ -1,15 +1,19 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Navigate } from 'react-router-dom'
+﻿import { useEffect, useMemo, useState } from 'react'
+import { Link, Navigate } from 'react-router-dom'
+import { ArrowLeft } from 'lucide-react'
 import { Card } from '../components/common'
 import { useAuth } from '../context/AuthContext'
 import AccessRequestDetailDrawer from '../features/support/users/AccessRequestDetailDrawer'
+import AuditLogsList from '../features/support/users/AuditLogsList'
 import AccessRequestsList from '../features/support/users/AccessRequestsList'
+import useToast from '../hooks/useToast'
 import UserEditDrawer from '../features/support/users/UserEditDrawer'
 import UsersList from '../features/support/users/UsersList'
 import {
   ACCESS_REQUEST_STATUS,
   approveAccessRequest,
   deactivateUser,
+  listAuditLogs,
   rejectAccessRequest,
   subscribeAccessRequests,
   subscribeUsers,
@@ -19,18 +23,19 @@ import {
 function mapFirestoreError(error) {
   const code = String(error?.code || '').trim()
   if (code === 'permission-denied') {
-    return 'No tienes permisos para esta operacion en Firestore.'
+    return 'No tienes permisos para esta operación en Firestore.'
   }
 
   if (code === 'unauthenticated') {
-    return 'Tu sesion no es valida. Cierra sesion e intenta de nuevo.'
+    return 'Tu sesión no es válida. Cierra sesión e intenta de nuevo.'
   }
 
-  return error?.message || 'Ocurrio un error inesperado al administrar usuarios.'
+  return error?.message || 'Ocurrió un error inesperado al administrar usuarios.'
 }
 
 function SoporteUsuarios() {
   const { user, loading, isFirebaseMode } = useAuth()
+  const toast = useToast()
   const [activeTab, setActiveTab] = useState('solicitudes')
 
   const [statusFilter, setStatusFilter] = useState('pendiente')
@@ -47,6 +52,9 @@ function SoporteUsuarios() {
   const [selectedUser, setSelectedUser] = useState(null)
   const [userActionLoading, setUserActionLoading] = useState(false)
   const [userActionError, setUserActionError] = useState('')
+  const [auditLogs, setAuditLogs] = useState([])
+  const [auditLogsLoading, setAuditLogsLoading] = useState(false)
+  const [auditLogsError, setAuditLogsError] = useState('')
 
   const isSupportUser = useMemo(() => {
     const role = String(user?.rol || user?.role || '').trim().toLowerCase()
@@ -94,6 +102,31 @@ function SoporteUsuarios() {
     return unsubscribe
   }, [isFirebaseMode, isSupportUser])
 
+  useEffect(() => {
+    if (!isFirebaseMode || !isSupportUser || activeTab !== 'historial') {
+      setAuditLogsLoading(false)
+      setAuditLogsError('')
+      return () => {}
+    }
+
+    setAuditLogsLoading(true)
+    setAuditLogsError('')
+
+    const unsubscribe = listAuditLogs(
+      { limitCount: 50 },
+      (nextLogs) => {
+        setAuditLogs(nextLogs)
+        setAuditLogsLoading(false)
+      },
+      (error) => {
+        setAuditLogsError(mapFirestoreError(error))
+        setAuditLogsLoading(false)
+      }
+    )
+
+    return unsubscribe
+  }, [activeTab, isFirebaseMode, isSupportUser])
+
   if (loading) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-lab-bg px-4">
@@ -110,11 +143,21 @@ function SoporteUsuarios() {
     return (
       <main className="min-h-screen bg-lab-bg px-5 py-8 md:px-8">
         <section className="mx-auto w-full max-w-4xl">
+          <div className="mb-4">
+            <Link
+              to="/"
+              className="inline-flex items-center gap-2 rounded-full border border-lab-border bg-white px-3 py-2 text-sm font-semibold text-lab-text shadow-sm transition hover:border-lab-primary hover:text-lab-primary"
+            >
+              <ArrowLeft className="size-4" aria-hidden="true" />
+              Volver a Mi Oficina
+            </Link>
+          </div>
+
           <Card className="space-y-3">
             <h1 className="text-2xl font-bold text-lab-text">Soporte de usuarios</h1>
             <p className="text-sm text-lab-muted">
               Esta pantalla solo opera en modo Firebase. Cambia `VITE_AUTH_MODE=firebase` para usar
-              gestion real de solicitudes y usuarios.
+              gestión real de solicitudes y usuarios.
             </p>
           </Card>
         </section>
@@ -132,7 +175,10 @@ function SoporteUsuarios() {
     setRequestActionError('')
 
     try {
-      await approveAccessRequest(selectedRequest, payload, user)
+      const result = await approveAccessRequest(selectedRequest, payload, user)
+      if (result?.auditLogWarning) {
+        toast.warning(result.auditLogWarning)
+      }
       setSelectedRequest(null)
     } catch (error) {
       setRequestActionError(mapFirestoreError(error))
@@ -147,7 +193,10 @@ function SoporteUsuarios() {
     setRequestActionError('')
 
     try {
-      await rejectAccessRequest(selectedRequest, reason, user)
+      const result = await rejectAccessRequest(selectedRequest, reason, user)
+      if (result?.auditLogWarning) {
+        toast.warning(result.auditLogWarning)
+      }
       setSelectedRequest(null)
     } catch (error) {
       setRequestActionError(mapFirestoreError(error))
@@ -188,11 +237,21 @@ function SoporteUsuarios() {
   return (
     <main className="min-h-screen bg-lab-bg px-5 py-8 md:px-8">
       <section className="mx-auto flex w-full max-w-7xl flex-col gap-5">
-        <header className="space-y-2">
-          <h1 className="text-3xl font-bold text-lab-text">Soporte de usuarios</h1>
-          <p className="text-sm text-lab-muted">
-            Administra solicitudes de acceso y usuarios autorizados en Firestore.
-          </p>
+        <header className="flex flex-col gap-3 rounded-2xl border border-lab-border bg-white p-4 shadow-sm sm:flex-row sm:items-start sm:justify-between">
+          <div className="space-y-2">
+            <h1 className="text-3xl font-bold text-lab-text">Soporte de usuarios</h1>
+            <p className="text-sm text-lab-muted">
+              Administra solicitudes de acceso y usuarios autorizados en Firestore.
+            </p>
+          </div>
+
+          <Link
+            to="/"
+            className="inline-flex items-center justify-center gap-2 rounded-full border border-lab-border bg-white px-3 py-2 text-sm font-semibold text-lab-text shadow-sm transition hover:border-lab-primary hover:text-lab-primary"
+          >
+            <ArrowLeft className="size-4" aria-hidden="true" />
+            Volver a Mi Oficina
+          </Link>
         </header>
 
         <div className="flex flex-wrap items-center gap-2">
@@ -218,6 +277,18 @@ function SoporteUsuarios() {
             }`}
           >
             Usuarios autorizados
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('historial')}
+            className={`rounded-md px-3 py-2 text-sm font-semibold ${
+              activeTab === 'historial'
+                ? 'bg-lab-primary text-white'
+                : 'border border-lab-border bg-white text-lab-text hover:border-lab-primary hover:text-lab-primary'
+            }`}
+          >
+            Historial
           </button>
         </div>
 
@@ -245,6 +316,10 @@ function SoporteUsuarios() {
               setSelectedUser(nextUser)
             }}
           />
+        ) : null}
+
+        {activeTab === 'historial' ? (
+          <AuditLogsList logs={auditLogs} loading={auditLogsLoading} error={auditLogsError} />
         ) : null}
       </section>
 
@@ -278,3 +353,5 @@ function SoporteUsuarios() {
 }
 
 export default SoporteUsuarios
+
+

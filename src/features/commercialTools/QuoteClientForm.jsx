@@ -7,7 +7,7 @@ function QuoteClientForm({ client, onChange }) {
     <Card className="space-y-4">
       <div className="space-y-1">
         <h3 className="text-base font-semibold text-lab-text">2. Datos del cliente</h3>
-        <p className="text-sm text-lab-muted">Captura informacion comercial basica del cliente.</p>
+        <p className="text-sm text-lab-muted">Captura información comercial básica del cliente.</p>
       </div>
 
       <div className="grid gap-3 md:grid-cols-2">

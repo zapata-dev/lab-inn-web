@@ -1,6 +1,7 @@
-import { ArrowLeft, Download, ExternalLink, RefreshCw } from 'lucide-react'
+﻿import { ArrowLeft, Download, ExternalLink, RefreshCw } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import catalogHeroImage from '../assets/catalogo-publicidad-hero.png'
 import {
   fetchInventoryFromCsv,
   getInventoryCache,
@@ -160,6 +161,15 @@ function toSafeFileToken(value, fallback) {
   return sanitized || fallback
 }
 
+function isSameOriginResource(url) {
+  try {
+    const parsedUrl = new URL(url, window.location.href)
+    return parsedUrl.origin === window.location.origin
+  } catch {
+    return false
+  }
+}
+
 async function tryDownloadCoverImage(url, fileName) {
   const response = await fetch(url, { mode: 'cors' })
   if (!response.ok) throw new Error(`HTTP_${response.status}`)
@@ -307,37 +317,11 @@ function CatalogoPortadas() {
   }, [currentPage, filteredUnits])
 
   const diagnostics = useMemo(() => {
-    const coverUrlsBefore = normalizedCoverUnits.slice(0, 10).map((unit) => unit.coverImage)
-    const unassignedExamples = uniqueCoverUnits
-      .filter((unit) => unit.branchId === 'none')
-      .slice(0, 20)
-      .map((unit) => ({
-        id: unit.id,
-        model: unit.model,
-        year: unit.year,
-        code: unit.promotionCode || 'SIN_CODIGO',
-        centerRaw: unit.centerRaw || '(vacio)',
-        locationRaw: unit.locationRaw || '(vacio)',
-      }))
-
     return {
-      totalUnits: units.length,
-      totalPromotional: promotionalUnits.length,
-      totalPromotionalWithCover: promotionalUnitsWithCover.length,
       totalUniqueImages: uniqueCoverUnits.length,
-      duplicateCount: dedupeSummary.duplicateCount,
-      coverUrlsBefore,
-      duplicateSamples: dedupeSummary.duplicateSamples,
-      unassignedExamples,
+      lastUpdated,
     }
-  }, [
-    units.length,
-    promotionalUnits.length,
-    promotionalUnitsWithCover.length,
-    normalizedCoverUnits,
-    uniqueCoverUnits,
-    dedupeSummary,
-  ])
+  }, [uniqueCoverUnits.length, lastUpdated])
 
   const rangeStart = filteredUnits.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1
   const rangeEnd = filteredUnits.length === 0 ? 0 : Math.min(currentPage * PAGE_SIZE, filteredUnits.length)
@@ -365,7 +349,7 @@ function CatalogoPortadas() {
       setLastUpdated(cache.lastUpdated)
       setCurrentPage(1)
       if (showSuccessMessage) {
-        setMessage({ type: 'success', text: 'Catalogo de publicidad actualizado correctamente.' })
+        setMessage({ type: 'success', text: 'Catálogo de Publicidad actualizado correctamente.' })
       }
     } catch (error) {
       const cache = getInventoryCache()
@@ -375,12 +359,12 @@ function CatalogoPortadas() {
         setCurrentPage(1)
         setMessage({
           type: 'warning',
-          text: 'No se pudo actualizar. Mostrando ultima version guardada.',
+          text: 'No se pudo actualizar. Mostrando última versión guardada.',
         })
       } else {
         setMessage({
           type: 'error',
-          text: 'No fue posible cargar el catalogo de publicidad. Verifica el CSV e intenta de nuevo.',
+          text: 'No fue posible cargar el Catálogo de Publicidad. Verifica el CSV e intenta de nuevo.',
         })
       }
     } finally {
@@ -404,6 +388,15 @@ function CatalogoPortadas() {
     const vinToken = toSafeFileToken(unit.vin, 'VIN')
     const fileName = `PORTADA_${yearToken}_${modelToken}_${branchToken}_${vinToken}.jpg`
 
+    if (!isSameOriginResource(unit.coverImage)) {
+      window.open(unit.coverImage, '_blank', 'noopener,noreferrer')
+      setMessage({
+        type: 'warning',
+        text: 'No fue posible descargar automáticamente por permisos del servidor. Se abrió la imagen en una nueva pestaña.',
+      })
+      return
+    }
+
     try {
       await tryDownloadCoverImage(unit.coverImage, fileName)
       setMessage({ type: 'success', text: `Imagen exportada: ${fileName}` })
@@ -411,7 +404,7 @@ function CatalogoPortadas() {
       window.open(unit.coverImage, '_blank', 'noopener,noreferrer')
       setMessage({
         type: 'warning',
-        text: 'No fue posible descargar por CORS. Se abrio la imagen en una nueva pestana.',
+        text: 'No fue posible descargar automáticamente por permisos del servidor. Se abrió la imagen en una nueva pestaña.',
       })
     }
   }
@@ -426,63 +419,95 @@ function CatalogoPortadas() {
   return (
     <main className="min-h-screen bg-gradient-to-b from-white via-lab-bg to-white px-4 py-8 sm:px-6 lg:px-8">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-5">
-        <header className="rounded-2xl border border-lab-border bg-white p-5 shadow-sm">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div className="space-y-2">
-              <Link
-                to="/"
-                className="inline-flex items-center gap-2 rounded-xl border border-lab-primary/20 bg-lab-primary/10 px-4 py-2 text-sm font-semibold text-lab-primary shadow-sm transition-all hover:-translate-y-0.5 hover:bg-lab-primary hover:text-white"
-              >
-                <ArrowLeft className="size-4" aria-hidden="true" />
-                Volver a Mi Oficina Virtual
-              </Link>
-              <h1 className="text-3xl font-bold text-lab-text">Catalogo de Publicidad</h1>
-              <p className="text-sm text-lab-muted">
-                Consulta y descarga material publicitario de unidades en promocion por sucursal.
-              </p>
-              <p className="text-sm text-lab-muted">
-                Ultima actualizacion: {formatLastUpdated(lastUpdated)}
-              </p>
-            </div>
+        <header className="relative overflow-hidden rounded-3xl border border-slate-200/60 bg-slate-950 text-white shadow-[0_30px_80px_rgba(15,23,42,0.18)]">
+          <img
+            src={catalogHeroImage}
+            alt=""
+            aria-hidden="true"
+            className="absolute inset-0 size-full object-cover object-center"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-black/35" />
 
-            <button
-              type="button"
-              onClick={() => refreshCatalog(true)}
-              disabled={loading}
-              className="inline-flex items-center gap-2 rounded-xl bg-lab-primary px-5 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              <RefreshCw className={`size-4 ${loading ? 'animate-spin' : ''}`} aria-hidden="true" />
-              {loading ? 'Actualizando...' : 'Actualizar catalogo'}
-            </button>
+          <div className="relative z-10 p-5 sm:p-6 lg:p-8">
+            <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+              <div className="max-w-3xl space-y-5">
+                <div className="flex flex-wrap items-center gap-3">
+                  <Link
+                    to="/"
+                    className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white backdrop-blur-md transition-all hover:-translate-y-0.5 hover:bg-white/20"
+                  >
+                    <ArrowLeft className="size-4" aria-hidden="true" />
+                    Volver a Mi Oficina
+                  </Link>
+                  <span className="inline-flex items-center rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.28em] text-white/80 backdrop-blur-md">
+                    Catálogo comercial
+                  </span>
+                </div>
+
+                <div className="space-y-3">
+                  <p className="text-xs font-semibold uppercase tracking-[0.38em] text-white/70">
+                    Catálogo de Publicidad
+                  </p>
+                  <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl">
+                    Portadas comerciales listas para compartir
+                  </h1>
+                  <p className="max-w-2xl text-sm leading-6 text-white/80 sm:text-base">
+                    Consulta, filtra y descarga material publicitario de unidades en promoción por sucursal con una
+                    vista más clara, ejecutiva y de alto contraste.
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold text-white/85 backdrop-blur-md">
+                    Portadas activas
+                  </span>
+                  <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold text-white/85 backdrop-blur-md">
+                    Cobertura por sucursal
+                  </span>
+                  <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold text-white/85 backdrop-blur-md">
+                    Descarga rápida
+                  </span>
+                </div>
+              </div>
+
+              <div className="w-full max-w-md rounded-2xl border border-white/15 bg-white/10 p-4 shadow-2xl backdrop-blur-md">
+                <div className="flex flex-col gap-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.28em] text-white/60">Panel rápido</p>
+                      <p className="mt-1 text-lg font-semibold text-white">Material listo para uso comercial</p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => refreshCatalog(true)}
+                      disabled={loading}
+                      className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-semibold text-slate-950 transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      <RefreshCw className={`size-4 ${loading ? 'animate-spin' : ''}`} aria-hidden="true" />
+                      {loading ? 'Actualizando...' : 'Actualizar catálogo'}
+                    </button>
+                  </div>
+
+                  <dl className="grid grid-cols-2 gap-3 text-sm">
+                    <div className="rounded-2xl border border-white/10 bg-black/20 p-3">
+                      <dt className="text-white/60">Portadas únicas</dt>
+                      <dd className="mt-1 text-lg font-semibold text-white">{diagnostics.totalUniqueImages}</dd>
+                    </div>
+                    <div className="rounded-2xl border border-white/10 bg-black/20 p-3">
+                      <dt className="text-white/60">Última actualización</dt>
+                      <dd className="mt-1 text-sm font-semibold text-white">{formatLastUpdated(lastUpdated)}</dd>
+                    </div>
+                  </dl>
+                </div>
+              </div>
+            </div>
           </div>
         </header>
 
         {message.text ? (
           <p className={`rounded-xl border px-4 py-3 text-sm font-medium ${messageClass}`}>{message.text}</p>
         ) : null}
-
-        <section className="grid gap-3 rounded-2xl border border-lab-border bg-white p-4 shadow-sm sm:grid-cols-2 xl:grid-cols-4">
-          <div className="rounded-xl bg-lab-bg/60 px-3 py-2">
-            <p className="text-xs text-lab-muted">Total unidades</p>
-            <p className="text-lg font-semibold text-lab-text">{diagnostics.totalUnits}</p>
-          </div>
-          <div className="rounded-xl bg-lab-bg/60 px-3 py-2">
-            <p className="text-xs text-lab-muted">Con Promocion = Si</p>
-            <p className="text-lg font-semibold text-lab-text">{diagnostics.totalPromotional}</p>
-          </div>
-          <div className="rounded-xl bg-lab-bg/60 px-3 py-2">
-            <p className="text-xs text-lab-muted">Promocion + Imagen Portada</p>
-            <p className="text-lg font-semibold text-lab-text">{diagnostics.totalPromotionalWithCover}</p>
-          </div>
-          <div className="rounded-xl bg-lab-bg/60 px-3 py-2">
-            <p className="text-xs text-lab-muted">Cards unicas (imagen)</p>
-            <p className="text-lg font-semibold text-lab-text">{diagnostics.totalUniqueImages}</p>
-          </div>
-          <div className="rounded-xl bg-lab-bg/60 px-3 py-2">
-            <p className="text-xs text-lab-muted">Duplicados removidos</p>
-            <p className="text-lg font-semibold text-lab-text">{diagnostics.duplicateCount}</p>
-          </div>
-        </section>
 
         <section className="rounded-2xl border border-lab-border bg-white p-5 shadow-sm">
           <div className="flex flex-wrap gap-2">
@@ -542,7 +567,7 @@ function CatalogoPortadas() {
                 <div className="space-y-3 p-4">
                   <div className="space-y-1 text-sm text-lab-muted">
                     <p>
-                      <span className="font-semibold text-lab-text">Ano:</span> {unit.year}
+                      <span className="font-semibold text-lab-text">Año:</span> {unit.year}
                     </p>
                     <p>
                       <span className="font-semibold text-lab-text">Modelo:</span> {unit.model}
@@ -551,10 +576,10 @@ function CatalogoPortadas() {
                       <span className="font-semibold text-lab-text">Sucursal:</span> {unit.branchLabel}
                     </p>
                     <p>
-                      <span className="font-semibold text-lab-text">Codigo:</span> {unit.promotionCode || 'Sin codigo'}
+                      <span className="font-semibold text-lab-text">Código:</span> {unit.promotionCode || 'Sin código'}
                     </p>
                     <p>
-                      <span className="font-semibold text-lab-text">Codigos asociados:</span>{' '}
+                      <span className="font-semibold text-lab-text">Códigos asociados:</span>{' '}
                       {unit.associatedCodeCount || 0}
                     </p>
                   </div>
@@ -595,7 +620,7 @@ function CatalogoPortadas() {
               Anterior
             </button>
             <p className="font-medium text-lab-muted">
-              Pagina {currentPage} de {totalPages}
+              Página {currentPage} de {totalPages}
             </p>
             <button
               type="button"
@@ -613,3 +638,4 @@ function CatalogoPortadas() {
 }
 
 export default CatalogoPortadas
+
