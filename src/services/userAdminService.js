@@ -140,6 +140,74 @@ function getReviewerValue(reviewer) {
   return 'soporte'
 }
 
+function getReviewerDetails(reviewer) {
+  const uid = normalizeString(reviewer?.uid)
+  const email = normalizeEmail(reviewer?.email)
+  const name = normalizeString(reviewer?.nombre || reviewer?.displayName || reviewer?.name)
+
+  return {
+    uid,
+    email,
+    name,
+  }
+}
+
+function buildAccessDecisionAuditEvent({
+  action,
+  request,
+  assignedRole,
+  assignedBranch,
+  decisionNote,
+  reviewer,
+}) {
+  const reviewerDetails = getReviewerDetails(reviewer)
+  const targetUid = normalizeString(request?.uid || request?.id)
+  const targetEmail = normalizeEmail(request?.email)
+  const targetName = normalizeString(
+    request?.nombre || request?.displayName || request?.name || request?.email
+  )
+  const normalizedRole = ensureValidRole(assignedRole || request?.requestedRole)
+
+  return {
+    action,
+    targetUid,
+    targetEmail,
+    targetName,
+    performedByUid: reviewerDetails.uid,
+    performedByEmail: reviewerDetails.email,
+    performedByName: reviewerDetails.name || reviewerDetails.email || reviewerDetails.uid || 'Soporte',
+    assignedRole: normalizedRole,
+    assignedBranch: normalizeString(assignedBranch || request?.requestedSucursalNombre),
+    requestId: targetUid,
+    decisionNote: normalizeString(decisionNote || ''),
+    createdAt: serverTimestamp(),
+    source: 'support_panel',
+  }
+}
+
+async function createAuditLog(event) {
+  ensureFirebaseReady()
+
+  const logRef = doc(collection(firebaseDb, 'auditLogs'))
+  await setDoc(logRef, {
+    action: normalizeString(event?.action),
+    targetUid: normalizeString(event?.targetUid),
+    targetEmail: normalizeEmail(event?.targetEmail),
+    targetName: normalizeString(event?.targetName),
+    performedByUid: normalizeString(event?.performedByUid),
+    performedByEmail: normalizeEmail(event?.performedByEmail),
+    performedByName: normalizeString(event?.performedByName),
+    assignedRole: ensureValidRole(event?.assignedRole),
+    assignedBranch: normalizeString(event?.assignedBranch),
+    requestId: normalizeString(event?.requestId),
+    decisionNote: normalizeString(event?.decisionNote),
+    createdAt: event?.createdAt || serverTimestamp(),
+    source: 'support_panel',
+  })
+
+  return logRef.id
+}
+
 async function getMyAccessRequest(uid) {
   ensureFirebaseReady()
   const normalizedUid = normalizeString(uid)
@@ -326,6 +394,25 @@ async function approveAccessRequest(request, payload, reviewer) {
   )
 
   await batch.commit()
+
+  let auditLogWarning = ''
+  try {
+    await createAuditLog(
+      buildAccessDecisionAuditEvent({
+        action: 'access_approved',
+        request,
+        assignedRole: role,
+        assignedBranch: branch.sucursalNombre,
+        decisionNote: reason || 'Solicitud aprobada',
+        reviewer,
+      })
+    )
+  } catch (auditError) {
+    console.warn('No se pudo registrar auditLogs para la aprobación de acceso.', auditError)
+    auditLogWarning = 'La solicitud se aprobó, pero no se pudo registrar la auditoría.'
+  }
+
+  return { auditLogWarning }
 }
 
 async function rejectAccessRequest(request, reason, reviewer) {
@@ -352,6 +439,25 @@ async function rejectAccessRequest(request, reason, reviewer) {
     },
     { merge: true }
   )
+
+  let auditLogWarning = ''
+  try {
+    await createAuditLog(
+      buildAccessDecisionAuditEvent({
+        action: 'access_rejected',
+        request,
+        assignedRole: request?.requestedRole,
+        assignedBranch: request?.requestedSucursalNombre,
+        decisionNote: decisionReason || 'Solicitud rechazada',
+        reviewer,
+      })
+    )
+  } catch (auditError) {
+    console.warn('No se pudo registrar auditLogs para el rechazo de acceso.', auditError)
+    auditLogWarning = 'La solicitud se rechazó, pero no se pudo registrar la auditoría.'
+  }
+
+  return { auditLogWarning }
 }
 
 async function updateUser(uid, payload) {
@@ -419,6 +525,7 @@ export {
   ROLE_OPTIONS,
   approveAccessRequest,
   createAccessRequest,
+  createAuditLog,
   deactivateUser,
   getMyAccessRequest,
   normalizeAccessRequest,
