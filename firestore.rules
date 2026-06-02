@@ -41,7 +41,7 @@ service cloud.firestore {
       return email is string && email.matches('^[^@]+@zapata\\.com\\.mx$');
     }
 
-    function validUsuarioPayload(data, uid) {
+    function validUsuarioPayload(data) {
       return data.keys().hasAll([
           'email',
           'nombre',
@@ -275,7 +275,7 @@ service cloud.firestore {
 
     match /usuarios/{uid} {
       allow read: if signedIn() && (request.auth.uid == uid || isSoporte());
-      allow create, update: if isSoporte() && validUsuarioPayload(request.resource.data, uid);
+      allow create, update: if isSoporte() && validUsuarioPayload(request.resource.data);
       allow delete: if false;
     }
 
@@ -296,8 +296,9 @@ service cloud.firestore {
     }
 
     match /auditLogs/{logId} {
+      allow read: if isSoporte();
       allow create: if isSoporte() && validAuditLogCreate(request.resource.data);
-      allow read, update, delete: if false;
+      allow update, delete: if false;
     }
 
     match /{document=**} {

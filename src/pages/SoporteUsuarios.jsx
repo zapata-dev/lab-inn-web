@@ -4,6 +4,7 @@ import { ArrowLeft } from 'lucide-react'
 import { Card } from '../components/common'
 import { useAuth } from '../context/AuthContext'
 import AccessRequestDetailDrawer from '../features/support/users/AccessRequestDetailDrawer'
+import AuditLogsList from '../features/support/users/AuditLogsList'
 import AccessRequestsList from '../features/support/users/AccessRequestsList'
 import useToast from '../hooks/useToast'
 import UserEditDrawer from '../features/support/users/UserEditDrawer'
@@ -12,6 +13,7 @@ import {
   ACCESS_REQUEST_STATUS,
   approveAccessRequest,
   deactivateUser,
+  listAuditLogs,
   rejectAccessRequest,
   subscribeAccessRequests,
   subscribeUsers,
@@ -50,6 +52,9 @@ function SoporteUsuarios() {
   const [selectedUser, setSelectedUser] = useState(null)
   const [userActionLoading, setUserActionLoading] = useState(false)
   const [userActionError, setUserActionError] = useState('')
+  const [auditLogs, setAuditLogs] = useState([])
+  const [auditLogsLoading, setAuditLogsLoading] = useState(false)
+  const [auditLogsError, setAuditLogsError] = useState('')
 
   const isSupportUser = useMemo(() => {
     const role = String(user?.rol || user?.role || '').trim().toLowerCase()
@@ -96,6 +101,31 @@ function SoporteUsuarios() {
 
     return unsubscribe
   }, [isFirebaseMode, isSupportUser])
+
+  useEffect(() => {
+    if (!isFirebaseMode || !isSupportUser || activeTab !== 'historial') {
+      setAuditLogsLoading(false)
+      setAuditLogsError('')
+      return () => {}
+    }
+
+    setAuditLogsLoading(true)
+    setAuditLogsError('')
+
+    const unsubscribe = listAuditLogs(
+      { limitCount: 50 },
+      (nextLogs) => {
+        setAuditLogs(nextLogs)
+        setAuditLogsLoading(false)
+      },
+      (error) => {
+        setAuditLogsError(mapFirestoreError(error))
+        setAuditLogsLoading(false)
+      }
+    )
+
+    return unsubscribe
+  }, [activeTab, isFirebaseMode, isSupportUser])
 
   if (loading) {
     return (
@@ -248,6 +278,18 @@ function SoporteUsuarios() {
           >
             Usuarios autorizados
           </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('historial')}
+            className={`rounded-md px-3 py-2 text-sm font-semibold ${
+              activeTab === 'historial'
+                ? 'bg-lab-primary text-white'
+                : 'border border-lab-border bg-white text-lab-text hover:border-lab-primary hover:text-lab-primary'
+            }`}
+          >
+            Historial
+          </button>
         </div>
 
         {activeTab === 'solicitudes' ? (
@@ -274,6 +316,10 @@ function SoporteUsuarios() {
               setSelectedUser(nextUser)
             }}
           />
+        ) : null}
+
+        {activeTab === 'historial' ? (
+          <AuditLogsList logs={auditLogs} loading={auditLogsLoading} error={auditLogsError} />
         ) : null}
       </section>
 

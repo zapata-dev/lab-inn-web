@@ -2,7 +2,10 @@ import {
   collection,
   doc,
   getDoc,
+  limit,
   onSnapshot,
+  orderBy,
+  query,
   serverTimestamp,
   setDoc,
   writeBatch,
@@ -80,6 +83,27 @@ function normalizeAccessRequest(snapshotDoc) {
     reviewedAt: toDate(data.reviewedAt),
     reviewedBy: normalizeString(data.reviewedBy),
     decisionReason: normalizeString(data.decisionReason),
+  }
+}
+
+function normalizeAuditLog(snapshotDoc) {
+  const data = snapshotDoc.data() ?? {}
+
+  return {
+    id: snapshotDoc.id,
+    action: normalizeString(data.action),
+    targetUid: normalizeString(data.targetUid),
+    targetEmail: normalizeEmail(data.targetEmail),
+    targetName: normalizeString(data.targetName),
+    performedByUid: normalizeString(data.performedByUid),
+    performedByEmail: normalizeEmail(data.performedByEmail),
+    performedByName: normalizeString(data.performedByName),
+    assignedRole: normalizeString(data.assignedRole).toLowerCase(),
+    assignedBranch: normalizeString(data.assignedBranch),
+    requestId: normalizeString(data.requestId),
+    decisionNote: normalizeString(data.decisionNote),
+    createdAt: toDate(data.createdAt),
+    source: normalizeString(data.source),
   }
 }
 
@@ -343,6 +367,27 @@ function subscribeUsers(callback, onError) {
   )
 }
 
+function listAuditLogs({ limitCount = 50 } = {}, callback, onError) {
+  ensureFirebaseReady()
+  const normalizedLimitCount = Number.isFinite(Number(limitCount)) ? Number(limitCount) : 50
+  const auditLogsQuery = query(
+    collection(firebaseDb, 'auditLogs'),
+    orderBy('createdAt', 'desc'),
+    limit(Math.max(1, normalizedLimitCount))
+  )
+
+  return onSnapshot(
+    auditLogsQuery,
+    (snapshot) => {
+      const normalizedAuditLogs = snapshot.docs.map(normalizeAuditLog)
+      callback(normalizedAuditLogs)
+    },
+    (error) => {
+      if (onError) onError(error)
+    }
+  )
+}
+
 async function approveAccessRequest(request, payload, reviewer) {
   ensureFirebaseReady()
   const uid = normalizeString(request?.uid || request?.id)
@@ -528,7 +573,9 @@ export {
   createAuditLog,
   deactivateUser,
   getMyAccessRequest,
+  listAuditLogs,
   normalizeAccessRequest,
+  normalizeAuditLog,
   normalizeUser,
   rejectAccessRequest,
   subscribeAccessRequests,
