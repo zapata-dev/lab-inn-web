@@ -15,6 +15,7 @@ import {
   createSimulatedOpportunityFromUnit,
   saveQuoteContext,
 } from '../services/inventoryActionsService'
+import { mixInventoryForDisplay } from '../utils/inventoryMixUtils'
 
 const scopeModeByRole = {
   admin: 'global',
@@ -72,6 +73,7 @@ function InventarioNacional() {
   const [inventory, setInventory] = useState([])
   const [branches, setBranches] = useState([])
   const [viewMode, setViewMode] = useState('table')
+  const [displayOrderMode, setDisplayOrderMode] = useState('mixed')
   const [filters, setFilters] = useState(getInitialFilters(user))
   const [selectedUnit, setSelectedUnit] = useState(null)
   const [isDetailOpen, setIsDetailOpen] = useState(false)
@@ -135,6 +137,14 @@ function InventarioNacional() {
   const visibleInventory = useMemo(
     () => applyInventoryFilters(scopedInventory, filters),
     [filters, scopedInventory]
+  )
+
+  const orderedVisibleInventory = useMemo(
+    () =>
+      displayOrderMode === 'mixed'
+        ? mixInventoryForDisplay(visibleInventory)
+        : visibleInventory,
+    [displayOrderMode, visibleInventory]
   )
 
   const filterBranchOptions = useMemo(() => {
@@ -305,41 +315,68 @@ function InventarioNacional() {
           <p className="text-sm text-lab-muted">
             Vista actual: {viewMode === 'table' ? 'Tabla' : 'Tarjetas'} | Resultados: {visibleInventory.length}
           </p>
-          <div className="inline-flex rounded-lg border border-lab-border bg-white p-1">
-            <button
-              type="button"
-              onClick={() => setViewMode('table')}
-              className={`inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-semibold transition ${
-                viewMode === 'table' ? 'bg-lab-primary text-white' : 'text-lab-muted hover:text-lab-text'
-              }`}
-            >
-              <Table2 className="size-4" aria-hidden="true" />
-              Tabla
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode('cards')}
-              className={`inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-semibold transition ${
-                viewMode === 'cards' ? 'bg-lab-primary text-white' : 'text-lab-muted hover:text-lab-text'
-              }`}
-            >
-              <LayoutGrid className="size-4" aria-hidden="true" />
-              Tarjetas
-            </button>
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="inline-flex rounded-lg border border-lab-border bg-white p-1">
+              <button
+                type="button"
+                onClick={() => setViewMode('table')}
+                className={`inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-semibold transition ${
+                  viewMode === 'table' ? 'bg-lab-primary text-white' : 'text-lab-muted hover:text-lab-text'
+                }`}
+              >
+                <Table2 className="size-4" aria-hidden="true" />
+                Tabla
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('cards')}
+                className={`inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-semibold transition ${
+                  viewMode === 'cards' ? 'bg-lab-primary text-white' : 'text-lab-muted hover:text-lab-text'
+                }`}
+              >
+                <LayoutGrid className="size-4" aria-hidden="true" />
+                Tarjetas
+              </button>
+            </div>
+
+            <div className="inline-flex rounded-lg border border-lab-border bg-white p-1">
+              <button
+                type="button"
+                onClick={() => setDisplayOrderMode('mixed')}
+                className={`rounded-md px-3 py-1.5 text-sm font-semibold transition ${
+                  displayOrderMode === 'mixed'
+                    ? 'bg-lab-primary text-white'
+                    : 'text-lab-muted hover:text-lab-text'
+                }`}
+              >
+                Mixto recomendado
+              </button>
+              <button
+                type="button"
+                onClick={() => setDisplayOrderMode('original')}
+                className={`rounded-md px-3 py-1.5 text-sm font-semibold transition ${
+                  displayOrderMode === 'original'
+                    ? 'bg-lab-primary text-white'
+                    : 'text-lab-muted hover:text-lab-text'
+                }`}
+              >
+                CSV original
+              </button>
+            </div>
           </div>
         </div>
       </Card>
 
       {viewMode === 'table' ? (
         <InventoryTable
-          units={visibleInventory}
+          units={orderedVisibleInventory}
           branchesById={branchesById}
           pageSize={20}
           onSelectUnit={handleSelectUnit}
         />
       ) : (
         <InventoryCardGrid
-          units={visibleInventory}
+          units={orderedVisibleInventory}
           branchesById={branchesById}
           onSelectUnit={handleSelectUnit}
         />

@@ -16,9 +16,17 @@ function safeText(value, fallback = 'Por confirmar') {
   return text
 }
 
+function joinValues(values, fallback = 'Por confirmar') {
+  const uniqueValues = [...new Set((Array.isArray(values) ? values : []).map((value) => safeText(value, '')).filter(Boolean))]
+  return uniqueValues.length > 0 ? uniqueValues.join(' / ') : fallback
+}
+
 function PromotionGroupCard({ group, onViewUnit, onExportSummary }) {
   const [isExpanded, setIsExpanded] = useState(false)
   const coverImage = group.coverImage || getPromotionCoverImage(group.representativeUnit)
+  const yearsLabel = joinValues(group.years, 'Por confirmar')
+  const modelsLabel = joinValues(group.models, 'Por confirmar')
+  const branchLabel = safeText(group.agency)
 
   return (
     <article className="overflow-hidden rounded-2xl border border-lab-border bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lab">
@@ -26,7 +34,7 @@ function PromotionGroupCard({ group, onViewUnit, onExportSummary }) {
         {coverImage ? (
           <img
             src={coverImage}
-            alt={`Portada de promocion ${safeText(group.code)}`}
+            alt={`Portada de promoción ${branchLabel} ${yearsLabel}`}
             className="size-full object-cover"
             loading="lazy"
           />
@@ -40,8 +48,8 @@ function PromotionGroupCard({ group, onViewUnit, onExportSummary }) {
       <div className="p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-lab-muted">{safeText(group.agency)}</p>
-            <h3 className="mt-1 text-lg font-bold text-lab-text">Codigo: {safeText(group.code)}</h3>
+            <p className="text-xs font-semibold uppercase tracking-wide text-lab-muted">{branchLabel}</p>
+            <h3 className="mt-1 text-lg font-bold text-lab-text">Año: {yearsLabel}</h3>
             <p className="mt-1 text-sm text-lab-muted">
               {group.count} {group.count === 1 ? 'unidad disponible' : 'unidades disponibles'}
             </p>
@@ -51,7 +59,10 @@ function PromotionGroupCard({ group, onViewUnit, onExportSummary }) {
 
         <div className="mt-3 space-y-2 text-sm text-lab-muted">
           <p>
-            <span className="font-semibold text-lab-text">Modelos:</span> {group.models.join(' / ') || 'Por confirmar'}
+            <span className="font-semibold text-lab-text">Modelo:</span> {modelsLabel}
+          </p>
+          <p>
+            <span className="font-semibold text-lab-text">Sucursal:</span> {branchLabel}
           </p>
           <p>
             <span className="font-semibold text-lab-text">Diferencias:</span>{' '}
@@ -62,7 +73,7 @@ function PromotionGroupCard({ group, onViewUnit, onExportSummary }) {
         <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3">
           <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">Texto comercial</p>
           <p className="mt-1 text-sm leading-relaxed text-emerald-900">
-            {truncatePromotionText(group.promoText, 180) || 'Promocion disponible'}
+            {truncatePromotionText(group.promoText, 180) || 'Promoción disponible'}
           </p>
         </div>
 
@@ -96,7 +107,7 @@ function PromotionGroupCard({ group, onViewUnit, onExportSummary }) {
               >
                 <div className="flex items-start justify-between gap-2">
                   <p className="text-sm font-semibold text-lab-text">
-                    {safeText(unit.marca, 'Sin marca')} {safeText(unit.modelo, 'Sin modelo')} ({safeText(unit.anio, 'Ano')})
+                    {safeText(unit.marca, 'Sin marca')} {safeText(unit.modelo, 'Sin modelo')} ({safeText(unit.anio, 'Año')})
                   </p>
                   <p className="text-sm font-semibold text-lab-primary">{formatCurrency(unit.precio)}</p>
                 </div>
@@ -114,3 +125,4 @@ function PromotionGroupCard({ group, onViewUnit, onExportSummary }) {
 }
 
 export default PromotionGroupCard
+

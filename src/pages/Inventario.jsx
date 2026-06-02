@@ -12,6 +12,7 @@ import {
   saveInventoryCache,
 } from '../services/inventoryService'
 import { getUnitFieldValue } from '../utils/inventoryUnitUtils'
+import { mixInventoryForDisplay } from '../utils/inventoryMixUtils'
 
 const SEARCHABLE_KEYS = ['marca', 'modelo', 'vin', 'vinCompleto', 'motor', 'tipoUnidad', 'descripcion', 'placas']
 const FILTER_LABELS = INVENTORY_FILTER_FIELDS.reduce((accumulator, field) => {
@@ -299,6 +300,7 @@ function Inventario() {
   const [inventory, setInventory] = useState([])
   const [filters, setFilters] = useState({})
   const [search, setSearch] = useState('')
+  const [displayOrderMode, setDisplayOrderMode] = useState('mixed')
   const [selectedUnit, setSelectedUnit] = useState(null)
   const [lastUpdated, setLastUpdated] = useState(null)
   const [loading, setLoading] = useState(false)
@@ -316,16 +318,20 @@ function Inventario() {
     () => applyFilters(inventory, filters, search, availableFilterDefinitions),
     [inventory, filters, search, availableFilterDefinitions]
   )
+  const displayUnits = useMemo(
+    () => (displayOrderMode === 'mixed' ? mixInventoryForDisplay(filteredUnits) : filteredUnits),
+    [displayOrderMode, filteredUnits]
+  )
   const activeChips = useMemo(() => getActiveChips(search, filters), [search, filters])
 
   const totalPages = useMemo(
-    () => Math.max(1, Math.ceil(filteredUnits.length / pageSize)),
-    [filteredUnits.length, pageSize]
+    () => Math.max(1, Math.ceil(displayUnits.length / pageSize)),
+    [displayUnits.length, pageSize]
   )
   const pageUnits = useMemo(() => {
     const start = (currentPage - 1) * pageSize
-    return filteredUnits.slice(start, start + pageSize)
-  }, [filteredUnits, currentPage, pageSize])
+    return displayUnits.slice(start, start + pageSize)
+  }, [displayUnits, currentPage, pageSize])
 
   useEffect(() => {
     const media = window.matchMedia('(max-width: 767px)')
@@ -380,7 +386,7 @@ function Inventario() {
 
   useEffect(() => {
     setCurrentPage(1)
-  }, [search, filters])
+  }, [search, filters, displayOrderMode])
 
   useEffect(() => {
     setCurrentPage((previous) => Math.min(previous, totalPages))
@@ -446,9 +452,9 @@ function Inventario() {
   const handleCopy = async (unit) => {
     try {
       await navigator.clipboard.writeText(buildCopyText(unit))
-      setMessage({ type: 'success', text: 'Informacion copiada al portapapeles.' })
+      setMessage({ type: 'success', text: 'Información copiada al portapapeles.' })
     } catch (error) {
-      setMessage({ type: 'error', text: 'No se pudo copiar la informacion.' })
+      setMessage({ type: 'error', text: 'No se pudo copiar la información.' })
     }
   }
 
@@ -483,7 +489,7 @@ function Inventario() {
                 className="inline-flex items-center gap-2 rounded-xl border border-lab-primary/20 bg-lab-primary/10 px-4 py-2 text-sm font-semibold text-lab-primary shadow-sm transition-all hover:-translate-y-0.5 hover:bg-lab-primary hover:text-white"
               >
                 <ArrowLeft className="size-4" aria-hidden="true" />
-                Volver a Mi Oficina Virtual
+                Volver a Mi Oficina
               </Link>
               <h1 className="text-3xl font-bold text-lab-text">Marketplace de inventario nacional</h1>
               <p className="text-sm text-lab-muted">
@@ -502,7 +508,7 @@ function Inventario() {
                 {loading ? 'Actualizando inventario...' : 'Actualizar inventario'}
               </button>
               <ExportInventoryCatalogPdfButton
-                units={filteredUnits}
+                units={displayUnits}
                 activeChips={activeChips}
                 disabled={loading}
               />
@@ -512,12 +518,48 @@ function Inventario() {
           <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-lab-muted">
             <span className="inline-flex items-center gap-2 rounded-full bg-lab-bg px-3 py-1">
               <Search className="size-4" aria-hidden="true" />
-              {filteredUnits.length} resultados
+              {displayUnits.length} resultados
             </span>
             <span className="rounded-full bg-lab-bg px-3 py-1">Total cargadas: {inventory.length}</span>
             <span className="rounded-full bg-lab-bg px-3 py-1">
-              Mostrando {pageUnits.length} de {filteredUnits.length} en esta pagina
+              Mostrando {pageUnits.length} de {displayUnits.length} en esta pagina
             </span>
+          </div>
+
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-lab-border bg-lab-bg/70 px-4 py-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-lab-muted">
+                Orden de visualizacion
+              </p>
+              <p className="text-sm text-lab-muted">
+                El orden mixto distribuye mejor modelos, años, sucursales e imágenes.
+              </p>
+            </div>
+
+            <div className="inline-flex rounded-xl border border-lab-border bg-white p-1">
+              <button
+                type="button"
+                onClick={() => setDisplayOrderMode('mixed')}
+                className={`rounded-lg px-3 py-2 text-sm font-semibold transition ${
+                  displayOrderMode === 'mixed'
+                    ? 'bg-lab-primary text-white'
+                    : 'text-lab-muted hover:text-lab-text'
+                }`}
+              >
+                Mixto recomendado
+              </button>
+              <button
+                type="button"
+                onClick={() => setDisplayOrderMode('original')}
+                className={`rounded-lg px-3 py-2 text-sm font-semibold transition ${
+                  displayOrderMode === 'original'
+                    ? 'bg-lab-primary text-white'
+                    : 'text-lab-muted hover:text-lab-text'
+                }`}
+              >
+                CSV original
+              </button>
+            </div>
           </div>
         </header>
 

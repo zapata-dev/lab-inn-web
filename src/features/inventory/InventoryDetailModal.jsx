@@ -51,8 +51,8 @@ function InventoryDetailModal({ unit, onClose, onCopy }) {
             <h2 className="text-2xl font-bold text-lab-text">
               {unit.marca || 'Sin marca'} {unit.modelo || 'Sin modelo'}
             </h2>
-            <p className="text-sm text-lab-muted">
-              {unit.anio || 'Ano no especificado'} | {unit.ubicacion || 'Sin ubicacion'}
+              <p className="text-sm text-lab-muted">
+              {unit.anio || 'Año no especificado'} | {unit.ubicacion || 'Sin ubicación'}
             </p>
             <p className="mt-1 text-xl font-bold text-lab-primary">{formatCurrency(unit.precio)}</p>
           </div>
@@ -67,10 +67,10 @@ function InventoryDetailModal({ unit, onClose, onCopy }) {
 
         <div className="max-h-[72vh] space-y-4 overflow-y-auto p-5">
           <div className="grid gap-4 md:grid-cols-2">
-            <DetailSection title="Informacion general">
+            <DetailSection title="Información general">
               <DetailRow label="Marca" value={unit.marca} />
               <DetailRow label="Modelo" value={unit.modelo} />
-              <DetailRow label="Ano" value={unit.anio} />
+              <DetailRow label="Año" value={unit.anio} />
               <DetailRow label="Color" value={unit.color} />
               <DetailRow label="Subempresa" value={unit.subempresa} />
               <DetailRow label="Status" value={unit.status} />
@@ -78,12 +78,12 @@ function InventoryDetailModal({ unit, onClose, onCopy }) {
 
             <DetailSection title="Tren motriz">
               <DetailRow label="Motor" value={unit.motor} />
-              <DetailRow label="Transmision" value={unit.transmision} />
+              <DetailRow label="Transmisión" value={unit.transmision} />
               <DetailRow label="Cilindros" value={unit.cilindros} />
               <DetailRow label="Kilometraje" value={formatKilometers(unit.kilometros)} />
             </DetailSection>
 
-            <DetailSection title="Configuracion">
+            <DetailSection title="Configuración">
               <DetailRow label="Paso" value={unit.paso} />
               <DetailRow label="Rodada" value={unit.rodada} />
               <DetailRow label="Eje delantero" value={unit.ejeDelantero} />
@@ -91,9 +91,9 @@ function InventoryDetailModal({ unit, onClose, onCopy }) {
               <DetailRow label="Dormitorio" value={unit.dormitorio} />
             </DetailSection>
 
-            <DetailSection title="Ubicacion y contacto">
+            <DetailSection title="Ubicación y contacto">
               <DetailRow label="Centro" value={unit.centro} />
-              <DetailRow label="Ubicacion fisica" value={unit.ubicacion} />
+              <DetailRow label="Ubicación física" value={unit.ubicacion} />
               <a
                 href={`mailto:innovaciogoon@zapata.com.mx?subject=Interes%20en%20${encodeURIComponent(`${unit.marca || ''} ${unit.modelo || ''}`.trim())}`}
                 className="mt-3 inline-flex rounded-lg bg-lab-primary px-3 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90"
@@ -105,12 +105,12 @@ function InventoryDetailModal({ unit, onClose, onCopy }) {
             <DetailSection title="Datos administrativos">
               <DetailRow label="VIN completo" value={unit.vinCompleto} />
               <DetailRow label="VIN" value={unit.vin} />
-              <DetailRow label="Promocion" value={unit.promocion} />
+              <DetailRow label="Promoción" value={unit.promocion} />
             </DetailSection>
           </div>
 
           <section className="rounded-xl border border-lab-border bg-white p-4">
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-lab-muted">Imagenes</h3>
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-lab-muted">Imágenes</h3>
             <div className="mt-3 space-y-3">
               {unit.imagenPortada ? (
                 <img
@@ -136,7 +136,7 @@ function InventoryDetailModal({ unit, onClose, onCopy }) {
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-lab-muted">No hay galeria disponible para esta unidad.</p>
+                <p className="text-sm text-lab-muted">No hay galería disponible para esta unidad.</p>
               )}
             </div>
           </section>
@@ -149,7 +149,7 @@ function InventoryDetailModal({ unit, onClose, onCopy }) {
             onClick={() => onCopy(unit)}
             className="rounded-xl border border-lab-border px-4 py-2 text-sm font-semibold text-lab-text transition-colors hover:border-lab-primary/40 hover:text-lab-primary"
           >
-            Copiar informacion
+            Copiar información
           </button>
           <a
             href={`mailto:innovaciogoon@zapata.com.mx?subject=Interes%20en%20${encodeURIComponent(`${unit.marca || ''} ${unit.modelo || ''}`.trim())}`}

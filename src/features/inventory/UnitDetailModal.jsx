@@ -11,8 +11,8 @@ const statusVariant = {
 
 const historyItems = [
   'Ingreso a inventario',
-  'Inspeccion completada',
-  'Disponible para cotizacion',
+  'Inspección completada',
+  'Disponible para cotización',
 ]
 
 const normalizeStatus = (status) => {
@@ -52,7 +52,7 @@ function UnitDetailModal({
             onClick={() => onShare?.(unit)}
             className="rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-sm font-semibold text-sky-700"
           >
-            Compartir ficha tecnica
+            Compartir ficha técnica
           </button>
           <ExportUnitPdfButton unit={unit} />
           <button
@@ -67,7 +67,7 @@ function UnitDetailModal({
             onClick={() => onAddToQuote?.(unit)}
             className="rounded-lg bg-lab-primary px-3 py-2 text-sm font-semibold text-white"
           >
-            Agregar a cotizacion
+            Agregar a cotización
           </button>
         </div>
       }
@@ -88,7 +88,7 @@ function UnitDetailModal({
               </dd>
             </div>
             <div>
-              <dt className="text-lab-muted">Anio</dt>
+              <dt className="text-lab-muted">Año</dt>
               <dd className="font-semibold text-lab-text">{unit.year}</dd>
             </div>
             <div>
@@ -100,7 +100,7 @@ function UnitDetailModal({
               <dd className="font-semibold text-lab-text">{formatNumber(unit.mileageKm)} km</dd>
             </div>
             <div>
-              <dt className="text-lab-muted">Configuracion</dt>
+              <dt className="text-lab-muted">Configuración</dt>
               <dd className="font-semibold text-lab-text">{unit.configuration}</dd>
             </div>
             <div>
@@ -108,7 +108,7 @@ function UnitDetailModal({
               <dd className="font-semibold text-lab-text">{unit.engine}</dd>
             </div>
             <div>
-              <dt className="text-lab-muted">Transmision</dt>
+              <dt className="text-lab-muted">Transmisión</dt>
               <dd className="font-semibold text-lab-text">{unit.transmission}</dd>
             </div>
             <div>
@@ -116,14 +116,14 @@ function UnitDetailModal({
               <dd className="font-semibold text-lab-text">{unit.color || 'N/D'}</dd>
             </div>
             <div>
-              <dt className="text-lab-muted">Dias en inventario</dt>
+              <dt className="text-lab-muted">Días en inventario</dt>
               <dd className="font-semibold text-lab-text">{formatNumber(unit.daysInInventory)}</dd>
             </div>
           </dl>
         </Card>
 
         <div className="space-y-2">
-          <h4 className="text-sm font-semibold text-lab-text">Galeria referencial</h4>
+          <h4 className="text-sm font-semibold text-lab-text">Galería referencial</h4>
           <div className="grid gap-3 md:grid-cols-3">
             {['Exterior', 'Cabina', 'Ficha tecnica'].map((label) => (
               <div

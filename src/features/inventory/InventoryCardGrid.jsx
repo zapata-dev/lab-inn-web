@@ -46,11 +46,11 @@ function InventoryCardGrid({ units = [], branchesById = {}, onSelectUnit }) {
               <dd className="font-medium text-lab-text">{branchesById[unit.branchId]?.name ?? unit.branchId}</dd>
             </div>
             <div className="flex items-center justify-between gap-2">
-              <dt>Configuracion</dt>
+              <dt>Configuración</dt>
               <dd className="text-right font-medium text-lab-text">{unit.configuration}</dd>
             </div>
             <div className="flex items-center justify-between gap-2">
-              <dt>Motor / Transmision</dt>
+              <dt>Motor / Transmisión</dt>
               <dd className="text-right font-medium text-lab-text">
                 {unit.engine} / {unit.transmission}
               </dd>
@@ -60,7 +60,7 @@ function InventoryCardGrid({ units = [], branchesById = {}, onSelectUnit }) {
               <dd className="font-medium text-lab-text">{formatNumber(unit.mileageKm)} km</dd>
             </div>
             <div className="flex items-center justify-between gap-2">
-              <dt>Dias inventario</dt>
+              <dt>Días de inventario</dt>
               <dd className="font-medium text-lab-text">{formatNumber(unit.daysInInventory)}</dd>
             </div>
           </dl>

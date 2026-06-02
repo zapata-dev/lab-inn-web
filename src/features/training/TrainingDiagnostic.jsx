@@ -68,7 +68,7 @@ function TrainingDiagnostic({ diagnostic, seedScore }) {
         </Card>
 
         <Card className="space-y-3">
-          <h4 className="text-xs font-semibold uppercase tracking-wide text-lab-muted">Revision de respuestas</h4>
+          <h4 className="text-xs font-semibold uppercase tracking-wide text-lab-muted">Revisión de respuestas</h4>
           {questions.map((q, idx) => {
             const selected = answers[q.id]
             const isCorrect = selected === q.correctOptionId

@@ -47,13 +47,13 @@ function InventoryTable({ units = [], branchesById = {}, pageSize = 20, onSelect
             <tr className="text-left text-xs uppercase tracking-wide text-lab-muted">
               <th className="px-4 py-3 font-semibold">Unidad</th>
               <th className="px-4 py-3 font-semibold">Marca</th>
-              <th className="px-4 py-3 font-semibold">Anio</th>
+              <th className="px-4 py-3 font-semibold">Año</th>
               <th className="px-4 py-3 font-semibold">Sucursal</th>
               <th className="px-4 py-3 font-semibold">Status</th>
-              <th className="px-4 py-3 font-semibold">Configuracion</th>
+              <th className="px-4 py-3 font-semibold">Configuración</th>
               <th className="px-4 py-3 font-semibold">Kilometraje</th>
               <th className="px-4 py-3 font-semibold">Precio USD</th>
-              <th className="px-4 py-3 font-semibold">Dias inv.</th>
+              <th className="px-4 py-3 font-semibold">Días inv.</th>
               <th className="px-4 py-3 font-semibold">Acciones</th>
             </tr>
           </thead>
@@ -94,7 +94,7 @@ function InventoryTable({ units = [], branchesById = {}, pageSize = 20, onSelect
 
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 px-4 py-3 text-sm">
         <p className="text-lab-muted">
-          Pagina {safePage} de {totalPages} | {formatNumber(units.length)} unidades
+          Página {safePage} de {totalPages} | {formatNumber(units.length)} unidades
         </p>
         <div className="flex items-center gap-2">
           <button

@@ -94,8 +94,8 @@ function ExportInventoryCatalogPdfButton({ units, activeChips, disabled = false 
   }
 
   const confirmDescription = showLargeWarning
-    ? `Se generara un PDF de catalogo con ficha completa para ${totalUnits} unidades visibles. Deseas continuar?\n\nEste PDF puede tardar en generarse por la cantidad de unidades.`
-    : `Se generara un PDF de catalogo con ficha completa para ${totalUnits} unidades visibles. Deseas continuar?`
+    ? `Se generará un PDF de catálogo con ficha completa para ${totalUnits} unidades visibles. ¿Deseas continuar?\n\nEste PDF puede tardar en generarse por la cantidad de unidades.`
+    : `Se generará un PDF de catálogo con ficha completa para ${totalUnits} unidades visibles. ¿Deseas continuar?`
 
   return (
     <>
@@ -107,7 +107,7 @@ function ExportInventoryCatalogPdfButton({ units, activeChips, disabled = false 
           className="inline-flex items-center gap-2 rounded-xl border border-lab-primary/25 bg-lab-primary/10 px-4 py-2.5 text-sm font-semibold text-lab-primary transition-all hover:-translate-y-0.5 hover:bg-lab-primary hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
         >
           <FileDown className="size-4" aria-hidden="true" />
-          Exportar catalogo PDF
+          Exportar catálogo PDF
         </button>
 
         {isDisabled ? (
@@ -119,9 +119,9 @@ function ExportInventoryCatalogPdfButton({ units, activeChips, disabled = false 
 
       <ConfirmModal
         open={isConfirmOpen}
-        title="Exportar catalogo de inventario"
+        title="Exportar catálogo de inventario"
         description={confirmDescription}
-        confirmText="Generar catalogo PDF"
+        confirmText="Generar catálogo PDF"
         cancelText="Cancelar"
         loading={isExporting}
         onCancel={() => {

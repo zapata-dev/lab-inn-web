@@ -1,6 +1,7 @@
-﻿import { ArrowLeft, ChevronLeft, ChevronRight, RefreshCw, Search } from 'lucide-react'
+﻿import { ArrowLeft, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
+import promotionsHeroImage from '../assets/promociones-hero.jpeg'
 import InventoryDetailModal from '../features/inventory/InventoryDetailModal'
 import InventoryFilters from '../features/inventory/InventoryFilters'
 import ExportPromotionsPdfButton from '../features/promotions/ExportPromotionsPdfButton'
@@ -238,15 +239,15 @@ function buildCopyText(unit) {
   return [
     `Marca: ${unit.marca || 'No especificado'}`,
     `Modelo: ${unit.modelo || 'No especificado'}`,
-    `Ano: ${unit.anio || 'No especificado'}`,
+    `Año: ${unit.anio || 'No especificado'}`,
     `Precio: ${unit.precio ?? 'No especificado'}`,
-    `Kilometros: ${unit.kilometros ?? 'No especificado'}`,
+    `Kilómetros: ${unit.kilometros ?? 'No especificado'}`,
     `Motor: ${unit.motor || 'No especificado'}`,
-    `Transmision: ${unit.transmision || 'No especificado'}`,
-    `Ubicacion: ${unit.ubicacion || 'No especificado'}`,
+    `Transmisión: ${unit.transmision || 'No especificado'}`,
+    `Ubicación: ${unit.ubicacion || 'No especificado'}`,
     `VIN completo: ${unit.vinCompleto || 'No especificado'}`,
     `VIN: ${unit.vin || 'No especificado'}`,
-    `Promocion: ${unit.promocion || 'No especificado'}`,
+    `Promoción: ${unit.promocion || 'No especificado'}`,
   ].join('\n')
 }
 
@@ -287,10 +288,10 @@ function Pagination({ currentPage, totalPages, onChange }) {
   return (
     <nav
       className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-lab-border bg-white px-4 py-3 shadow-sm"
-      aria-label="Paginacion de promociones"
+      aria-label="Paginación de promociones"
     >
       <p className="text-sm font-medium text-lab-muted">
-        Pagina {currentPage} de {totalPages}
+        Página {currentPage} de {totalPages}
       </p>
 
       <div className="flex flex-wrap items-center gap-2">
@@ -554,12 +555,12 @@ function Promociones() {
         setLastUpdated(cache.lastUpdated)
         setMessage({
           type: 'warning',
-          text: 'No se pudo actualizar. Mostrando ultima version guardada.',
+          text: 'No se pudo actualizar. Mostrando última versión guardada.',
         })
       } else {
         setMessage({
           type: 'error',
-          text: 'No fue posible cargar promociones. Verifica la URL CSV publica e intenta de nuevo.',
+          text: 'No fue posible cargar promociones. Verifica la URL CSV pública e intenta de nuevo.',
         })
       }
     } finally {
@@ -601,9 +602,9 @@ function Promociones() {
   const handleCopy = async (unit) => {
     try {
       await navigator.clipboard.writeText(buildCopyText(unit))
-      setMessage({ type: 'success', text: 'Informacion copiada al portapapeles.' })
+      setMessage({ type: 'success', text: 'Información copiada al portapapeles.' })
     } catch (error) {
-      setMessage({ type: 'error', text: 'No se pudo copiar la informacion.' })
+      setMessage({ type: 'error', text: 'No se pudo copiar la información.' })
     }
   }
 
@@ -631,60 +632,106 @@ function Promociones() {
   return (
     <main className="min-h-screen bg-gradient-to-b from-white via-lab-bg to-white px-4 py-8 sm:px-6 lg:px-8">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-5">
-        <header className="rounded-2xl border border-lab-border bg-white p-5 shadow-sm">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div className="space-y-2">
-              <Link
-                to="/"
-                className="inline-flex items-center gap-2 rounded-xl border border-lab-primary/20 bg-lab-primary/10 px-4 py-2 text-sm font-semibold text-lab-primary shadow-sm transition-all hover:-translate-y-0.5 hover:bg-lab-primary hover:text-white"
-              >
-                <ArrowLeft className="size-4" aria-hidden="true" />
-                Volver a Mi Oficina Virtual
-              </Link>
-              <h1 className="text-3xl font-bold text-lab-text">Catalogo de Promociones</h1>
-              <p className="text-sm text-lab-muted">Ultima actualizacion: {formatLastUpdated(lastUpdated)}</p>
+        <header className="relative overflow-hidden rounded-3xl border border-slate-200/60 bg-slate-950 text-white shadow-[0_30px_80px_rgba(15,23,42,0.18)]">
+          <img
+            src={promotionsHeroImage}
+            alt=""
+            aria-hidden="true"
+            className="absolute inset-0 size-full object-cover object-center"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/60 to-black/35" />
+
+          <div className="relative z-10 p-5 sm:p-6 lg:p-8">
+            <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+              <div className="max-w-3xl space-y-5">
+                <div className="flex flex-wrap items-center gap-3">
+                  <Link
+                    to="/"
+                    className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white backdrop-blur-md transition-all hover:-translate-y-0.5 hover:bg-white/20"
+                  >
+                    <ArrowLeft className="size-4" aria-hidden="true" />
+                    Volver a Mi Oficina
+                  </Link>
+                  <span className="inline-flex items-center rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.28em] text-white/80 backdrop-blur-md">
+                    Catálogo comercial
+                  </span>
+                </div>
+
+                <div className="space-y-3">
+                  <p className="text-xs font-semibold uppercase tracking-[0.38em] text-white/70">
+                    Catálogo de Promociones
+                  </p>
+                  <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl">
+                    Promociones listas para activar ventas
+                  </h1>
+                  <p className="max-w-2xl text-sm leading-6 text-white/80 sm:text-base">
+                    Revisa, agrupa y exporta promociones con una vista más limpia, ejecutiva y enfocada en conversiones
+                    comerciales.
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold text-white/85 backdrop-blur-md">
+                    Promociones vigentes
+                  </span>
+                  <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold text-white/85 backdrop-blur-md">
+                    Agrupación por agencia
+                  </span>
+                  <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold text-white/85 backdrop-blur-md">
+                    Exportación PDF
+                  </span>
+                </div>
+              </div>
+
+              <div className="w-full max-w-md rounded-2xl border border-white/15 bg-white/10 p-4 shadow-2xl backdrop-blur-md">
+                <div className="flex flex-col gap-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.28em] text-white/60">Panel r?pido</p>
+                      <p className="mt-1 text-lg font-semibold text-white">Material comercial listo para exportar</p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => refreshPromotions(true)}
+                      disabled={loading}
+                      className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-semibold text-slate-950 transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      <RefreshCw className={`size-4 ${loading ? 'animate-spin' : ''}`} aria-hidden="true" />
+                      {loading ? 'Actualizando promociones...' : 'Actualizar promociones'}
+                    </button>
+                  </div>
+
+                  <div className="rounded-2xl border border-white/10 bg-black/20 p-3">
+                    <p className="text-xs uppercase tracking-[0.28em] text-white/60">?ltima actualizaci?n</p>
+                    <p className="mt-1 text-sm font-semibold text-white">{formatLastUpdated(lastUpdated)}</p>
+                  </div>
+
+                  <div className="rounded-2xl border border-white/10 bg-white/10 p-3">
+                    <p className="text-xs uppercase tracking-[0.28em] text-white/60">Exportaci?n</p>
+                    <div className="mt-2">
+                      <ExportPromotionsPdfButton
+                        units={filteredPromotionUnits}
+                        activeChips={exportChips}
+                        disabled={loading || !selectedAgency}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <div className="flex flex-col items-end gap-2">
-              <button
-                type="button"
-                onClick={() => refreshPromotions(true)}
-                disabled={loading}
-                className="inline-flex items-center gap-2 rounded-xl bg-lab-primary px-5 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                <RefreshCw className={`size-4 ${loading ? 'animate-spin' : ''}`} aria-hidden="true" />
-                {loading ? 'Actualizando promociones...' : 'Actualizar promociones'}
-              </button>
+            <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:items-center">
               {selectedAgency ? (
                 <button
                   type="button"
                   onClick={() => handleSelectAgency('')}
-                  className="rounded-xl border border-lab-border px-4 py-2 text-xs font-semibold text-lab-text transition-colors hover:border-lab-primary/40 hover:text-lab-primary"
+                  className="inline-flex items-center justify-center rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-xs font-semibold text-white backdrop-blur-md transition-colors hover:bg-white/20"
                 >
                   Cambiar agencia
                 </button>
               ) : null}
-              <ExportPromotionsPdfButton
-                units={filteredPromotionUnits}
-                activeChips={exportChips}
-                disabled={loading || !selectedAgency}
-              />
             </div>
-          </div>
-
-          <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-lab-muted">
-            <span className="inline-flex items-center gap-2 rounded-full bg-lab-bg px-3 py-1">
-              <Search className="size-4" aria-hidden="true" />
-              {selectedAgency
-                ? `${groupedPromotions.length} promociones agrupadas`
-                : 'Selecciona una agencia para ver promociones'}
-            </span>
-            <span className="rounded-full bg-lab-bg px-3 py-1">Total con promocion: {promotionUnits.length}</span>
-            {selectedAgency ? (
-              <span className="rounded-full bg-lab-bg px-3 py-1">
-                Mostrando {pageGroups.length} de {groupedPromotions.length} grupos en esta pagina
-              </span>
-            ) : null}
           </div>
         </header>
 
@@ -696,7 +743,7 @@ function Promociones() {
           <section className="rounded-2xl border border-lab-border bg-white p-6 shadow-sm">
             <h2 className="text-xl font-bold text-lab-text">Selecciona una agencia</h2>
             <p className="mt-1 text-sm text-lab-muted">
-              El catalogo mostrara solo promociones con codigo valido agrupadas por agencia y codigo.
+              El catálogo mostrará solo promociones con código válido agrupadas por agencia y código.
             </p>
             <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {agencyOptions.map((agency) => (

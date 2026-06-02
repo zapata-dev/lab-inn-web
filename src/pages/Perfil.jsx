@@ -97,8 +97,8 @@ function Perfil() {
   const accountRows = useMemo(() => {
     const rows = [
       { label: 'Fecha de alta', value: createdAtLabel },
-      { label: 'Ultima actualizacion', value: updatedAtLabel },
-      { label: 'Metodo de acceso', value: authModeLabel },
+      { label: 'Última actualización', value: updatedAtLabel },
+      { label: 'Método de acceso', value: authModeLabel },
     ]
     if (isSupportUser) {
       rows.unshift({ label: 'UID', value: String(user?.uid || 'No disponible').trim() || 'No disponible' })
@@ -110,7 +110,7 @@ function Perfil() {
     <main className="mx-auto w-full max-w-4xl space-y-5">
       <header className="space-y-2">
         <h1 className="text-3xl font-bold text-lab-text">Mi Perfil</h1>
-        <p className="text-sm text-lab-muted">Informacion de tu cuenta en LAB.</p>
+        <p className="text-sm text-lab-muted">Información de tu cuenta en LAB.</p>
       </header>
 
       <Card className="space-y-4">
@@ -141,7 +141,7 @@ function Perfil() {
       </Card>
 
       <Card className="space-y-4">
-        <h2 className="text-lg font-semibold text-lab-text">Operacion</h2>
+        <h2 className="text-lg font-semibold text-lab-text">Operación</h2>
         <dl className="grid gap-3 sm:grid-cols-2">
           {operationRows.map((row) => (
             <div key={row.label} className="rounded-lg border border-lab-border bg-slate-50 px-3 py-2">
@@ -169,7 +169,7 @@ function Perfil() {
           to="/"
           className="inline-flex items-center rounded-lg border border-lab-border bg-white px-4 py-2 text-sm font-semibold text-lab-text hover:bg-slate-50"
         >
-          Volver a Mi Oficina Virtual
+          Volver a Mi Oficina
         </Link>
       </div>
     </main>

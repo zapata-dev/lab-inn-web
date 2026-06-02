@@ -19,11 +19,20 @@ import {
   Truck,
   Users,
 } from 'lucide-react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { Badge, Card } from '../components/common'
+import UserMenu from '../components/layout/UserMenu'
 import { useAuth } from '../context/AuthContext'
 import { accessLinks } from '../data/accessLinks'
 import heroTruckImage from '../assets/home/truck-hero.png'
+import promocionesHeroImage from '../assets/promociones-hero.jpeg'
+import catalogoPublicidadHeroImage from '../assets/catalogo-publicidad-home.png'
+import salesforceHeroImage from '../assets/salesforce-hero.png'
+import krinoHeroImage from '../assets/krino-hero.png'
+import youtubeHeroImage from '../assets/youtube-hero.png'
+import whatsappHeroImage from '../assets/whatsapp-hero.png'
+import btpHeroImage from '../assets/btp-hero.png'
+import contactoHeroImage from '../assets/contacto-hero.png'
 import {
   fetchInventoryFromCsv,
   getInventoryCache,
@@ -69,13 +78,11 @@ const toolVisuals = {
     categoryLabel: 'Inventario',
   },
   promociones: {
-    image:
-      'https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?auto=format&fit=crop&w=1400&q=80',
+    image: promocionesHeroImage,
     categoryLabel: 'Promociones',
   },
-  catalogoPortadas: {
-    image:
-      'https://images.unsplash.com/photo-1609521263047-f8f205293f24?auto=format&fit=crop&w=1400&q=80',
+  'catalogo-portadas': {
+    image: catalogoPublicidadHeroImage,
     categoryLabel: 'Publicidad',
   },
   directorioSeminuevos: {
@@ -84,33 +91,27 @@ const toolVisuals = {
     categoryLabel: 'Seminuevos',
   },
   salesforce: {
-    image:
-      'https://images.unsplash.com/photo-1551281044-8b6f8d8e27b5?auto=format&fit=crop&w=1400&q=80',
+    image: salesforceHeroImage,
     categoryLabel: 'Plataforma',
   },
   krino: {
-    image:
-      'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?auto=format&fit=crop&w=1400&q=80',
+    image: krinoHeroImage,
     categoryLabel: 'Datos',
   },
   btp: {
-    image:
-      'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1400&q=80',
+    image: btpHeroImage,
     categoryLabel: 'Sistemas',
   },
   youtube: {
-    image:
-      'https://images.unsplash.com/photo-1611162616305-c69b3fa7fbe0?auto=format&fit=crop&w=1400&q=80',
+    image: youtubeHeroImage,
     categoryLabel: 'Comunidad',
   },
   whatsapp: {
-    image:
-      'https://images.unsplash.com/photo-1614680376573-df3480f0c6ff?auto=format&fit=crop&w=1400&q=80',
+    image: whatsappHeroImage,
     categoryLabel: 'Comunidad',
   },
   contacto: {
-    image:
-      'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=1400&q=80',
+    image: contactoHeroImage,
     categoryLabel: 'Soporte',
   },
 }
@@ -513,11 +514,7 @@ function Home() {
             })}
           </nav>
 
-          <div className="mt-auto rounded-2xl border border-slate-200 bg-white/90 p-3 text-xs text-slate-600">
-            <p className="font-semibold text-slate-900">{displayName}</p>
-            <p>{displayRole}</p>
-            <p>{displayBranch}</p>
-          </div>
+          <UserMenu variant="sidebar" className="mt-auto" />
         </aside>
 
         <div className="space-y-5">
@@ -574,12 +571,6 @@ function Home() {
                   Rol: {displayRole}
                 </Badge>
                 <Badge className="border-white/30 bg-white/15 text-white backdrop-blur">Sucursal: {displayBranch}</Badge>
-                <Link
-                  to="/perfil"
-                  className="inline-flex items-center rounded-full border border-white/35 bg-white/15 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur transition hover:bg-white/25"
-                >
-                  Mi perfil
-                </Link>
               </div>
 
               <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
