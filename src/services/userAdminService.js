@@ -104,6 +104,11 @@ function normalizeAuditLog(snapshotDoc) {
     decisionNote: normalizeString(data.decisionNote),
     createdAt: toDate(data.createdAt),
     source: normalizeString(data.source),
+    emailStatus: normalizeString(data.emailStatus).toLowerCase(),
+    emailProvider: normalizeString(data.emailProvider).toLowerCase(),
+    emailSentAt: toDate(data.emailSentAt),
+    emailMessageId: normalizeString(data.emailMessageId),
+    emailError: normalizeString(data.emailError),
   }
 }
 
