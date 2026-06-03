@@ -147,7 +147,7 @@ function InventoryFilters({
   }
 
   return (
-    <aside className="space-y-4 rounded-2xl border border-lab-border bg-white p-4 shadow-sm lg:sticky lg:top-4">
+    <aside className="space-y-4 rounded-2xl border border-lab-border bg-white p-4 shadow-sm lg:self-start">
       <div className="flex items-center justify-between gap-2">
         <div>
           <h2 className="text-lg font-semibold text-lab-text">Filtros del marketplace</h2>

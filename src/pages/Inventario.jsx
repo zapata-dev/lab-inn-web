@@ -213,7 +213,7 @@ function buildCopyText(unit) {
   return [
     `Marca: ${unit.marca || 'No especificado'}`,
     `Modelo: ${unit.modelo || 'No especificado'}`,
-    `Ano: ${unit.anio || 'No especificado'}`,
+    `Año: ${unit.anio || 'No especificado'}`,
     `Precio: ${unit.precio ?? 'No especificado'}`,
     `Kilometros: ${unit.kilometros ?? 'No especificado'}`,
     `Motor: ${unit.motor || 'No especificado'}`,
@@ -492,7 +492,7 @@ function Inventario() {
               </Link>
               <h1 className="text-3xl font-bold text-lab-text">Marketplace de inventario nacional</h1>
               <p className="text-sm text-lab-muted">
-                Ultima actualizacion: {formatLastUpdated(lastUpdated)}
+                Última actualización: {formatLastUpdated(lastUpdated)}
               </p>
             </div>
 

@@ -6,7 +6,7 @@ export const INVENTORY_LAST_UPDATED_KEY = 'lab:v1:inventory_last_updated'
 export const INVENTORY_FILTER_FIELDS = [
   { key: 'marca', label: 'Marca', type: 'select' },
   { key: 'modelo', label: 'Modelo', type: 'select' },
-  { key: 'anio', label: 'Ano', type: 'select' },
+  { key: 'anio', label: 'AÑO', type: 'select' },
   { key: 'precio', label: 'Precio', type: 'numberRange' },
   { key: 'ubicacion', label: 'Ubicacion / sucursal', type: 'select' },
   { key: 'subempresa', label: 'Subempresa', type: 'select' },
