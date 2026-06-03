@@ -300,7 +300,6 @@ function Inventario() {
   const [inventory, setInventory] = useState([])
   const [filters, setFilters] = useState({})
   const [search, setSearch] = useState('')
-  const [displayOrderMode, setDisplayOrderMode] = useState('mixed')
   const [selectedUnit, setSelectedUnit] = useState(null)
   const [lastUpdated, setLastUpdated] = useState(null)
   const [loading, setLoading] = useState(false)
@@ -319,8 +318,8 @@ function Inventario() {
     [inventory, filters, search, availableFilterDefinitions]
   )
   const displayUnits = useMemo(
-    () => (displayOrderMode === 'mixed' ? mixInventoryForDisplay(filteredUnits) : filteredUnits),
-    [displayOrderMode, filteredUnits]
+    () => mixInventoryForDisplay(filteredUnits),
+    [filteredUnits]
   )
   const activeChips = useMemo(() => getActiveChips(search, filters), [search, filters])
 
@@ -386,7 +385,7 @@ function Inventario() {
 
   useEffect(() => {
     setCurrentPage(1)
-  }, [search, filters, displayOrderMode])
+  }, [search, filters])
 
   useEffect(() => {
     setCurrentPage((previous) => Math.min(previous, totalPages))
@@ -526,41 +525,6 @@ function Inventario() {
             </span>
           </div>
 
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-lab-border bg-lab-bg/70 px-4 py-3">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-lab-muted">
-                Orden de visualizacion
-              </p>
-              <p className="text-sm text-lab-muted">
-                El orden mixto distribuye mejor modelos, años, sucursales e imágenes.
-              </p>
-            </div>
-
-            <div className="inline-flex rounded-xl border border-lab-border bg-white p-1">
-              <button
-                type="button"
-                onClick={() => setDisplayOrderMode('mixed')}
-                className={`rounded-lg px-3 py-2 text-sm font-semibold transition ${
-                  displayOrderMode === 'mixed'
-                    ? 'bg-lab-primary text-white'
-                    : 'text-lab-muted hover:text-lab-text'
-                }`}
-              >
-                Mixto recomendado
-              </button>
-              <button
-                type="button"
-                onClick={() => setDisplayOrderMode('original')}
-                className={`rounded-lg px-3 py-2 text-sm font-semibold transition ${
-                  displayOrderMode === 'original'
-                    ? 'bg-lab-primary text-white'
-                    : 'text-lab-muted hover:text-lab-text'
-                }`}
-              >
-                CSV original
-              </button>
-            </div>
-          </div>
         </header>
 
         {message.text ? (

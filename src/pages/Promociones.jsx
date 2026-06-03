@@ -26,7 +26,7 @@ const FILTER_LABELS = INVENTORY_FILTER_FIELDS.reduce((accumulator, field) => {
 }, {})
 const DESKTOP_PAGE_SIZE = 12
 const MOBILE_PAGE_SIZE = 6
-const ALL_AGENCIES_LABEL = 'Todas las agencias'
+const ALL_AGENCIES_LABEL = 'TODAS LAS AGENCIAS'
 
 function normalizeText(value) {
   return String(value ?? '')
@@ -687,7 +687,7 @@ function Promociones() {
                 <div className="flex flex-col gap-4">
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="text-xs uppercase tracking-[0.28em] text-white/60">Panel r?pido</p>
+                      <p className="text-xs uppercase tracking-[0.28em] text-white/60">Panel rápido</p>
                       <p className="mt-1 text-lg font-semibold text-white">Material comercial listo para exportar</p>
                     </div>
 
@@ -703,12 +703,12 @@ function Promociones() {
                   </div>
 
                   <div className="rounded-2xl border border-white/10 bg-black/20 p-3">
-                    <p className="text-xs uppercase tracking-[0.28em] text-white/60">?ltima actualizaci?n</p>
+                    <p className="text-xs uppercase tracking-[0.28em] text-white/60">Última actualización</p>
                     <p className="mt-1 text-sm font-semibold text-white">{formatLastUpdated(lastUpdated)}</p>
                   </div>
 
                   <div className="rounded-2xl border border-white/10 bg-white/10 p-3">
-                    <p className="text-xs uppercase tracking-[0.28em] text-white/60">Exportaci?n</p>
+                    <p className="text-xs uppercase tracking-[0.28em] text-white/60">Exportación</p>
                     <div className="mt-2">
                       <ExportPromotionsPdfButton
                         units={filteredPromotionUnits}
@@ -751,7 +751,7 @@ function Promociones() {
                   key={agency}
                   type="button"
                   onClick={() => handleSelectAgency(agency)}
-                  className="rounded-xl border border-lab-border bg-white px-4 py-3 text-sm font-semibold text-lab-text transition-all hover:-translate-y-0.5 hover:border-lab-primary/40 hover:text-lab-primary"
+                  className="rounded-xl border border-lab-border bg-white px-4 py-3 text-sm font-semibold uppercase text-lab-text transition-all hover:-translate-y-0.5 hover:border-lab-primary/40 hover:text-lab-primary"
                 >
                   {agency}
                 </button>
