@@ -89,8 +89,8 @@ export const accessLinks = [
     icon: 'PlayCircle',
     brandColor: 'rose',
     category: 'comunidad',
-    cta: 'Ver playlist',
-    url: 'https://www.youtube.com/playlist?list=PL2W1hGWz_2scsontjyuroiFs6uKnXE3la',
+    cta: 'Elegir playlist',
+    to: '/youtube',
   },
   {
     id: 'whatsapp',

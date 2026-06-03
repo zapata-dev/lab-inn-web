@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import CatalogoPortadas from '../pages/CatalogoPortadas'
+import CanalYoutube from '../pages/CanalYoutube'
 import { AuthProvider } from '../context/AuthContext'
 import Home from '../pages/Home'
 import Inventario from '../pages/Inventario'
@@ -24,6 +25,8 @@ function AppRoutes() {
           <Route path="/inventario" element={<Inventario />} />
           <Route path="/promociones" element={<Promociones />} />
           <Route path="/perfil" element={<Perfil />} />
+          <Route path="/youtube" element={<CanalYoutube />} />
+          <Route path="/canal-youtube" element={<Navigate to="/youtube" replace />} />
           <Route path="/usuarios" element={<Usuarios />} />
           <Route path="/soporte/usuarios" element={<SoporteUsuarios />} />
         </Route>
