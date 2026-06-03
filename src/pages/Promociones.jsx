@@ -212,7 +212,9 @@ function buildAgencyOptions(units) {
     if (!byKey.has(normalized)) byKey.set(normalized, agency)
   })
 
-  const dynamicAgencies = [...byKey.values()].sort((first, second) => first.localeCompare(second, 'es'))
+  const dynamicAgencies = [...byKey.values()]
+    .map((agency) => agency.toLocaleUpperCase('es-MX'))
+    .sort((first, second) => first.localeCompare(second, 'es'))
   return [...dynamicAgencies, ALL_AGENCIES_LABEL]
 }
 
@@ -220,14 +222,15 @@ function applyAgencySelection(units, selectedAgency) {
   if (!selectedAgency) return []
   if (selectedAgency === ALL_AGENCIES_LABEL) return units
 
-  return units.filter((unit) => getUnitAgency(unit) === selectedAgency)
+  const normalizedSelectedAgency = normalizeText(selectedAgency)
+  return units.filter((unit) => normalizeText(getUnitAgency(unit)) === normalizedSelectedAgency)
 }
 
 function formatLastUpdated(dateString) {
-  if (!dateString) return 'Sin registro de actualizacion'
+  if (!dateString) return 'Sin registro de actualización'
 
   const date = new Date(dateString)
-  if (Number.isNaN(date.getTime())) return 'Sin registro de actualizacion'
+  if (Number.isNaN(date.getTime())) return 'Sin registro de actualización'
 
   return new Intl.DateTimeFormat('es-MX', {
     dateStyle: 'medium',
@@ -438,7 +441,7 @@ function Promociones() {
     const chips = activeChips.filter((chip) => allowedKeys.has(chip.key))
 
     if (!selectedAgency) return chips
-    return [{ key: 'agencia', label: 'Agencia', value: selectedAgency }, ...chips]
+    return [{ key: 'agencia', label: 'AGENCIA', value: selectedAgency }, ...chips]
   }, [activeChips, selectedAgency])
 
   const totalPages = useMemo(
@@ -584,7 +587,7 @@ function Promociones() {
   }
 
   const handleSelectAgency = (agency) => {
-    setSelectedAgency(agency)
+    setSelectedAgency(agency ? agency.toLocaleUpperCase('es-MX') : '')
     setSearch('')
     setFilters({})
     setCurrentPage(1)
@@ -675,7 +678,7 @@ function Promociones() {
                     Promociones vigentes
                   </span>
                   <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold text-white/85 backdrop-blur-md">
-                    Agrupación por agencia
+                    AGRUPACIÓN POR AGENCIA
                   </span>
                   <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold text-white/85 backdrop-blur-md">
                     Exportación PDF
@@ -728,7 +731,7 @@ function Promociones() {
                   onClick={() => handleSelectAgency('')}
                   className="inline-flex items-center justify-center rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-xs font-semibold text-white backdrop-blur-md transition-colors hover:bg-white/20"
                 >
-                  Cambiar agencia
+                  CAMBIAR AGENCIA
                 </button>
               ) : null}
             </div>
@@ -741,9 +744,9 @@ function Promociones() {
 
         {!selectedAgency ? (
           <section className="rounded-2xl border border-lab-border bg-white p-6 shadow-sm">
-            <h2 className="text-xl font-bold text-lab-text">Selecciona una agencia</h2>
+            <h2 className="text-xl font-bold text-lab-text">SELECCIONA UNA AGENCIA</h2>
             <p className="mt-1 text-sm text-lab-muted">
-              El catálogo mostrará solo promociones con código válido agrupadas por agencia y código.
+              EL CATÁLOGO MOSTRARÁ SOLO PROMOCIONES CON CÓDIGO VÁLIDO AGRUPADAS POR AGENCIA Y CÓDIGO.
             </p>
             <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {agencyOptions.map((agency) => (
@@ -782,9 +785,9 @@ function Promociones() {
                 <PromotionSkeleton />
               ) : agencyScopedPromotionUnits.length === 0 ? (
                 <div className="rounded-2xl border border-dashed border-lab-border bg-white p-10 text-center shadow-sm">
-                  <h3 className="text-xl font-semibold text-lab-text">No hay promociones para esta agencia.</h3>
+                  <h3 className="text-xl font-semibold text-lab-text">NO HAY PROMOCIONES PARA ESTA AGENCIA.</h3>
                   <p className="mt-2 text-sm text-lab-muted">
-                    Prueba con otra agencia o revisa que las unidades tengan codigo lleno.
+                    PRUEBA CON OTRA AGENCIA O REVISA QUE LAS UNIDADES TENGAN CÓDIGO LLENO.
                   </p>
                 </div>
               ) : groupedPromotions.length === 0 ? (
@@ -819,4 +822,3 @@ function Promociones() {
 }
 
 export default Promociones
-
