@@ -88,6 +88,17 @@ function normalizeText(value) {
     .replace(/[\u0300-\u036f]/g, '')
 }
 
+function logInventoryDebug(message, details) {
+  if (!import.meta.env.DEV) return
+
+  if (typeof details === 'undefined') {
+    console.info('[LAB][inventory]', message)
+    return
+  }
+
+  console.info('[LAB][inventory]', message, details)
+}
+
 export function normalizeHeader(header) {
   const cleaned = normalizeText(header).replace(/[^a-z0-9]+/g, ' ').trim()
   if (!cleaned) return ''
@@ -270,8 +281,6 @@ function normalizeRows(parsedRows) {
   const headerRow = parsedRows[0]
   const normalizedHeaders = headerRow.map((header) => normalizeHeader(header))
 
-  console.info('[LAB INVENTORY] Headers detectados:', normalizedHeaders)
-
   const normalizedUnits = parsedRows.slice(1).map((row, rowIndex) => {
     const normalizedRow = {}
 
@@ -283,8 +292,10 @@ function normalizeRows(parsedRows) {
     return mapRowToUnit(normalizedRow, rowIndex)
   })
 
-  console.info('[LAB INVENTORY] Filas parseadas:', normalizedUnits.length)
-  console.info('[LAB INVENTORY] Primer registro normalizado:', normalizedUnits[0] ?? null)
+  logInventoryDebug('CSV de inventario procesado', {
+    headersCount: normalizedHeaders.length,
+    rowsCount: normalizedUnits.length,
+  })
 
   return normalizedUnits
 }
