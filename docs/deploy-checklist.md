@@ -7,6 +7,7 @@ Antes de desplegar, revisar `docs/LAB-ALCANCE-ACTUAL.md` y el baseline de estado
 ## Pre-deploy
 
 - [ ] `main` limpio.
+- [ ] `npm ci` OK.
 - [ ] `npm run lint` OK.
 - [ ] `npm run build` OK.
 - [ ] Produccion no usa `VITE_AUTH_MODE=demo`.
@@ -24,6 +25,7 @@ Antes de desplegar, revisar `docs/LAB-ALCANCE-ACTUAL.md` y el baseline de estado
 - [ ] El proveedor de hosting elegido sigue siendo el destino activo del repo.
 - [ ] Las variables de entorno del entorno objetivo coinciden con el README y con la config del proyecto.
 - [ ] No se modificaron `src/` ni reglas de acceso como parte de este ticket.
+- [ ] GitHub Actions de CI ejecuta `npm ci`, `npm run lint` y `npm run build` en `pull_request` y `push` a `main`.
 
 ## Smoke test post-deploy
 
@@ -58,7 +60,7 @@ Antes de desplegar, revisar `docs/LAB-ALCANCE-ACTUAL.md` y el baseline de estado
 
 ## Criterio de cierre
 
-El deploy se considera listo cuando lint y build pasan, el sitio responde en el host elegido y el smoke test anterior no encuentra 404 ni loops de autenticacion.
+El deploy se considera listo cuando `npm ci`, lint y build pasan, el sitio responde en el host elegido y el smoke test anterior no encuentra 404 ni loops de autenticacion.
 
 Si aparece `AUTH-CONFIG`, revisar variables de entorno antes de intentar publicar otra vez.
 
