@@ -13,6 +13,7 @@ Antes de desplegar, revisar `docs/LAB-ALCANCE-ACTUAL.md` y el baseline de estado
 - [ ] Produccion no usa `VITE_DEMO_MODE=true`.
 - [ ] Las variables de auth estan configuradas antes del deploy.
 - [ ] El login no muestra detalles tecnicos al usuario final.
+- [ ] La consola en produccion no imprime datos operativos de inventario.
 - [ ] `docs/SMOKE_TEST_OPERATIVO_ACTUAL.md` ejecutado y registrado.
 - [ ] Ninguna ruta principal falla en el smoke test operativo actual.
 - [ ] `dist/` generado.

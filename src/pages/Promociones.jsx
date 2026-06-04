@@ -460,10 +460,9 @@ function Promociones() {
   }, [selectedAgency, agencyOptions])
 
   useEffect(() => {
-    const agenciesWithPromos = agencyOptions.filter((agency) => agency !== ALL_AGENCIES_LABEL)
-    console.info('[LAB PROMOS] Total inventory:', inventory.length)
-    console.info('[LAB PROMOS] Units with codigo:', promotionUnits.length)
-    console.info('[LAB PROMOS] Agencies with promos:', agenciesWithPromos)
+    if (!import.meta.env.DEV) return
+
+    console.info('[LAB][inventory] Promociones actualizadas en desarrollo')
   }, [inventory.length, promotionUnits.length, agencyOptions])
 
   useEffect(() => {
