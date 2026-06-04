@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
-  ArrowUpRight,
+  ArrowRight,
   Bell,
-  Building2,
-  Database,
+  ChevronRight,
+  ExternalLink,
+  Headphones,
   Heart,
   Home as HomeIcon,
   ImagePlus,
@@ -14,85 +15,112 @@ import {
   Network,
   PlayCircle,
   Search,
+  Server,
   ShieldCheck,
   Star,
   Tags,
   Truck,
   Users,
   X,
+  Zap,
 } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Badge, Card } from '../components/common'
 import UserMenu from '../components/layout/UserMenu'
 import { useAuth } from '../context/AuthContext'
 import { accessLinks } from '../data/accessLinks'
 import heroTruckImage from '../assets/home/truck-hero.png'
 import { fetchInventoryFromCsv, getInventoryCache, saveInventoryCache } from '../services/inventoryService'
-import { countUniquePromotionCoverImages, isPromotionFlagUnit } from '../utils/advertisingCatalogUtils'
+import {
+  countUniquePromotionCoverImages,
+  isPromotionFlagUnit,
+} from '../utils/advertisingCatalogUtils'
 import useToast from '../hooks/useToast'
 
 const sidebarItems = [
-  { id: 'oficina', label: 'Mi Oficina', icon: HomeIcon, category: 'todas' },
-  { id: 'inventario', label: 'Inventario', icon: Truck, category: 'inventario' },
-  { id: 'plataformas', label: 'Plataformas', icon: Database, category: 'plataforma' },
-  { id: 'comunidad', label: 'Comunidad', icon: PlayCircle, category: 'comunidad' },
-  { id: 'soporte', label: 'Soporte', icon: Users, category: 'soporte' },
-  { id: 'favoritos', label: 'Favoritos', icon: Heart, category: 'favoritos' },
+  { id: 'oficina', label: 'Mi Oficina', icon: HomeIcon, section: 'todas' },
+  { id: 'inventario', label: 'Inventario', icon: Truck, section: 'inventario' },
   { id: 'directorio', label: 'Directorio', icon: Users, to: '/usuarios' },
+  { id: 'favoritos', label: 'Favoritos', icon: Heart, section: 'favoritos' },
 ]
 
-const filterItems = [
-  { id: 'todas', label: 'Todo', icon: LayoutGrid },
-  { id: 'inventario', label: 'Inventario', icon: Truck },
-  { id: 'plataforma', label: 'Plataformas', icon: Database },
-  { id: 'comunidad', label: 'Comunidad', icon: PlayCircle },
-  { id: 'soporte', label: 'Soporte', icon: Users },
-  { id: 'favoritos', label: 'Favoritos', icon: Heart },
-]
-
-const sectionDefinitions = [
-  {
-    id: 'inventario',
-    title: 'Inventario y publicidad',
-    description: 'Unidades disponibles, promociones vigentes y piezas listas para compartir.',
-    icon: Truck,
-    accent: 'from-sky-500 via-cyan-500 to-blue-500',
+const sectionMeta = {
+  inventario: {
+    label: 'Accesos rápidos',
+    icon: Zap,
+    description: 'Unidades, promociones y publicidad listas para usar.',
   },
-  {
-    id: 'plataforma',
-    title: 'Plataformas comerciales',
-    description: 'Herramientas oficiales para operar, revisar datos y seguir oportunidades.',
-    icon: Database,
-    accent: 'from-slate-700 via-slate-600 to-slate-500',
+  plataforma: {
+    label: 'Plataformas',
+    icon: Server,
+    description: 'Herramientas externas oficiales para operar el día a día.',
   },
-  {
-    id: 'comunidad',
-    title: 'Comunidad y aprendizaje',
-    description: 'Contenido, video y mensajería para colaborar más rápido.',
-    icon: PlayCircle,
-    accent: 'from-emerald-500 via-teal-500 to-cyan-500',
-  },
-  {
-    id: 'soporte',
-    title: 'Soporte y directorio',
-    description: 'Canales de ayuda, contacto y administración interna.',
+  comunidad: {
+    label: 'Comunidad',
     icon: Users,
-    accent: 'from-amber-500 via-orange-500 to-rose-500',
+    description: 'Contenido, video y mensajería para trabajar mejor en equipo.',
   },
-]
+  soporte: {
+    label: 'Soporte',
+    icon: Headphones,
+    description: 'Contacto y administración de usuarios según el rol.',
+  },
+}
 
-const iconMap = {
-  Database,
-  ImagePlus,
-  Mail,
-  MessageCircle,
-  Network,
-  PlayCircle,
-  ShieldCheck,
-  Tags,
-  Truck,
-  Users,
-  Building2,
+const sectionOrder = ['inventario', 'plataforma', 'comunidad', 'soporte']
+
+const quickAccessIds = ['inventario', 'promociones', 'catalogo-portadas']
+
+const brandToneByKey = {
+  slate: {
+    box: 'bg-blue-50 text-blue-600',
+    cta: 'text-blue-600',
+    dot: 'bg-blue-500',
+  },
+  cyan: {
+    box: 'bg-emerald-50 text-emerald-600',
+    cta: 'text-emerald-600',
+    dot: 'bg-emerald-500',
+  },
+  red: {
+    box: 'bg-violet-50 text-violet-600',
+    cta: 'text-violet-600',
+    dot: 'bg-violet-500',
+  },
+  sky: {
+    box: 'bg-sky-50 text-sky-600',
+    cta: 'text-sky-600',
+    dot: 'bg-sky-500',
+  },
+  emerald: {
+    box: 'bg-emerald-50 text-emerald-600',
+    cta: 'text-emerald-600',
+    dot: 'bg-emerald-500',
+  },
+  blue: {
+    box: 'bg-indigo-50 text-indigo-600',
+    cta: 'text-indigo-600',
+    dot: 'bg-indigo-500',
+  },
+  rose: {
+    box: 'bg-rose-50 text-rose-600',
+    cta: 'text-rose-600',
+    dot: 'bg-rose-500',
+  },
+  green: {
+    box: 'bg-green-50 text-green-600',
+    cta: 'text-green-600',
+    dot: 'bg-green-500',
+  },
+  amber: {
+    box: 'bg-amber-50 text-amber-600',
+    cta: 'text-amber-600',
+    dot: 'bg-amber-500',
+  },
+  indigo: {
+    box: 'bg-orange-50 text-orange-600',
+    cta: 'text-orange-600',
+    dot: 'bg-orange-500',
+  },
 }
 
 function normalizeText(value) {
@@ -157,117 +185,216 @@ function getGreetingByHour() {
 }
 
 function getLinkIcon(link) {
-  return iconMap[link.icon] || Building2
+  if (link.logoUrl) return null
+  if (link.icon === 'Truck') return Truck
+  if (link.icon === 'Tags') return Tags
+  if (link.icon === 'ImagePlus') return ImagePlus
+  if (link.icon === 'Database') return ShieldCheck
+  if (link.icon === 'ShieldCheck') return ShieldCheck
+  if (link.icon === 'Network') return Network
+  if (link.icon === 'PlayCircle') return PlayCircle
+  if (link.icon === 'MessageCircle') return MessageCircle
+  if (link.icon === 'Mail') return Mail
+  if (link.icon === 'Users') return Users
+  return LayoutGrid
 }
 
-function getSectionVariant(category) {
-  if (category === 'inventario') return 'info'
-  if (category === 'plataforma') return 'default'
-  if (category === 'comunidad') return 'success'
-  if (category === 'soporte') return 'warning'
-  return 'default'
+function getSectionForLink(link) {
+  if (link.category === 'inventario') return 'inventario'
+  if (link.category === 'plataforma') return 'plataforma'
+  if (link.category === 'comunidad') return 'comunidad'
+  return 'soporte'
 }
 
-function getLinkSurfaceLabel(link) {
-  return link.to ? 'Ruta interna' : 'Recurso externo'
+function getSectionTheme(sectionKey) {
+  if (sectionKey === 'inventario') return 'blue'
+  if (sectionKey === 'plataforma') return 'indigo'
+  if (sectionKey === 'comunidad') return 'green'
+  return 'amber'
 }
 
-function LinkActionButton({ link, variant = 'dark', className = '', children }) {
-  if (!link) return null
+function AccessCard({ link, isFavorite, onToggleFavorite, toneKey = 'blue' }) {
+  const Icon = getLinkIcon(link) || LayoutGrid
+  const tone = brandToneByKey[link.brandColor] || brandToneByKey[toneKey] || brandToneByKey.blue
 
-  const baseClasses =
-    'inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition duration-200 focus-visible:outline-none focus-visible:ring-2'
-
-  const variants = {
-    light:
-      'bg-white text-slate-950 hover:bg-slate-100 focus-visible:ring-white/70 focus-visible:ring-offset-0',
-    dark:
-      'bg-slate-950 text-white hover:bg-slate-800 focus-visible:ring-lab-primary/25 focus-visible:ring-offset-white',
-    glass:
-      'border border-white/20 bg-white/10 text-white hover:bg-white/15 focus-visible:ring-white/60 focus-visible:ring-offset-0',
-  }
-
-  const classes = `${baseClasses} ${variants[variant] || variants.dark} ${className}`.trim()
-  const content = (
+  const cardContent = (
     <>
-      <span>{children}</span>
-      <ArrowUpRight className="size-4" aria-hidden="true" />
+      <button
+        type="button"
+        onClick={(event) => {
+          event.preventDefault()
+          event.stopPropagation()
+          onToggleFavorite(link.id)
+        }}
+        className={`absolute right-4 top-4 inline-flex size-8 items-center justify-center rounded-full border transition focus-visible:outline-none focus-visible:ring-2 ${
+          isFavorite
+            ? 'border-amber-300 bg-amber-100 text-amber-500'
+            : 'border-slate-200 bg-white text-slate-400 hover:text-slate-600'
+        }`}
+        aria-label={isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+      >
+        <Star className={`size-4 ${isFavorite ? 'fill-current' : ''}`} aria-hidden="true" />
+      </button>
+
+      <div className="flex items-start gap-4">
+        <div className={`flex size-16 shrink-0 items-center justify-center rounded-[1.2rem] ${tone.box}`}>
+          {link.logoUrl ? (
+            <img
+              src={link.logoUrl}
+              alt={link.logoAlt || link.title}
+              className="size-8 object-contain"
+              loading="lazy"
+              decoding="async"
+            />
+          ) : (
+            <Icon className="size-7" aria-hidden="true" />
+          )}
+        </div>
+
+        <div className="min-w-0 flex-1 pr-10">
+          <h3 className="truncate text-xl font-semibold text-slate-950">{link.title}</h3>
+          <p className="mt-1 text-sm leading-6 text-slate-500">{link.description}</p>
+        </div>
+      </div>
+
+      <div className={`mt-5 inline-flex items-center gap-2 text-sm font-semibold ${tone.cta}`}>
+        <span>{link.cta || 'Abrir'}</span>
+        <ArrowRight className="size-4" aria-hidden="true" />
+      </div>
     </>
   )
 
   if (link.to) {
     return (
-      <Link to={link.to} className={classes}>
-        {content}
+      <Link
+        to={link.to}
+        className="group relative block rounded-[2rem] border border-slate-200 bg-white p-5 shadow-[0_1px_0_rgba(15,23,42,0.02),0_12px_24px_rgba(15,23,42,0.04)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(15,23,42,0.08)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lab-primary/20"
+      >
+        {cardContent}
       </Link>
     )
   }
 
   return (
-    <a href={link.url} target="_blank" rel="noreferrer" className={classes}>
-      {content}
+    <a
+      href={link.url}
+      target="_blank"
+      rel="noreferrer"
+      className="group relative block rounded-[2rem] border border-slate-200 bg-white p-5 shadow-[0_1px_0_rgba(15,23,42,0.02),0_12px_24px_rgba(15,23,42,0.04)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(15,23,42,0.08)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lab-primary/20"
+    >
+      {cardContent}
     </a>
   )
 }
 
-function AccessCard({ link, section, isFavorite, onToggleFavorite }) {
-  const Icon = getLinkIcon(link)
-  const sectionVariant = getSectionVariant(link.category)
+function PlatformCard({ link }) {
+  const sectionTheme = brandToneByKey[link.brandColor] || brandToneByKey.blue
+  const Icon = getLinkIcon(link) || LayoutGrid
 
-  return (
-    <article className="group overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-[0_10px_28px_rgba(15,23,42,0.08)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_18px_42px_rgba(15,23,42,0.14)]">
-      <div className={`h-1 bg-gradient-to-r ${section.accent}`} />
-
-      <div className="flex h-full flex-col p-5">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex min-w-0 items-start gap-3">
-            <span className="inline-flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-slate-950/5 text-lab-primary">
-              {link.logoUrl ? (
-                <img
-                  src={link.logoUrl}
-                  alt={link.logoAlt || link.title}
-                  className="size-8 object-contain"
-                  loading="lazy"
-                  decoding="async"
-                />
-              ) : (
-                <Icon className="size-5" aria-hidden="true" />
-              )}
-            </span>
-
-            <div className="min-w-0 space-y-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <h3 className="truncate text-base font-semibold text-slate-900">{link.title}</h3>
-                <Badge variant={sectionVariant}>{section.title}</Badge>
-              </div>
-              <p className="text-sm leading-relaxed text-slate-600">{link.description}</p>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => onToggleFavorite(link.id)}
-            className={`inline-flex size-11 shrink-0 items-center justify-center rounded-full border transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lab-primary/25 ${
-              isFavorite
-                ? 'border-amber-300 bg-amber-50 text-amber-600 hover:bg-amber-100'
-                : 'border-slate-200 bg-white text-slate-500 hover:border-lab-primary/25 hover:text-lab-primary'
-            }`}
-            aria-label={isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}
-          >
-            <Star className={`size-4 ${isFavorite ? 'fill-current' : ''}`} aria-hidden="true" />
-          </button>
+  const cardContent = (
+    <>
+      <div className="flex min-w-0 items-center gap-4">
+        <div className={`flex size-16 shrink-0 items-center justify-center rounded-[1.2rem] ${sectionTheme.box}`}>
+          {link.logoUrl ? (
+            <img
+              src={link.logoUrl}
+              alt={link.logoAlt || link.title}
+              className="size-8 object-contain"
+              loading="lazy"
+              decoding="async"
+            />
+          ) : (
+            <Icon className="size-7" aria-hidden="true" />
+          )}
         </div>
 
-        <div className="mt-5 flex items-center justify-between gap-3 border-t border-slate-100 pt-4">
-          <span className="text-xs font-medium uppercase tracking-[0.16em] text-slate-500">
-            {getLinkSurfaceLabel(link)}
-          </span>
-          <LinkActionButton link={link} variant="dark" className="px-4 py-2 text-xs">
-            {link.cta || 'Abrir'}
-          </LinkActionButton>
+        <div className="min-w-0">
+          <h3 className="truncate text-xl font-semibold text-slate-950">{link.title}</h3>
+          <p className="mt-1 inline-flex items-center gap-1 text-sm font-medium text-slate-500">
+            Ir ahora
+            <ExternalLink className="size-3.5" aria-hidden="true" />
+          </p>
         </div>
       </div>
-    </article>
+
+      <ExternalLink className="size-5 shrink-0 text-slate-400 transition group-hover:text-slate-600" aria-hidden="true" />
+    </>
+  )
+
+  if (link.to) {
+    return (
+      <Link
+        to={link.to}
+        className="group flex items-center justify-between gap-4 rounded-[2rem] border border-slate-200 bg-white p-5 shadow-[0_1px_0_rgba(15,23,42,0.02),0_12px_24px_rgba(15,23,42,0.04)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(15,23,42,0.08)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lab-primary/20"
+      >
+        {cardContent}
+      </Link>
+    )
+  }
+
+  return (
+    <a
+      href={link.url}
+      target="_blank"
+      rel="noreferrer"
+      className="group flex items-center justify-between gap-4 rounded-[2rem] border border-slate-200 bg-white p-5 shadow-[0_1px_0_rgba(15,23,42,0.02),0_12px_24px_rgba(15,23,42,0.04)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(15,23,42,0.08)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lab-primary/20"
+    >
+      {cardContent}
+    </a>
+  )
+}
+
+function StackRowCard({ link }) {
+  const sectionTheme = brandToneByKey[link.brandColor] || brandToneByKey.blue
+  const Icon = getLinkIcon(link) || LayoutGrid
+
+  const rowContent = (
+    <>
+      <div className="flex min-w-0 items-center gap-4">
+        <div className={`flex size-14 shrink-0 items-center justify-center rounded-[1.15rem] ${sectionTheme.box}`}>
+          {link.logoUrl ? (
+            <img
+              src={link.logoUrl}
+              alt={link.logoAlt || link.title}
+              className="size-7 object-contain"
+              loading="lazy"
+              decoding="async"
+            />
+          ) : (
+            <Icon className="size-6" aria-hidden="true" />
+          )}
+        </div>
+
+        <div className="min-w-0">
+          <h3 className="truncate text-xl font-semibold text-slate-950">{link.title}</h3>
+          <p className="mt-1 truncate text-sm text-slate-500">{link.description}</p>
+        </div>
+      </div>
+
+      <ChevronRight className="size-5 shrink-0 text-slate-400 transition group-hover:text-slate-600" aria-hidden="true" />
+    </>
+  )
+
+  if (link.to) {
+    return (
+      <Link
+        to={link.to}
+        className="group flex items-center justify-between gap-4 p-5 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lab-primary/20"
+      >
+        {rowContent}
+      </Link>
+    )
+  }
+
+  return (
+    <a
+      href={link.url}
+      target="_blank"
+      rel="noreferrer"
+      className="group flex items-center justify-between gap-4 p-5 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lab-primary/20"
+    >
+      {rowContent}
+    </a>
   )
 }
 
@@ -285,10 +412,8 @@ function Home() {
   const greeting = getGreetingByHour()
 
   const [query, setQuery] = useState('')
-  const [activeCategory, setActiveCategory] = useState('todas')
+  const [activeSection, setActiveSection] = useState('todas')
   const [homeMetrics, setHomeMetrics] = useState(() => buildHomeMetrics([]))
-  const [metricsStatus, setMetricsStatus] = useState('loading')
-  const [metricsRetryToken, setMetricsRetryToken] = useState(0)
 
   const favoritesStorageKey = `lab:v1:favorites:${getUserStorageKey(user)}`
   const [favoriteIds, setFavoriteIds] = useState([])
@@ -325,13 +450,10 @@ function Home() {
     const applyMetrics = (items) => {
       if (!mounted) return
       setHomeMetrics(buildHomeMetrics(Array.isArray(items) ? items : []))
-      setMetricsStatus('ready')
     }
 
     if (cache.items.length > 0) {
       applyMetrics(cache.items)
-    } else {
-      setMetricsStatus('loading')
     }
 
     const syncMetrics = async () => {
@@ -340,12 +462,7 @@ function Home() {
         saveInventoryCache(items)
         applyMetrics(items)
       } catch {
-        if (!mounted) return
-        if (cache.items.length > 0) {
-          setMetricsStatus('ready')
-        } else {
-          setMetricsStatus('error')
-        }
+        // Keep the cached metrics or the zero state if the CSV refresh fails.
       }
     }
 
@@ -354,61 +471,9 @@ function Home() {
     return () => {
       mounted = false
     }
-  }, [metricsRetryToken])
+  }, [])
 
-  const categoryCounts = useMemo(() => {
-    const counts = {
-      todas: visibleAccessLinks.length,
-      inventario: 0,
-      plataforma: 0,
-      comunidad: 0,
-      soporte: 0,
-      favoritos: favoriteIds.length,
-    }
-
-    visibleAccessLinks.forEach((link) => {
-      counts[link.category] = (counts[link.category] || 0) + 1
-    })
-
-    return counts
-  }, [favoriteIds, visibleAccessLinks])
-
-  const activeViewCategory = activeCategory === 'favoritos' ? 'todas' : activeCategory
-  const normalizedQuery = normalizeText(query)
-
-  const filteredSections = useMemo(() => {
-    return sectionDefinitions
-      .map((section) => {
-        const links = visibleAccessLinks.filter((link) => {
-          if (activeViewCategory !== 'todas' && link.category !== activeViewCategory) return false
-          if (activeCategory === 'favoritos' && !favoriteIds.includes(link.id)) return false
-          if (!normalizedQuery) return true
-
-          const searchable = `${link.title} ${link.description} ${link.category || ''}`.toLowerCase()
-          return searchable.includes(normalizedQuery)
-        })
-
-        return {
-          ...section,
-          links,
-        }
-      })
-      .filter((section) => section.links.length > 0)
-  }, [activeCategory, activeViewCategory, favoriteIds, normalizedQuery, visibleAccessLinks])
-
-  const filteredLinksCount = filteredSections.reduce((total, section) => total + section.links.length, 0)
-  const visibleSectionCount = filteredSections.length
-
-  const heroQuickLinkIds = isSupportUser
-    ? ['inventario', 'promociones', 'catalogo-portadas', 'soporte-usuarios']
-    : ['inventario', 'promociones', 'catalogo-portadas', 'contacto']
-
-  const heroQuickLinks = heroQuickLinkIds
-    .map((linkId) => visibleLinkMap.get(linkId))
-    .filter(Boolean)
-
-  const primaryHeroLink = visibleLinkMap.get('inventario') || heroQuickLinks[0]
-  const secondaryHeroLink = visibleLinkMap.get('promociones') || visibleLinkMap.get('catalogo-portadas')
+  const activeSidebarId = activeSection === 'todas' ? 'oficina' : activeSection
 
   const handleToggleFavorite = (toolId) => {
     setFavoriteIds((previous) => {
@@ -426,459 +491,353 @@ function Home() {
     })
   }
 
-  const handleNotificationsClick = () => {
-    toast.info('No hay notificaciones nuevas por ahora.')
-  }
-
   const handleSidebarAction = (item) => {
     if (item.to) {
       navigate(item.to)
       return
     }
 
-    setActiveCategory(item.category)
+    setActiveSection(item.section)
   }
 
-  const activeSidebarId = activeCategory === 'todas' ? 'oficina' : activeCategory
+  const handleNotificationsClick = () => {
+    toast.info('No hay notificaciones nuevas por ahora.')
+  }
+
+  const filteredLinksBySection = useMemo(() => {
+    const normalizedQuery = normalizeText(query)
+
+    const sections = sectionOrder
+      .filter((sectionKey) => activeSection === 'todas' || activeSection === 'favoritos' || activeSection === sectionKey)
+      .map((sectionKey) => {
+        const links = visibleAccessLinks.filter((link) => {
+          const matchesSection = getSectionForLink(link) === sectionKey
+          const matchesFavorite = activeSection !== 'favoritos' || favoriteIds.includes(link.id)
+          if (!matchesSection || !matchesFavorite) return false
+          if (!normalizedQuery) return true
+          const searchable = `${link.title} ${link.description} ${link.category || ''}`.toLowerCase()
+          return searchable.includes(normalizedQuery)
+        })
+
+        return {
+          key: sectionKey,
+          meta: sectionMeta[sectionKey],
+          links,
+        }
+      })
+      .filter((section) => section.links.length > 0)
+
+    return sections
+  }, [activeSection, favoriteIds, query, visibleAccessLinks])
+
+  const searchResultCount = filteredLinksBySection.reduce((total, section) => total + section.links.length, 0)
+
+  const heroQuickLinks = quickAccessIds
+    .map((id) => visibleLinkMap.get(id))
+    .filter(Boolean)
 
   return (
-    <main className="relative min-h-dvh overflow-x-hidden bg-[radial-gradient(circle_at_top_right,_rgba(56,189,248,0.14),_transparent_28%),radial-gradient(circle_at_left_bottom,_rgba(15,23,42,0.08),_transparent_30%),linear-gradient(180deg,_#f8fafc_0%,_#eef4fb_42%,_#f8fafc_100%)] text-lab-text">
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -right-24 -top-24 size-80 rounded-full bg-sky-300/20 blur-3xl" />
-        <div className="absolute -bottom-0 -left-28 size-96 rounded-full bg-indigo-200/20 blur-3xl" />
-      </div>
-
-      <div className="relative mx-auto flex min-h-dvh w-full max-w-[1600px]">
-        <aside className="hidden min-h-dvh w-[300px] shrink-0 border-r border-slate-800/70 bg-slate-950 text-slate-100 lg:flex lg:flex-col">
-          <div className="flex flex-1 flex-col px-5 py-6">
-            <div className="rounded-[1.75rem] border border-white/10 bg-white/5 p-4 shadow-[0_20px_40px_rgba(15,23,42,0.16)]">
-              <div className="flex items-center gap-3">
-                <span className="inline-flex size-12 items-center justify-center rounded-2xl bg-gradient-to-br from-lab-primary via-sky-500 to-cyan-500 text-base font-bold text-white shadow-lg shadow-lab-primary/20">
-                  L
-                </span>
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-white">LAB Comercial</p>
-                  <p className="truncate text-xs text-slate-300">Mi Oficina Virtual</p>
-                </div>
+    <main className="min-h-dvh overflow-x-hidden bg-[#eef3fb] text-slate-900">
+      <div className="mx-auto flex min-h-dvh w-full max-w-[1600px]">
+        <aside className="hidden min-h-dvh w-[342px] shrink-0 flex-col bg-gradient-to-b from-[#12336f] via-[#102b5a] to-[#0a1630] text-white shadow-[inset_-1px_0_0_rgba(255,255,255,0.08)] lg:flex">
+          <div className="flex flex-1 flex-col p-6">
+            <div className="flex items-center gap-4 rounded-3xl p-1">
+              <div className="flex size-12 items-center justify-center rounded-[1.15rem] bg-gradient-to-br from-[#4f9cfb] to-[#2b6be8] text-xl font-bold text-white shadow-[0_14px_30px_rgba(59,130,246,0.35)]">
+                L
               </div>
-
-              <div className="mt-4 rounded-2xl border border-white/10 bg-slate-900/70 p-3">
-                <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Sesión actual</p>
-                <p className="mt-2 truncate text-sm font-semibold text-white">{displayName}</p>
-                <div className="mt-2 flex flex-wrap gap-2 text-xs text-slate-200">
-                  <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1">
-                    {displayRole}
-                  </span>
-                  <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1">
-                    {displayBranch}
-                  </span>
-                </div>
+              <div className="min-w-0">
+                <p className="truncate text-[1.35rem] font-semibold leading-none text-white">LAB Comercial</p>
+                <p className="mt-2 truncate font-mono text-[0.8rem] uppercase tracking-[0.32em] text-[#7fb2ff]">
+                  Oficina Virtual
+                </p>
               </div>
             </div>
 
-            <nav className="mt-6 space-y-2">
-              {sidebarItems.map((item) => {
-                const Icon = item.icon
-                const isActive = item.id === activeSidebarId
-
-                return (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => handleSidebarAction(item)}
-                    className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-semibold transition duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 ${
-                      isActive
-                        ? 'bg-gradient-to-r from-lab-primary via-sky-600 to-cyan-600 text-white shadow-[0_12px_24px_rgba(14,165,233,0.24)]'
-                        : 'text-slate-200 hover:bg-white/10 hover:text-white'
-                    }`}
-                    aria-pressed={isActive}
-                  >
-                    <Icon className="size-4 shrink-0" aria-hidden="true" />
-                    <span className="truncate">{item.label}</span>
-                  </button>
-                )
-              })}
-            </nav>
-
-              <div className="mt-6 grid gap-3 rounded-3xl border border-white/10 bg-white/5 p-4">
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                <div className="rounded-2xl border border-white/10 bg-slate-900/65 p-3">
-                  <p className="text-xs text-slate-400">Unidades</p>
-                  <p className="mt-1 text-lg font-semibold text-white">
-                    {formatCompactNumber(homeMetrics.totalUnits)}
-                  </p>
-                </div>
-                <div className="rounded-2xl border border-white/10 bg-slate-900/65 p-3">
-                  <p className="text-xs text-slate-400">Promos</p>
-                  <p className="mt-1 text-lg font-semibold text-white">
-                    {formatCompactNumber(homeMetrics.activePromotions)}
-                  </p>
-                </div>
-              </div>
-              <p className="text-xs leading-relaxed text-slate-300">
-                {visibleAccessLinks.length} accesos visibles en esta sesión.
+            <div className="mt-14">
+              <p className="text-[0.82rem] font-medium uppercase tracking-[0.38em] text-[#7ea4e5]">
+                Navegación
               </p>
+              <nav className="mt-5 space-y-3">
+                {sidebarItems.map((item) => {
+                  const Icon = item.icon
+                  const isActive = item.id === activeSidebarId
+
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => handleSidebarAction(item)}
+                      className={`relative flex w-full items-center gap-4 rounded-[1.2rem] p-4 text-left transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 ${
+                        isActive
+                          ? 'bg-white/15 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]'
+                          : 'text-white/85 hover:bg-white/10 hover:text-white'
+                      }`}
+                      aria-current={isActive ? 'page' : undefined}
+                    >
+                      {isActive ? (
+                        <span className="absolute left-0 top-1/2 h-10 w-1 -translate-y-1/2 rounded-r-full bg-sky-400" />
+                      ) : null}
+                      <Icon className={`size-5 shrink-0 ${isActive ? 'text-white' : 'text-white/75'}`} aria-hidden="true" />
+                      <span className="text-[1.03rem] font-semibold">{item.label}</span>
+                    </button>
+                  )
+                })}
+              </nav>
             </div>
 
-            <UserMenu variant="sidebar" className="mt-6" />
+            <div className="mt-auto pt-6">
+              <UserMenu variant="sidebar" />
+            </div>
           </div>
         </aside>
 
-        <div className="flex min-w-0 flex-1 flex-col">
-          <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/85 backdrop-blur-xl">
-            <div className="flex flex-wrap items-center gap-3 p-4 sm:px-6 lg:px-8">
-              <div className="flex min-w-0 flex-1 items-center gap-3">
-                <label className="flex min-h-11 flex-1 items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 shadow-sm transition focus-within:border-lab-primary focus-within:ring-2 focus-within:ring-lab-primary/15">
-                  <Search className="size-4 shrink-0 text-slate-500" aria-hidden="true" />
-                  <input
-                    value={query}
-                    onChange={(event) => setQuery(event.target.value)}
-                    placeholder="Buscar accesos, plataformas o soporte..."
-                    aria-label="Buscar accesos, plataformas o soporte"
-                    className="w-full border-0 bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400"
-                  />
-                  {query ? (
-                    <button
-                      type="button"
-                      onClick={() => setQuery('')}
-                      className="inline-flex size-8 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
-                      aria-label="Limpiar búsqueda"
-                    >
-                      <X className="size-4" aria-hidden="true" />
-                    </button>
-                  ) : null}
-                </label>
-              </div>
+        <div className="min-w-0 flex-1">
+          <header className="border-b border-slate-200 bg-[#f6f8fc]/90 backdrop-blur-xl">
+          <div className="flex items-center gap-4 p-4 sm:px-6 lg:p-8">
+              <label className="flex min-h-14 w-full max-w-[660px] items-center gap-3 rounded-[1.2rem] border border-slate-200 bg-white px-4 shadow-[0_10px_25px_rgba(15,23,42,0.04)]">
+                <Search className="size-5 shrink-0 text-slate-400" aria-hidden="true" />
+                <input
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder="Buscar herramientas, accesos o recursos..."
+                  aria-label="Buscar herramientas, accesos o recursos"
+                  className="min-w-0 flex-1 border-0 bg-transparent text-[0.98rem] text-slate-700 outline-none placeholder:text-slate-400"
+                />
+                <kbd className="hidden rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs text-slate-500 sm:inline-flex">
+                  /
+                </kbd>
+              </label>
 
               <button
                 type="button"
                 onClick={handleNotificationsClick}
-                className="inline-flex size-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-lab-primary/25 hover:text-lab-primary hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lab-primary/20"
+                className="relative ml-auto inline-flex size-14 items-center justify-center rounded-[1.15rem] border border-slate-200 bg-white text-slate-700 shadow-[0_10px_25px_rgba(15,23,42,0.04)] transition hover:border-slate-300 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lab-primary/20"
                 aria-label="Ver notificaciones"
                 title="Ver notificaciones"
               >
-                <Bell className="size-4" aria-hidden="true" />
+                <Bell className="size-5" aria-hidden="true" />
+                <span className="absolute right-4 top-4 size-2 rounded-full bg-orange-400" />
               </button>
-
-              <div className="min-w-48">
-                <UserMenu variant="compact" />
-              </div>
-            </div>
-
-            <div className="flex gap-2 overflow-x-auto px-4 pb-4 sm:px-6 lg:px-8">
-              {filterItems.map((item) => {
-                const Icon = item.icon
-                const isActive = activeCategory === item.id
-                const count = categoryCounts[item.id] ?? 0
-
-                return (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => setActiveCategory(item.id)}
-                    className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lab-primary/20 ${
-                      isActive
-                        ? 'border-lab-primary bg-lab-primary text-white shadow-[0_10px_20px_rgba(14,165,233,0.18)]'
-                        : 'border-slate-200 bg-white text-slate-700 hover:border-lab-primary/35 hover:text-lab-primary'
-                    }`}
-                    aria-pressed={isActive}
-                  >
-                    <Icon className="size-4" aria-hidden="true" />
-                    <span>{item.label}</span>
-                    <span
-                      className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${
-                        isActive ? 'bg-white/15 text-white' : 'bg-slate-100 text-slate-500'
-                      }`}
-                    >
-                      {count}
-                    </span>
-                  </button>
-                )
-              })}
             </div>
           </header>
 
-          <div className="space-y-6 px-4 py-5 sm:px-6 lg:px-8">
-            <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-slate-950 text-white shadow-[0_24px_70px_rgba(15,23,42,0.24)]">
-              <div className="grid lg:grid-cols-[1.2fr_0.8fr]">
-                <div className="relative isolate overflow-hidden p-6 sm:p-8 lg:p-10">
-                  <img
-                    src={heroTruckImage}
-                    alt="Camión de carga de la marca sobre fondo corporativo"
-                    className="absolute inset-0 size-full object-cover object-center"
-                    loading="eager"
-                    decoding="async"
+          <div className="space-y-8 px-4 py-6 sm:px-6 lg:p-8">
+            <section className="relative overflow-hidden rounded-[2.15rem] bg-[#111f44] text-white shadow-[0_22px_60px_rgba(8,15,34,0.18)]">
+              <img
+                src={heroTruckImage}
+                alt="Camión de carga de la marca"
+                className="absolute inset-0 size-full object-cover object-right opacity-90"
+                loading="eager"
+                decoding="async"
+              />
+              <div className="absolute inset-0 bg-gradient-to-r from-[#0b1430]/95 via-[#0b1430]/85 to-[#0b1430]/30" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0b1430]/45 via-transparent to-transparent" />
+
+              <div className="relative z-10 p-5 sm:p-6 lg:p-8">
+                <div className="max-w-[57%] space-y-5 xl:max-w-[48%]">
+                  <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-[0.8rem] font-semibold uppercase tracking-[0.3em] text-white/90">
+                    <span className="size-3 rounded-full bg-emerald-400 shadow-[0_0_0_4px_rgba(74,222,128,0.15)]" />
+                    Tu oficina · en vivo
+                  </div>
+
+                  <h1 className="text-[2.1rem] font-semibold leading-[1.02] tracking-tight sm:text-[2.75rem] xl:text-[3.6rem]">
+                    {greeting}, {displayName}.
+                    <br />
+                    Esta es tu <span className="text-sky-300">oficina virtual</span>.
+                  </h1>
+
+                  <div className="flex flex-wrap items-center gap-3">
+                    {displayPhoto ? (
+                      <img
+                        src={displayPhoto}
+                        alt={`Foto de ${displayName}`}
+                        className="size-9 rounded-full border border-white/20 object-cover"
+                        referrerPolicy="no-referrer"
+                      />
+                    ) : (
+                      <span className="inline-flex size-9 items-center justify-center rounded-full bg-orange-400 text-sm font-bold text-white">
+                        {nameInitials}
+                      </span>
+                    )}
+
+                    <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-semibold text-white/95">
+                      <span className="size-3 rounded-full bg-orange-400" />
+                      Rol: {displayRole}
+                    </span>
+
+                    <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-semibold text-white/95">
+                      <MapPin className="size-4" aria-hidden="true" />
+                      Sucursal: {displayBranch}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="mt-6 grid gap-3 sm:grid-cols-3 lg:absolute lg:bottom-6 lg:right-6 lg:mt-0 lg:w-[52%] xl:w-[44%]">
+                  <div className="rounded-3xl border border-white/15 bg-white/[0.12] p-5 backdrop-blur-sm">
+                    <p className="text-[2rem] font-semibold leading-none">{formatCompactNumber(homeMetrics.totalUnits)}</p>
+                    <p className="mt-1 text-sm text-sky-200">Unidades disponibles</p>
+                  </div>
+                  <div className="rounded-3xl border border-white/15 bg-white/[0.12] p-5 backdrop-blur-sm">
+                    <p className="text-[2rem] font-semibold leading-none">
+                      {formatCompactNumber(homeMetrics.activePromotions)}
+                    </p>
+                    <p className="mt-1 text-sm text-sky-200">Promociones vigentes</p>
+                  </div>
+                  <div className="rounded-3xl border border-white/15 bg-white/[0.12] p-5 backdrop-blur-sm">
+                    <p className="text-[2rem] font-semibold leading-none">
+                      {formatCompactNumber(homeMetrics.availableAds)}
+                    </p>
+                    <p className="mt-1 text-sm text-sky-200">Publicidades disponibles</p>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section className="space-y-4">
+              <div className="flex items-center gap-3">
+                <Zap className="size-5 text-slate-500" aria-hidden="true" />
+                <h2 className="font-mono text-[0.8rem] font-semibold uppercase tracking-[0.3em] text-slate-700">
+                  Accesos rápidos
+                </h2>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
+                {heroQuickLinks.map((link) => (
+                  <AccessCard
+                    key={link.id}
+                    link={link}
+                    isFavorite={favoriteIds.includes(link.id)}
+                    onToggleFavorite={handleToggleFavorite}
+                    toneKey="blue"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/70 to-slate-950/40" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/35 via-transparent to-transparent" />
+                ))}
+              </div>
+            </section>
 
-                  <div className="relative z-10 max-w-2xl space-y-6">
-                    <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/90 backdrop-blur">
-                      <LayoutGrid className="size-3.5" aria-hidden="true" />
-                      Mi Oficina Virtual
-                    </div>
+            <section className="space-y-4">
+              <div className="flex items-center gap-3">
+                <Server className="size-5 text-slate-500" aria-hidden="true" />
+                <h2 className="font-mono text-[0.8rem] font-semibold uppercase tracking-[0.3em] text-slate-700">
+                  Plataformas
+                </h2>
+              </div>
 
-                    <div className="space-y-3">
-                      <h1 className="text-3xl font-semibold leading-tight sm:text-4xl xl:text-[3.35rem]">
-                        {greeting}, {displayName}.
-                        <br />
-                        Tu operación comercial empieza aquí.
-                      </h1>
-                      <p className="max-w-xl text-sm leading-7 text-slate-200 sm:text-base">
-                        Centraliza inventario, promociones, plataformas, comunidad y soporte en una
-                        sola vista pensada para trabajar más rápido.
-                      </p>
-                    </div>
+              <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
+                {visibleAccessLinks
+                  .filter((link) => link.category === 'plataforma')
+                  .map((link) => (
+                    <PlatformCard key={link.id} link={link} />
+                  ))}
+              </div>
+            </section>
 
-                    <div className="flex flex-wrap items-center gap-2">
-                      {displayPhoto ? (
-                        <img
-                          src={displayPhoto}
-                          alt={`Foto de ${displayName}`}
-                          className="size-11 rounded-full border border-white/30 object-cover"
-                          referrerPolicy="no-referrer"
-                        />
-                      ) : (
-                        <span className="inline-flex size-11 items-center justify-center rounded-full border border-white/30 bg-white/10 text-sm font-semibold text-white">
-                          {nameInitials}
-                        </span>
-                      )}
-                      <Badge
-                        variant="info"
-                        className="border-white/20 bg-white/10 text-white backdrop-blur"
-                      >
-                        Rol: {displayRole}
-                      </Badge>
-                      <Badge className="border-white/20 bg-white/10 text-white backdrop-blur">
-                        <MapPin className="mr-1 size-3.5" aria-hidden="true" />
-                        Sucursal: {displayBranch}
-                      </Badge>
-                      <Badge className="border-white/20 bg-white/10 text-white backdrop-blur">
-                        Accesos visibles: {visibleAccessLinks.length}
-                      </Badge>
-                    </div>
-
-                    <div className="flex flex-wrap gap-3">
-                      <LinkActionButton link={primaryHeroLink} variant="light">
-                        {primaryHeroLink?.cta || 'Abrir inventario'}
-                      </LinkActionButton>
-                      <LinkActionButton link={secondaryHeroLink} variant="glass">
-                        {secondaryHeroLink?.cta || 'Ver promociones'}
-                      </LinkActionButton>
-                    </div>
-
-                    <p className="text-xs uppercase tracking-[0.18em] text-slate-300">
-                      Inventario, publicidad y accesos listos para responder desde escritorio o móvil.
-                    </p>
-
-                    {metricsStatus === 'loading' ? (
-                      <div
-                        role="status"
-                        className="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/10 px-4 py-3 text-sm text-slate-100"
-                      >
-                        <span className="inline-flex size-2 rounded-full bg-sky-300" />
-                        Actualizando indicadores de inventario...
-                      </div>
-                    ) : null}
-
-                    {metricsStatus === 'error' ? (
-                      <div
-                        role="alert"
-                        className="flex flex-col gap-3 rounded-2xl border border-rose-400/30 bg-rose-500/10 p-4 text-sm text-rose-100 sm:flex-row sm:items-center sm:justify-between"
-                      >
-                        <div>
-                          <p className="font-semibold">No pudimos actualizar las métricas de inventario.</p>
-                          <p className="mt-1 text-rose-100/90">
-                            Puedes reintentar o continuar con la vista actual usando la caché local.
-                          </p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => setMetricsRetryToken((value) => value + 1)}
-                          className="inline-flex min-h-11 items-center justify-center rounded-full border border-white/20 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-white/15"
-                        >
-                          Reintentar
-                        </button>
-                      </div>
-                    ) : null}
-                  </div>
+            <section className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <Users className="size-5 text-slate-500" aria-hidden="true" />
+                  <h2 className="font-mono text-[0.8rem] font-semibold uppercase tracking-[0.3em] text-slate-700">
+                    Comunidad
+                  </h2>
                 </div>
 
-                <div className="border-t border-white/10 bg-white/[0.04] p-5 sm:p-6 lg:border-l lg:border-t-0">
-                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-                    <div className="rounded-3xl border border-white/10 bg-white/[0.07] p-4">
-                      <p className="text-xs uppercase tracking-[0.16em] text-slate-300">Unidades</p>
-                      <p className="mt-2 text-3xl font-semibold text-white">
-                        {formatCompactNumber(homeMetrics.totalUnits)}
-                      </p>
-                      <p className="mt-1 text-sm text-slate-300">Disponibles en la caché de inventario.</p>
-                    </div>
-                    <div className="rounded-3xl border border-white/10 bg-white/[0.07] p-4">
-                      <p className="text-xs uppercase tracking-[0.16em] text-slate-300">Promociones</p>
-                      <p className="mt-2 text-3xl font-semibold text-white">
-                        {formatCompactNumber(homeMetrics.activePromotions)}
-                      </p>
-                      <p className="mt-1 text-sm text-slate-300">Unidades con promociones vigentes.</p>
-                    </div>
-                    <div className="rounded-3xl border border-white/10 bg-white/[0.07] p-4">
-                      <p className="text-xs uppercase tracking-[0.16em] text-slate-300">Piezas publicitarias</p>
-                      <p className="mt-2 text-3xl font-semibold text-white">
-                        {formatCompactNumber(homeMetrics.availableAds)}
-                      </p>
-                      <p className="mt-1 text-sm text-slate-300">Material visual único disponible.</p>
-                    </div>
-                    <div className="rounded-3xl border border-white/10 bg-white/[0.07] p-4">
-                      <p className="text-xs uppercase tracking-[0.16em] text-slate-300">Accesos visibles</p>
-                      <p className="mt-2 text-3xl font-semibold text-white">
-                        {formatCompactNumber(visibleAccessLinks.length)}
-                      </p>
-                      <p className="mt-1 text-sm text-slate-300">Recursos activos en este rol.</p>
-                    </div>
-                  </div>
-
-              <div className="mt-5 rounded-3xl border border-white/10 bg-slate-900/45 p-4">
-                    <div className="flex items-center justify-between gap-3">
-                      <div>
-                        <p className="text-sm font-semibold text-white">Accesos rápidos</p>
-                        <p className="mt-1 text-xs text-slate-300">Los más usados en esta oficina.</p>
+                <div className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_1px_0_rgba(15,23,42,0.02),0_12px_24px_rgba(15,23,42,0.04)]">
+                  {visibleAccessLinks
+                    .filter((link) => link.category === 'comunidad')
+                    .map((link, index, rows) => (
+                      <div key={link.id} className={index < rows.length - 1 ? 'border-b border-slate-200' : ''}>
+                        <StackRowCard link={link} />
                       </div>
-                      <Badge className="border-white/10 bg-white/10 text-white">
-                        {formatCompactNumber(heroQuickLinks.length)} visibles
-                      </Badge>
-                    </div>
+                    ))}
+                </div>
+              </div>
 
-                    <div className="mt-4 space-y-2">
-                      {heroQuickLinks.map((link) => {
-                        const Icon = getLinkIcon(link)
-                        return (
-                          <div
-                            key={link.id}
-                            className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-3"
-                          >
-                            <div className="flex min-w-0 items-center gap-3">
-                              <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-2xl bg-white/10 text-white">
-                                {link.logoUrl ? (
-                                  <img
-                                    src={link.logoUrl}
-                                    alt={link.logoAlt || link.title}
-                                    className="size-6 object-contain"
-                                    loading="lazy"
-                                    decoding="async"
-                                  />
-                                ) : (
-                                  <Icon className="size-4" aria-hidden="true" />
-                                )}
-                              </span>
-                              <div className="min-w-0">
-                                <p className="truncate text-sm font-semibold text-white">{link.title}</p>
-                                <p className="truncate text-xs text-slate-300">{link.cta || 'Abrir'}</p>
-                              </div>
-                            </div>
-                            <LinkActionButton link={link} variant="light" className="px-3 py-2 text-xs">
-                              Abrir
-                            </LinkActionButton>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  </div>
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <Headphones className="size-5 text-slate-500" aria-hidden="true" />
+                  <h2 className="font-mono text-[0.8rem] font-semibold uppercase tracking-[0.3em] text-slate-700">
+                    Soporte
+                  </h2>
+                </div>
+
+                <div className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_1px_0_rgba(15,23,42,0.02),0_12px_24px_rgba(15,23,42,0.04)]">
+                  {visibleAccessLinks
+                    .filter((link) => link.category === 'soporte')
+                    .map((link, index, rows) => (
+                      <div key={link.id} className={index < rows.length - 1 ? 'border-b border-slate-200' : ''}>
+                        <StackRowCard link={link} />
+                      </div>
+                    ))}
                 </div>
               </div>
             </section>
 
-            <section className="rounded-[1.75rem] border border-slate-200 bg-white/90 p-4 shadow-[0_12px_28px_rgba(15,23,42,0.07)]">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <p className="text-sm font-semibold text-slate-900">
-                    {activeCategory === 'favoritos' ? 'Favoritos guardados' : 'Vista actual'}
-                  </p>
-                  <p className="mt-1 text-xs text-slate-500">
-                    {query ? `Filtrado por “${query}”. ` : ''}
-                    {visibleSectionCount > 0
-                      ? `${filteredLinksCount} accesos visibles en ${visibleSectionCount} secciones.`
-                      : 'No hay accesos que coincidan con los filtros actuales.'}
-                  </p>
-                </div>
-
-                {(query || activeCategory !== 'todas') ? (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setQuery('')
-                      setActiveCategory('todas')
-                    }}
-                    className="inline-flex min-h-11 items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-lab-primary/30 hover:text-lab-primary"
-                  >
-                    Limpiar filtros
-                  </button>
-                ) : null}
-              </div>
-            </section>
-
-            {filteredSections.length > 0 ? (
-              filteredSections.map((section) => {
-                const SectionIcon = section.icon
-                return (
-                  <section key={section.id} className="space-y-4">
-                    <div className="flex flex-wrap items-start justify-between gap-3">
-                      <div className="flex items-start gap-3">
-                        <span
-                          className={`inline-flex size-11 items-center justify-center rounded-2xl bg-gradient-to-br ${section.accent} text-white shadow-[0_12px_28px_rgba(15,23,42,0.16)]`}
-                        >
-                          <SectionIcon className="size-5" aria-hidden="true" />
-                        </span>
-                        <div>
-                          <h2 className="text-lg font-semibold text-slate-900 sm:text-xl">{section.title}</h2>
-                          <p className="mt-1 max-w-3xl text-sm leading-relaxed text-slate-600">
-                            {section.description}
-                          </p>
-                        </div>
-                      </div>
-
-                      <Badge variant={getSectionVariant(section.id)}>
-                        {formatCompactNumber(section.links.length)} accesos
-                      </Badge>
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-                      {section.links.map((link) => (
-                        <AccessCard
-                          key={link.id}
-                          link={link}
-                          section={section}
-                          isFavorite={favoriteIds.includes(link.id)}
-                          onToggleFavorite={handleToggleFavorite}
-                        />
-                      ))}
-                    </div>
-                  </section>
-                )
-              })
-            ) : (
-              <Card className="border-dashed border-slate-300 bg-white/90 p-8 text-center shadow-none">
-                <div className="mx-auto flex max-w-md flex-col items-center gap-4">
-                  <span className="inline-flex size-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-500">
-                    <Search className="size-6" aria-hidden="true" />
-                  </span>
-                  <div className="space-y-1">
-                    <h2 className="text-lg font-semibold text-slate-900">No encontramos accesos para estos filtros.</h2>
-                    <p className="text-sm leading-relaxed text-slate-600">
-                      Prueba con otra búsqueda o vuelve a la vista general para revisar todos los recursos.
+            {query ? (
+              <section className="space-y-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="font-mono text-[0.8rem] font-semibold uppercase tracking-[0.3em] text-slate-700">
+                      Resultados
+                    </p>
+                    <p className="mt-1 text-sm text-slate-500">
+                      {searchResultCount} accesos coinciden con “{query}”.
                     </p>
                   </div>
+
                   <button
                     type="button"
-                    onClick={() => {
-                      setQuery('')
-                      setActiveCategory('todas')
-                    }}
-                    className="inline-flex min-h-11 items-center justify-center rounded-full bg-lab-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-lab-primary/90"
+                    onClick={() => setQuery('')}
+                    className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-slate-300 hover:text-slate-900"
                   >
-                    Limpiar búsqueda
+                    <X className="size-4" aria-hidden="true" />
+                    Limpiar
                   </button>
                 </div>
-              </Card>
-            )}
+
+                <div className="space-y-6">
+                  {filteredLinksBySection.map((section) => {
+                    const SectionIcon = section.meta?.icon || LayoutGrid
+                    return (
+                      <div key={section.key} className="space-y-3">
+                        <div className="flex items-center gap-3">
+                          <SectionIcon className="size-5 text-slate-500" aria-hidden="true" />
+                          <h3 className="font-mono text-[0.8rem] font-semibold uppercase tracking-[0.3em] text-slate-700">
+                            {section.meta?.label || section.key}
+                          </h3>
+                        </div>
+                        <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
+                          {section.links.map((link) => {
+                            if (section.key === 'plataforma') {
+                              return <PlatformCard key={link.id} link={link} />
+                            }
+
+                            if (section.key === 'comunidad' || section.key === 'soporte') {
+                              return (
+                                <div
+                                  key={link.id}
+                                  className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_1px_0_rgba(15,23,42,0.02),0_12px_24px_rgba(15,23,42,0.04)]"
+                                >
+                                  <StackRowCard link={link} />
+                                </div>
+                              )
+                            }
+
+                            return (
+                              <AccessCard
+                                key={link.id}
+                                link={link}
+                                isFavorite={favoriteIds.includes(link.id)}
+                                onToggleFavorite={handleToggleFavorite}
+                                toneKey={getSectionTheme(section.key)}
+                              />
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </section>
+            ) : null}
           </div>
         </div>
       </div>
