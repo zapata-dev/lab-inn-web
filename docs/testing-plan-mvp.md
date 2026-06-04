@@ -1,32 +1,67 @@
 # Testing Plan MVP LAB
 
+## Fuente de verdad
+
+El estado actual del repo y `docs/LAB-ALCANCE-ACTUAL.md` mandan sobre cualquier blueprint viejo.
+
 ## Usuarios a probar
 
 | Usuario | Rol | Alcance |
-|---------|-----|---------|
+| --- | --- | --- |
 | Admin LAB | admin | Global |
-| Dirección | direccion | Global |
+| Direccion | direccion | Global |
 | Gerente | gerente | Sucursal |
 | Ejecutivo | ejecutivo | Sucursal |
 | BDC LAB | bdcLab | Global |
 | BDC Sucursal | bdcSucursal | Sucursal |
+| Vendedor | vendedor | Productivo |
+| Coordinador | coordinador | Productivo |
+| Soporte | soporte | Productivo |
 
-## Flujos críticos
+## Flujos criticos actuales
 
-1. **Login / cambio de usuario** — seleccionar usuario, verificar dashboard correcto por rol.
-2. **Dashboard por rol** — KPIs y secciones visibles según alcance (global vs. sucursal).
-3. **Inventario → detalle → agregar a cotización** — filtrar, abrir modal, iniciar cotización.
-4. **Cotizador → confirmar cotización** — 3 pasos, modal de confirmación, folio generado.
-5. **Salesforce → oportunidad → drawer → avanzar etapa** — tab tablero/leads/oportunidades, abrir drawer, seguimiento.
-6. **Capacitación → marcar video → diagnóstico** — progreso guardado, diagnóstico 5 preguntas, barra al 100%.
-7. **Soporte → tomar ticket → resolver ticket** — filtros, acciones, FAQ.
-8. **Perfil Admin → snapshot storage → reset controlado** — ver KPIs, tabla usuarios, storage keys, doble-confirm reset.
-9. **Demo guiada → 6 pasos** — botón Topbar, navegación auto, Salir y Finalizar.
+1. Login y logout.
+2. Acceso por rol y redireccion a `/unauthorized` cuando no hay autorizacion.
+3. Navegacion principal y refresco de rutas actuales.
+4. Inventario, promociones, catalogo de portadas y YouTube.
+5. Perfil, usuarios y soporte de usuarios.
+6. Validacion de rutas protegidas con sesion activa.
+7. Validacion de rutas protegidas despues de refrescar.
 
-## Registro de bugs
+## Smoke test base
 
-| ID | Usuario | Ruta | Paso | Esperado | Obtenido | Severidad | Estado |
-|----|---------|------|------|----------|----------|-----------|--------|
-| — | — | — | — | — | — | — | — |
+Usar como referencia `docs/baseline/LAB-029-smoke-test-actual.md` para confirmar:
 
-**Severidades:** `blocker` / `high` / `medium` / `low`
+- `/login`
+- `/`
+- `/inicio`
+- `/catalogo-portadas`
+- `/inventario`
+- `/promociones`
+- `/herramientas`
+- `/capacitacion`
+- `/perfil`
+- `/youtube`
+- `/canal-youtube`
+- `/salesforce`
+- `/usuarios`
+- `/soporte/usuarios`
+
+## Fuera de alcance en este plan
+
+- No crear roles nuevos.
+- No crear modulos nuevos.
+- No recuperar el blueprint viejo.
+- No documentar cotizacion, dashboards futuros ni flujos que ya no formen parte del alcance actual.
+
+## Evidencia
+
+Para cada fallo capturar:
+
+- URL exacta.
+- Usuario o rol usado.
+- Pantalla observada.
+- Primer error rojo de consola.
+- Requests relevantes de Network.
+- Resultado esperado vs resultado real.
+

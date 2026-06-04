@@ -2,6 +2,10 @@
 
 Proyecto base del MVP comercial interno de Zapata.
 
+## Fuente de verdad
+
+El alcance actual del proyecto vive en [`docs/LAB-ALCANCE-ACTUAL.md`](docs/LAB-ALCANCE-ACTUAL.md). Este README solo resume la base tecnica y de arranque.
+
 ## Stack
 
 - React 18
@@ -45,8 +49,9 @@ src/
 |- data/
 ```
 
-## Alcance de este setup
+## Alcance actual
 
-- Mantiene el modo demo y la base visual del MVP.
-- Incluye navegacion principal, auth demo/Firebase y layout compartido.
+- Mantiene la base demo/Firebase actual y el layout compartido.
+- Documenta la navegacion, rutas y roles vigentes en el baseline y en `docs/LAB-ALCANCE-ACTUAL.md`.
+- No recupera el blueprint viejo ni agrega modulos nuevos.
 - No incluye tests automatizados ni Docker.

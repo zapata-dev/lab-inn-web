@@ -1,42 +1,42 @@
-# Firebase Go-Live Checklist (Dev)
+# Firebase Go-Live Checklist (Current Scope)
+
+## Scope note
+
+This checklist validates the current Firebase auth setup. It does not define roadmap items or add new modules.
 
 ## Proyecto e infraestructura
-- [ ] Proyecto Firebase dev creado.
-- [ ] Project ID final confirmado con Diego.
-- [ ] Billing asociada o confirmada por administrador.
-- [ ] Region validada (`us-central1` / Firestore `nam5|us-central`).
+
+- [ ] Firebase project confirmed.
+- [ ] Billing confirmed by admin.
+- [ ] Region validated for the target environment.
 
 ## Auth
-- [ ] Google Provider habilitado.
-- [ ] Correo de soporte configurado (confirmado por Diego).
-- [ ] Authorized domains incluye:
-  - [ ] localhost
-  - [ ] lab-inn-web.onrender.com
-  - [ ] dominio Firebase Hosting (si existe)
-  - [ ] dominio futuro (si existe)
+
+- [ ] Google Provider enabled.
+- [ ] Support email configured.
+- [ ] Authorized domains include localhost and the active hosting domain.
+- [ ] `VITE_AUTH_MODE=firebase` is set where Firebase auth should be used.
 
 ## Firestore
-- [ ] Database creada en production mode.
-- [ ] Coleccion `usuarios` creada.
-- [ ] Usuario de soporte inicial creado y activo.
 
-## Render
-- [ ] Variables Firebase cargadas en Environment.
-- [ ] `VITE_AUTH_MODE=firebase`.
-- [ ] Clear build cache & deploy ejecutado.
+- [ ] Database created.
+- [ ] Collection `usuarios` exists.
+- [ ] At least one active support user exists.
 
-## Pruebas funcionales
-- [ ] AUTH-001: boton Google visible en `/login` con modo firebase.
-- [ ] AUTH-002: correo externo bloqueado.
-- [ ] AUTH-003: `@zapata.com.mx` sin perfil va a `/unauthorized`.
-- [ ] AUTH-004: soporte activo entra.
-- [ ] AUTH-005: soporte inactivo bloqueado.
-- [ ] AUTH-006: rol invalido bloqueado.
-- [ ] AUTH-007: modo demo sigue funcionando.
-- [ ] AUTH-008: sidebar sin cambios de categorias.
+## Verification
 
-## Seguridad y control de cambios
-- [ ] No se subieron secretos al repo.
-- [ ] `.env.local` no trackeado.
-- [ ] `.firebaserc` real no trackeado.
-- [ ] No hubo cambios en inventario/functions/sidebar/modulos comerciales.
+- [ ] `/login` shows the current sign-in state.
+- [ ] External email is blocked.
+- [ ] Authorized user without profile goes to `/unauthorized`.
+- [ ] Active support user can enter.
+- [ ] Inactive user is blocked.
+- [ ] Invalid role is blocked.
+- [ ] Login and logout stay stable.
+- [ ] Current navigation routes still resolve after login.
+
+## Security and change control
+
+- [ ] No secrets were committed to the repo.
+- [ ] `.env.local` is not tracked.
+- [ ] No unplanned changes were made to `src/`, rules or hosting config for this document.
+
