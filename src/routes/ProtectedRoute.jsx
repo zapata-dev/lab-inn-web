@@ -12,7 +12,20 @@ const AUTHORIZATION_CODES = new Set([
   'authorization/validation-timeout',
 ])
 
-function ProtectedRoute({ children }) {
+function normalizeRole(role) {
+  return String(role ?? '').trim().toLowerCase()
+}
+
+function hasAllowedRole(user, allowedRoles) {
+  if (!Array.isArray(allowedRoles) || allowedRoles.length === 0) return true
+
+  const normalizedRole = normalizeRole(user?.rol || user?.role)
+  if (!normalizedRole) return false
+
+  return allowedRoles.some((role) => normalizeRole(role) === normalizedRole)
+}
+
+function ProtectedRoute({ children, allowedRoles }) {
   const navigate = useNavigate()
   const [logoutError, setLogoutError] = useState('')
   const [loggingOut, setLoggingOut] = useState(false)
@@ -32,6 +45,10 @@ function ProtectedRoute({ children }) {
 
   if (!user) {
     return <Navigate to="/login" replace />
+  }
+
+  if (!hasAllowedRole(user, allowedRoles)) {
+    return <Navigate to="/unauthorized" replace />
   }
 
   const handleLogout = async () => {

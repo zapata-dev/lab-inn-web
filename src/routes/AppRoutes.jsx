@@ -35,6 +35,9 @@ function AppRoutes() {
           <Route path="/canal-youtube" element={<Navigate to="/youtube" replace />} />
           <Route path="/salesforce" element={<Salesforce />} />
           <Route path="/usuarios" element={<Usuarios />} />
+        </Route>
+
+        <Route element={<ProtectedRoute allowedRoles={['soporte']} />}>
           <Route path="/soporte/usuarios" element={<SoporteUsuarios />} />
         </Route>
 

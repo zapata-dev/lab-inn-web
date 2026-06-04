@@ -71,8 +71,8 @@ Si alguna ruta no aplica por permisos, documentar el resultado esperado.
 
 ### Usuarios y soporte
 
-- `/usuarios` responde segun permisos actuales.
-- `/soporte/usuarios` responde segun permisos actuales.
+- `/usuarios` carga para cualquier usuario autenticado.
+- `/soporte/usuarios` solo carga para el rol `soporte`; otros roles van a `/unauthorized`.
 - Si no hay acceso, debe verse bloqueo controlado, no pantalla rota.
 
 ### Perfil
