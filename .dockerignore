@@ -1,0 +1,11 @@
+.git/
+.firebase/
+.agents/
+.env
+.env.local
+.env.example
+node_modules/
+dist/
+firebase-debug.log
+tmp_pdf_preview/
+skills-lock.json
