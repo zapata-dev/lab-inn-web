@@ -9,6 +9,9 @@ Antes de desplegar, revisar `docs/LAB-ALCANCE-ACTUAL.md` y el baseline de estado
 - [ ] `main` limpio.
 - [ ] `npm run lint` OK.
 - [ ] `npm run build` OK.
+- [ ] Produccion no usa `VITE_AUTH_MODE=demo`.
+- [ ] Produccion no usa `VITE_DEMO_MODE=true`.
+- [ ] Las variables de auth estan configuradas antes del deploy.
 - [ ] `docs/SMOKE_TEST_OPERATIVO_ACTUAL.md` ejecutado y registrado.
 - [ ] Ninguna ruta principal falla en el smoke test operativo actual.
 - [ ] `dist/` generado.
@@ -44,4 +47,6 @@ Antes de desplegar, revisar `docs/LAB-ALCANCE-ACTUAL.md` y el baseline de estado
 ## Criterio de cierre
 
 El deploy se considera listo cuando lint y build pasan, el sitio responde en el host elegido y el smoke test anterior no encuentra 404 ni loops de autenticacion.
+
+Si aparece `AUTH-CONFIG`, revisar variables de entorno antes de intentar publicar otra vez.
 

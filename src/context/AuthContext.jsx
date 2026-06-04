@@ -5,6 +5,11 @@ import { loginWithGoogle as loginFirebaseWithGoogle, logoutFirebase, subscribeTo
 import { isFirebaseConfigured } from '../services/firebase'
 import { AUTHORIZATION_ERROR_CODES, getAuthorizedUser } from '../services/userService'
 import { isAllowedEmailDomain } from '../utils/authDomain'
+import {
+  AUTH_CONFIG_ERROR_CODE,
+  createAuthConfigError,
+  getAuthRuntimeConfig,
+} from '../utils/authMode'
 import { removeFromStorage } from '../services/storage'
 
 const AuthContext = createContext(null)
@@ -57,15 +62,19 @@ function AuthProvider({ children }) {
   const [authState, setAuthState] = useLocalStorage('auth', null)
   const [user, setUser] = useState(null)
   const [authIdentity, setAuthIdentity] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [authErrorCode, setAuthErrorCode] = useState(null)
+  const authRuntime = useMemo(
+    () => getAuthRuntimeConfig(import.meta.env, { firebaseConfigured: isFirebaseConfigured }),
+    []
+  )
+  const [loading, setLoading] = useState(() => !authRuntime.isBlocked)
+  const [error, setError] = useState(() => (authRuntime.isBlocked ? createAuthConfigError() : null))
+  const [authErrorCode, setAuthErrorCode] = useState(() =>
+    authRuntime.isBlocked ? AUTH_CONFIG_ERROR_CODE : null
+  )
 
-  const authMode = (import.meta.env.VITE_AUTH_MODE || 'demo').trim().toLowerCase()
   const allowedDomain = (import.meta.env.VITE_FIREBASE_ALLOWED_DOMAIN || 'zapata.com.mx')
     .trim()
     .toLowerCase()
-  const isFirebaseMode = authMode === 'firebase'
 
   const demoUser = useMemo(() => {
     if (!authState?.userId) return null
@@ -73,7 +82,32 @@ function AuthProvider({ children }) {
   }, [authState])
 
   useEffect(() => {
-    if (isFirebaseMode) return
+    if (authRuntime.isBlocked) {
+      if (import.meta.env.DEV || import.meta.env.VITE_DEBUG_AUTH === 'true') {
+        console.error('[auth-config]', {
+          code: AUTH_CONFIG_ERROR_CODE,
+          reason: authRuntime.blockReason,
+          authMode: authRuntime.authMode || 'missing',
+          demoModeEnabled: authRuntime.demoModeEnabled,
+          isProd: authRuntime.isProd,
+          firebaseConfigured: isFirebaseConfigured,
+        })
+      }
+
+      if (authState?.userId) {
+        removeFromStorage('auth')
+        setAuthState(null)
+      }
+
+      setUser(null)
+      setAuthIdentity(null)
+      setError(createAuthConfigError())
+      setAuthErrorCode(AUTH_CONFIG_ERROR_CODE)
+      setLoading(false)
+      return
+    }
+
+    if (authRuntime.isFirebaseMode) return
 
     if (authState?.userId && !demoUser) {
       removeFromStorage('auth')
@@ -85,10 +119,10 @@ function AuthProvider({ children }) {
     setLoading(false)
     setError(null)
     setAuthErrorCode(null)
-  }, [authState?.userId, demoUser, isFirebaseMode, setAuthState])
+  }, [authRuntime, authState?.userId, demoUser, setAuthState])
 
   useEffect(() => {
-    if (!isFirebaseMode) return () => {}
+    if (!authRuntime.isFirebaseMode) return () => {}
 
     debugAuthLog('firebase auth effect init')
     if (!isFirebaseConfigured) {
@@ -185,11 +219,11 @@ function AuthProvider({ children }) {
       window.clearTimeout(authResolveTimeout)
       unsubscribe()
     }
-  }, [allowedDomain, isFirebaseMode])
+  }, [allowedDomain, authRuntime.isFirebaseMode])
 
   const login = useCallback(
     (userId) => {
-      if (isFirebaseMode) {
+      if (authRuntime.isBlocked || !authRuntime.isDemoMode) {
         return false
       }
 
@@ -204,11 +238,15 @@ function AuthProvider({ children }) {
 
       return true
     },
-    [isFirebaseMode, setAuthState]
+    [authRuntime.isBlocked, authRuntime.isDemoMode, setAuthState]
   )
 
   const loginWithGoogle = useCallback(async () => {
-    if (!isFirebaseMode) return null
+    if (authRuntime.isBlocked) {
+      throw createAuthConfigError()
+    }
+
+    if (!authRuntime.isFirebaseMode) return null
 
     setError(null)
     setAuthErrorCode(null)
@@ -226,14 +264,23 @@ function AuthProvider({ children }) {
       setLoading(false)
       throw loginError
     }
-  }, [isFirebaseMode])
+  }, [authRuntime.isBlocked, authRuntime.isFirebaseMode])
 
   const logout = useCallback(async () => {
     setLoading(true)
     setError(null)
     setAuthErrorCode(null)
 
-    if (isFirebaseMode) {
+    if (authRuntime.isBlocked) {
+      removeFromStorage('auth')
+      setAuthState(null)
+      setUser(null)
+      setAuthIdentity(null)
+      setLoading(false)
+      return
+    }
+
+    if (authRuntime.isFirebaseMode) {
       try {
         await logoutFirebase()
         setUser(null)
@@ -254,14 +301,14 @@ function AuthProvider({ children }) {
     removeFromStorage('auth')
     setAuthState(null)
     setLoading(false)
-  }, [isFirebaseMode, setAuthState])
+  }, [authRuntime.isBlocked, authRuntime.isFirebaseMode, setAuthState])
 
   const switchUser = useCallback(
     (userId) => {
-      if (isFirebaseMode) return false
+      if (authRuntime.isBlocked || !authRuntime.isDemoMode) return false
       return login(userId)
     },
-    [isFirebaseMode, login]
+    [authRuntime.isBlocked, authRuntime.isDemoMode, login]
   )
 
   const clearError = useCallback(() => {
@@ -275,16 +322,19 @@ function AuthProvider({ children }) {
     loading,
     error,
     authErrorCode,
+    authConfigBlocked: authRuntime.isBlocked,
+    authConfigReason: authRuntime.blockReason,
     isAuthenticated: Boolean(user),
     isAuthorized: Boolean(user),
-    isFirebaseMode,
+    isFirebaseMode: authRuntime.isFirebaseMode,
+    isDemoMode: authRuntime.isDemoMode,
     isFirebaseConfigured,
     login,
     loginWithGoogle,
     logout,
     switchUser,
     clearError,
-    users: isFirebaseMode ? [] : mockUsers,
+    users: authRuntime.isDemoMode ? mockUsers : [],
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
