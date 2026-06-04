@@ -1,4 +1,4 @@
-export const commercialAccessLinks = [
+﻿export const commercialAccessLinks = [
   {
     id: 'inventory-national',
     title: 'Inventario Nacional',
@@ -11,7 +11,7 @@ export const commercialAccessLinks = [
   },
   {
     id: 'promotions-catalog',
-    title: 'Catálogo de promociones',
+    title: 'CatÃ¡logo de promociones',
     description: 'Promociones vigentes para apoyar el cierre comercial.',
     category: 'Herramientas Comerciales',
     icon: 'BadgePercent',
@@ -22,7 +22,7 @@ export const commercialAccessLinks = [
   {
     id: 'salesforce-prospects',
     title: 'Prospectos en Salesforce',
-    description: 'Acceso rápido a prospectos comerciales.',
+    description: 'Acceso rÃ¡pido a prospectos comerciales.',
     category: 'Herramientas Comerciales',
     icon: 'Users',
     href: '/salesforce?tab=leads',
@@ -52,7 +52,7 @@ export const commercialAccessLinks = [
   {
     id: 'btp-inventory',
     title: 'Modificar inventario BTP',
-    description: 'Acceso al flujo de actualización de inventario.',
+    description: 'Acceso al flujo de actualizaciÃ³n de inventario.',
     category: 'Herramientas Comerciales',
     icon: 'Settings',
     href: 'https://portal.scpzapataservices.com.mx/',
@@ -71,8 +71,8 @@ export const commercialAccessLinks = [
   },
   {
     id: 'technical-sheets',
-    title: 'Fichas técnicas',
-    description: 'Consulta fichas técnicas por unidad o modelo.',
+    title: 'Fichas tÃ©cnicas',
+    description: 'Consulta fichas tÃ©cnicas por unidad o modelo.',
     category: 'Herramientas Comerciales',
     icon: 'FileText',
     href: '/inventario',
@@ -115,8 +115,8 @@ export const trainingAccessLinks = [
   {
     id: 'salesforce-videos',
     title: 'Videos Salesforce',
-    description: 'Capacitación para uso comercial de Salesforce.',
-    category: 'Capacitación',
+    description: 'CapacitaciÃ³n para uso comercial de Salesforce.',
+    category: 'CapacitaciÃ³n',
     icon: 'PlayCircle',
     href: 'https://www.youtube.com/playlist?list=PL2W1hGWz_2scsontjyuroiFs6uKnXE3la',
     type: 'external',
@@ -125,8 +125,8 @@ export const trainingAccessLinks = [
   {
     id: 'btp-videos',
     title: 'Videos BTP',
-    description: 'Videos para operación y actualización en BTP.',
-    category: 'Capacitación',
+    description: 'Videos para operaciÃ³n y actualizaciÃ³n en BTP.',
+    category: 'CapacitaciÃ³n',
     icon: 'PlayCircle',
     href: 'https://www.youtube.com/playlist?list=PL2W1hGWz_2scsontjyuroiFs6uKnXE3la',
     type: 'external',
@@ -136,7 +136,7 @@ export const trainingAccessLinks = [
     id: 'krino-videos',
     title: 'Videos Krino',
     description: 'Aprende a usar asesores virtuales comerciales.',
-    category: 'Capacitación',
+    category: 'CapacitaciÃ³n',
     icon: 'PlayCircle',
     href: 'https://www.youtube.com/playlist?list=PL2W1hGWz_2scsontjyuroiFs6uKnXE3la',
     type: 'external',
@@ -145,8 +145,8 @@ export const trainingAccessLinks = [
   {
     id: 'role-processes',
     title: 'Funciones y procesos por rol',
-    description: 'Consulta procesos comerciales según tu rol.',
-    category: 'Capacitación',
+    description: 'Consulta procesos comerciales segÃºn tu rol.',
+    category: 'CapacitaciÃ³n',
     icon: 'Network',
     href: '/capacitacion?section=capacitacion&tab=progreso',
     type: 'internal',
@@ -154,9 +154,9 @@ export const trainingAccessLinks = [
   },
   {
     id: 'events-calendar',
-    title: 'Calendario de próximos eventos',
+    title: 'Calendario de prÃ³ximos eventos',
     description: 'Consulta sesiones, capacitaciones y eventos comerciales.',
-    category: 'Capacitación',
+    category: 'CapacitaciÃ³n',
     icon: 'CalendarDays',
     href: '/capacitacion?section=capacitacion&tab=calendario',
     type: 'internal',
@@ -166,7 +166,7 @@ export const trainingAccessLinks = [
     id: 'recorded-events',
     title: 'Biblioteca de eventos grabados',
     description: 'Accede a grabaciones de capacitaciones anteriores.',
-    category: 'Capacitación',
+    category: 'CapacitaciÃ³n',
     icon: 'Library',
     href: 'https://www.youtube.com/playlist?list=PL2W1hGWz_2scsontjyuroiFs6uKnXE3la',
     type: 'external',
@@ -178,7 +178,7 @@ export const supportAccessLinks = [
   {
     id: 'whatsapp-community',
     title: 'Comunidad comercial en WhatsApp',
-    description: 'Canal de apoyo y comunicación comercial.',
+    description: 'Canal de apoyo y comunicaciÃ³n comercial.',
     category: 'Soporte',
     icon: 'MessageCircle',
     href: 'https://chat.whatsapp.com/I1pMV94PUCF3QBazMVow52',
@@ -204,71 +204,5 @@ export const supportAccessLinks = [
     href: 'mailto:innovaciogoon@zapata.com.mx',
     type: 'external',
     status: 'active',
-  },
-]
-
-export const resultMetrics = [
-  {
-    id: 'ranking',
-    title: 'Ranking comercial',
-    value: '7 / 120',
-    description: 'Tu posición a nivel grupo',
-    icon: 'Trophy',
-  },
-  {
-    id: 'closed-sales',
-    title: 'Ventas cerradas totales',
-    value: '$2,340,000',
-    description: 'Ventas acumuladas del periodo',
-    icon: 'CircleDollarSign',
-  },
-  {
-    id: 'lab-sales',
-    title: 'Ventas cerradas LAB Comercial',
-    value: '$1,890,000',
-    description: 'Ventas influenciadas por LAB',
-    icon: 'BadgeCheck',
-  },
-  {
-    id: 'assigned-prospects',
-    title: 'Prospectos asignados',
-    value: '211',
-    description: 'Prospectos activos en gestión',
-    icon: 'Users',
-  },
-  {
-    id: 'conversion-rate',
-    title: 'Tasa de conversión',
-    value: '24.6%',
-    description: 'Conversión de prospecto a venta',
-    icon: 'TrendingUp',
-  },
-  {
-    id: 'open-opportunities',
-    title: 'Oportunidades en gestión',
-    value: '38',
-    description: 'Oportunidades abiertas',
-    icon: 'Target',
-  },
-  {
-    id: 'training-progress',
-    title: 'Progreso de capacitación',
-    value: '72%',
-    description: 'Avance de rutas completadas',
-    icon: 'GraduationCap',
-  },
-  {
-    id: 'support-tickets',
-    title: 'Tickets levantados',
-    value: '8',
-    description: 'Tickets abiertos y resueltos',
-    icon: 'LifeBuoy',
-  },
-  {
-    id: 'score',
-    title: 'Score y gamificación',
-    value: '850 pts',
-    description: 'Puntaje comercial acumulado',
-    icon: 'ShieldCheck',
   },
 ]

@@ -43,11 +43,10 @@ src/
 |- services/
 |- utils/
 |- data/
-`- config/
 ```
 
 ## Alcance de este setup
 
-- Incluye pantalla minima de validacion (`LAB MVP`, `Setup base listo`, badge `Modo demo`).
-- Incluye icono de Lucide para validar integracion.
-- No incluye Auth, Sidebar, backend, tests automatizados ni migracion de legacy.
+- Mantiene el modo demo y la base visual del MVP.
+- Incluye navegacion principal, auth demo/Firebase y layout compartido.
+- No incluye tests automatizados ni Docker.
