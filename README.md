@@ -30,6 +30,7 @@ El flujo actual de ramas, PR, CI, deploy y rollback esta documentado en [`docs/F
 ## Variables de entorno
 
 Duplicar `.env.example` a `.env` y ajustar segun entorno.
+La referencia actual de variables vive en [`docs/ENVIRONMENT_VARIABLES.md`](docs/ENVIRONMENT_VARIABLES.md).
 
 ## Arquitectura base
 
