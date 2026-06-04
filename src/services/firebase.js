@@ -1,6 +1,7 @@
 import { initializeApp } from 'firebase/app'
 import { getAuth } from 'firebase/auth'
 import { getFirestore } from 'firebase/firestore'
+import { logAuthDebug } from '../utils/authMessages'
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -23,7 +24,10 @@ if (hasRequiredFirebaseConfig) {
     firebaseAuth = getAuth(firebaseApp)
     firebaseDb = getFirestore(firebaseApp)
   } catch (error) {
-    console.error('Firebase initialization failed', error)
+    logAuthDebug('firebase initialization failed', {
+      message: error?.message,
+      code: error?.code,
+    })
     firebaseApp = null
     firebaseAuth = null
     firebaseDb = null

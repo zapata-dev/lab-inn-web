@@ -10,20 +10,14 @@ import {
   createAuthConfigError,
   getAuthRuntimeConfig,
 } from '../utils/authMode'
+import {
+  createPublicAuthError,
+  logAuthDebug,
+} from '../utils/authMessages'
 import { removeFromStorage } from '../services/storage'
 
 const AuthContext = createContext(null)
-const DEBUG_AUTH = import.meta.env.DEV || import.meta.env.VITE_DEBUG_AUTH === 'true'
 const AUTHORIZATION_CHECK_TIMEOUT_MS = 12000
-
-function debugAuthLog(...args) {
-  if (!DEBUG_AUTH) return
-  console.info('[auth-debug]', ...args)
-}
-
-function normalizeErrorCode(error) {
-  return String(error?.code ?? '').trim() || 'authorization/unknown'
-}
 
 function normalizeAuthIdentity(firebaseUser) {
   if (!firebaseUser) return null
@@ -83,16 +77,14 @@ function AuthProvider({ children }) {
 
   useEffect(() => {
     if (authRuntime.isBlocked) {
-      if (import.meta.env.DEV || import.meta.env.VITE_DEBUG_AUTH === 'true') {
-        console.error('[auth-config]', {
-          code: AUTH_CONFIG_ERROR_CODE,
-          reason: authRuntime.blockReason,
-          authMode: authRuntime.authMode || 'missing',
-          demoModeEnabled: authRuntime.demoModeEnabled,
-          isProd: authRuntime.isProd,
-          firebaseConfigured: isFirebaseConfigured,
-        })
-      }
+      logAuthDebug('auth config blocked', {
+        code: AUTH_CONFIG_ERROR_CODE,
+        reason: authRuntime.blockReason,
+        authMode: authRuntime.authMode || 'missing',
+        demoModeEnabled: authRuntime.demoModeEnabled,
+        isProd: authRuntime.isProd,
+        firebaseConfigured: isFirebaseConfigured,
+      })
 
       if (authState?.userId) {
         removeFromStorage('auth')
@@ -124,17 +116,18 @@ function AuthProvider({ children }) {
   useEffect(() => {
     if (!authRuntime.isFirebaseMode) return () => {}
 
-    debugAuthLog('firebase auth effect init')
+    logAuthDebug('firebase auth effect init')
     if (!isFirebaseConfigured) {
-      const firebaseConfigError = new Error('Firebase no esta configurado. Revisa las variables del entorno.')
-      firebaseConfigError.code = AUTHORIZATION_ERROR_CODES.FIREBASE_NOT_CONFIGURED
+      const firebaseConfigError = createPublicAuthError(AUTHORIZATION_ERROR_CODES.FIREBASE_NOT_CONFIGURED)
 
       setUser(null)
       setAuthIdentity(null)
       setError(firebaseConfigError)
       setAuthErrorCode(firebaseConfigError.code)
       setLoading(false)
-      debugAuthLog('firebase not configured')
+      logAuthDebug('firebase not configured', {
+        code: firebaseConfigError.code,
+      })
       return () => {}
     }
 
@@ -146,7 +139,7 @@ function AuthProvider({ children }) {
     // Safety net: if Firebase listener never resolves, unblock login UI.
     const authResolveTimeout = window.setTimeout(() => {
       if (!isMounted || authStateResolved) return
-      debugAuthLog('auth listener timed out before first response')
+      logAuthDebug('auth listener timed out before first response')
       setLoading(false)
     }, 4000)
 
@@ -155,7 +148,7 @@ function AuthProvider({ children }) {
       const currentRequestId = ++validationRequestId
       authStateResolved = true
       window.clearTimeout(authResolveTimeout)
-      debugAuthLog('onAuthStateChanged fired', {
+      logAuthDebug('onAuthStateChanged fired', {
         uid: firebaseUser?.uid ?? null,
         email: firebaseUser?.email ?? null,
       })
@@ -166,7 +159,7 @@ function AuthProvider({ children }) {
         setError(null)
         setAuthErrorCode(null)
         setLoading(false)
-        debugAuthLog('no firebase session, loading false')
+        logAuthDebug('no firebase session, loading false')
         return
       }
 
@@ -175,20 +168,19 @@ function AuthProvider({ children }) {
 
       try {
         if (!isAllowedEmailDomain(firebaseUser.email, allowedDomain)) {
-          debugAuthLog('domain not allowed', firebaseUser.email)
+          logAuthDebug('domain not allowed', { email: firebaseUser.email })
           await logoutFirebase()
-          const domainError = new Error(`Solo se permite acceso con correos @${allowedDomain}.`)
-          domainError.code = 'authorization/domain-not-allowed'
+          const domainError = createPublicAuthError('authorization/domain-not-allowed')
           throw domainError
         }
 
-        debugAuthLog('getAuthorizedUser start', firebaseUser.uid)
+        logAuthDebug('getAuthorizedUser start', { uid: firebaseUser.uid })
         const authorizedUser = await withTimeout(
           getAuthorizedUser(firebaseUser),
           AUTHORIZATION_CHECK_TIMEOUT_MS
         )
         if (!isMounted || currentRequestId !== validationRequestId) return
-        debugAuthLog('getAuthorizedUser success', {
+        logAuthDebug('getAuthorizedUser success', {
           uid: authorizedUser.uid,
           role: authorizedUser.role,
         })
@@ -198,18 +190,20 @@ function AuthProvider({ children }) {
         setAuthErrorCode(null)
       } catch (authorizationError) {
         if (!isMounted || currentRequestId !== validationRequestId) return
-        debugAuthLog('authorization rejected', {
-          code: normalizeErrorCode(authorizationError),
-          message: authorizationError?.message,
+        const publicError = createPublicAuthError(authorizationError)
+        logAuthDebug('authorization rejected', {
+          code: publicError.code,
+          internalCode: String(authorizationError?.code ?? '').trim() || 'authorization/unknown',
+          internalMessage: authorizationError?.message,
         })
 
         setUser(null)
-        setError(authorizationError)
-        setAuthErrorCode(normalizeErrorCode(authorizationError))
+        setError(publicError)
+        setAuthErrorCode(publicError.code)
       } finally {
         if (isMounted && currentRequestId === validationRequestId) {
           setLoading(false)
-          debugAuthLog('loading false after authorization check')
+          logAuthDebug('loading false after authorization check')
         }
       }
     })
@@ -257,12 +251,18 @@ function AuthProvider({ children }) {
       setAuthIdentity(normalizeAuthIdentity(firebaseUser))
       return firebaseUser
     } catch (loginError) {
+      const publicError = createPublicAuthError(loginError)
       setUser(null)
       setAuthIdentity(null)
-      setError(loginError)
-      setAuthErrorCode(normalizeErrorCode(loginError))
+      setError(publicError)
+      setAuthErrorCode(publicError.code)
       setLoading(false)
-      throw loginError
+      logAuthDebug('loginWithGoogle rejected', {
+        code: publicError.code,
+        internalCode: String(loginError?.code ?? '').trim() || 'authorization/unknown',
+        internalMessage: loginError?.message,
+      })
+      throw publicError
     }
   }, [authRuntime.isBlocked, authRuntime.isFirebaseMode])
 
@@ -289,10 +289,10 @@ function AuthProvider({ children }) {
         setAuthErrorCode(null)
         return
       } catch (logoutError) {
-        const normalizedCode = normalizeErrorCode(logoutError)
-        setError(logoutError)
-        setAuthErrorCode(normalizedCode)
-        throw logoutError
+        const publicError = createPublicAuthError(logoutError)
+        setError(publicError)
+        setAuthErrorCode(publicError.code)
+        throw publicError
       } finally {
         setLoading(false)
       }
