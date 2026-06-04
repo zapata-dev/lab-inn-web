@@ -38,7 +38,7 @@ export const accessLinks = [
   {
     id: 'camiones',
     title: 'Directorio Camiones Seminuevos',
-    description: 'Encuentra unidades seminuevas por categoria.',
+    description: 'Encuentra unidades seminuevas por categoría.',
     icon: 'Bus',
     brandColor: 'green',
     category: 'inventario',
@@ -84,7 +84,7 @@ export const accessLinks = [
   },
   {
     id: 'youtube',
-    title: 'Acceso Playlist Youtube',
+    title: 'Acceso Playlist YouTube',
     description: 'Visualiza la playlist comercial y los tutoriales específicos.',
     icon: 'PlayCircle',
     brandColor: 'rose',
@@ -94,7 +94,7 @@ export const accessLinks = [
   },
   {
     id: 'whatsapp',
-    title: 'Acceso Comunidad Whatsapp',
+    title: 'Acceso Comunidad WhatsApp',
     description: 'Conecta con la comunidad del equipo.',
     icon: 'MessageCircle',
     brandColor: 'green',
