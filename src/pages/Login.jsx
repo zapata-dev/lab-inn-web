@@ -2,21 +2,7 @@ import { useMemo } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { Badge, Card } from '../components/common'
 import { useAuth } from '../context/AuthContext'
-
-const AUTH_ERROR_MESSAGES = Object.freeze({
-  'AUTH-CONFIG': 'La configuracion de acceso no esta disponible. Contacta a soporte LAB.',
-  'firebase-not-configured': 'Firebase no esta configurado. Revisa .env.local.',
-  'authorization/domain-not-allowed': 'Solo se permite acceso con correo @zapata.com.mx.',
-  'authorization/user-not-found':
-    'Tu cuenta de Google es valida, pero no existe en usuarios/{uid}. Contacta a soporte.',
-  'authorization/user-inactive': 'Tu cuenta existe pero esta inactiva. Solicita activacion.',
-  'authorization/role-invalid': 'Tu cuenta tiene un rol no permitido para LAB.',
-  'authorization/permission-denied':
-    'No fue posible validar tu acceso en Firestore (permission-denied). Contacta a soporte.',
-  'authorization/validation-timeout':
-    'La validacion de acceso tardo demasiado. Revisa tu conexion e intenta de nuevo.',
-  'authorization/unknown': 'No fue posible validar tu acceso. Intenta de nuevo.',
-})
+import { getPublicAuthMessage } from '../utils/authMessages'
 
 function Login() {
   const navigate = useNavigate()
@@ -34,9 +20,9 @@ function Login() {
   } = useAuth()
 
   const errorMessage = useMemo(() => {
-    if (!authErrorCode) return ''
-    return AUTH_ERROR_MESSAGES[authErrorCode] ?? error?.message ?? AUTH_ERROR_MESSAGES['authorization/unknown']
-  }, [authErrorCode, error?.message])
+    const source = authErrorCode || error
+    return source ? getPublicAuthMessage(source) : ''
+  }, [authErrorCode, error])
 
   if (isAuthenticated) {
     return <Navigate to="/" replace />
@@ -58,8 +44,8 @@ function Login() {
     try {
       await loginWithGoogle()
       navigate('/', { replace: true })
-    } catch (loginError) {
-      // El error se maneja en AuthContext para centralizar codigos de autorizacion.
+    } catch {
+      // El error se maneja en AuthContext para mantener el login limpio.
     }
   }
 
@@ -67,45 +53,51 @@ function Login() {
     <main className="min-h-screen bg-lab-bg px-5 py-8 md:px-8">
       <section className="mx-auto w-full max-w-5xl space-y-6">
         <header className="space-y-2">
-          <Badge variant={isAuthConfigBlocked ? 'danger' : 'demo'}>
-            {isAuthConfigBlocked ? 'Acceso bloqueado' : isFirebaseMode ? 'Modo firebase' : 'Modo demo'}
+          <Badge variant={isAuthConfigBlocked ? 'danger' : isFirebaseMode ? 'info' : 'demo'}>
+            {isAuthConfigBlocked ? 'Acceso bloqueado' : isFirebaseMode ? 'Acceso con Google' : 'Modo demo'}
           </Badge>
           <h1 className="text-3xl font-bold text-lab-text">LAB MVP</h1>
           <p className="text-sm text-lab-muted">
             {isAuthConfigBlocked
               ? 'La configuracion de acceso no esta disponible. Contacta a soporte LAB.'
               : isFirebaseMode
-                ? 'Inicia sesion con Google Zapata'
+                ? 'Inicia sesion con tu cuenta corporativa autorizada.'
                 : 'Selecciona un perfil demo'}
           </p>
         </header>
 
-        {errorMessage && !isAuthConfigBlocked ? (
-          <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+        {isAuthConfigBlocked ? (
+          <div role="alert" aria-live="polite" className="mx-auto max-w-md">
+            <Card className="space-y-4 border-rose-200 bg-rose-50 p-6">
+              <Badge variant="danger">Autenticacion bloqueada</Badge>
+              <div className="space-y-2">
+                <h2 className="text-lg font-semibold text-lab-text">
+                  La configuracion de acceso no esta disponible.
+                </h2>
+                <p className="text-sm text-lab-muted">
+                  Contacta a soporte LAB para revisar la configuracion antes de publicar.
+                </p>
+              </div>
+              <p className="rounded-lg border border-rose-200 bg-white px-4 py-3 text-sm font-medium text-rose-700">
+                Codigo: AUTH-CONFIG
+              </p>
+            </Card>
+          </div>
+        ) : errorMessage ? (
+          <div
+            role="alert"
+            aria-live="polite"
+            className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700"
+          >
             {errorMessage}
           </div>
         ) : null}
 
-        {isAuthConfigBlocked ? (
-          <Card className="mx-auto max-w-md space-y-4 border-rose-200 bg-rose-50 p-6">
-            <Badge variant="danger">Autenticacion bloqueada</Badge>
-            <div className="space-y-2">
-              <h2 className="text-lg font-semibold text-lab-text">
-                La configuracion de acceso no esta disponible.
-              </h2>
-              <p className="text-sm text-lab-muted">
-                Contacta a soporte LAB para revisar la configuracion antes de publicar.
-              </p>
-            </div>
-            <p className="rounded-lg border border-rose-200 bg-white px-4 py-3 text-sm font-medium text-rose-700">
-              Codigo: AUTH-CONFIG
-            </p>
-          </Card>
-        ) : isFirebaseMode ? (
+        {isFirebaseMode && !isAuthConfigBlocked ? (
           <Card className="mx-auto max-w-md space-y-4 p-6">
             <h2 className="text-lg font-semibold text-lab-text">Acceso con Google</h2>
             <p className="text-sm text-lab-muted">
-              Usa tu cuenta corporativa para autenticarte y validar autorizacion por Firestore.
+              Usa tu cuenta corporativa autorizada para autenticarte en LAB.
             </p>
             <button
               type="button"
@@ -116,7 +108,9 @@ function Login() {
               {loading ? 'Validando acceso...' : 'Entrar con Google Zapata'}
             </button>
           </Card>
-        ) : (
+        ) : null}
+
+        {!isFirebaseMode && !isAuthConfigBlocked ? (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {users.map((demoUser) => (
               <Card key={demoUser.id} className="space-y-3">
@@ -143,7 +137,7 @@ function Login() {
               </Card>
             ))}
           </div>
-        )}
+        ) : null}
       </section>
     </main>
   )
