@@ -9,6 +9,8 @@ Antes de desplegar, revisar `docs/LAB-ALCANCE-ACTUAL.md` y el baseline de estado
 - [ ] `main` limpio.
 - [ ] `npm run lint` OK.
 - [ ] `npm run build` OK.
+- [ ] `docs/SMOKE_TEST_OPERATIVO_ACTUAL.md` ejecutado y registrado.
+- [ ] Ninguna ruta principal falla en el smoke test operativo actual.
 - [ ] `dist/` generado.
 - [ ] Remote configurado y branch listo para publicar.
 
@@ -20,6 +22,7 @@ Antes de desplegar, revisar `docs/LAB-ALCANCE-ACTUAL.md` y el baseline de estado
 
 ## Smoke test post-deploy
 
+- [ ] Repetir el smoke test operativo actual antes de cerrar el deploy.
 - [ ] `/login`
 - [ ] `/`
 - [ ] `/inicio`
@@ -36,6 +39,7 @@ Antes de desplegar, revisar `docs/LAB-ALCANCE-ACTUAL.md` y el baseline de estado
 - [ ] `/soporte/usuarios`
 - [ ] Refrescar rutas protegidas no da 404.
 - [ ] Cerrar sesion vuelve a `/login`.
+- [ ] Si una ruta principal falla, no desplegar hasta corregirla.
 
 ## Criterio de cierre
 
