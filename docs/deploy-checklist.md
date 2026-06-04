@@ -1,47 +1,43 @@
-# Deploy Checklist MVP LAB — Render
+# Deploy Checklist MVP LAB
+
+## Fuente de verdad
+
+Antes de desplegar, revisar `docs/LAB-ALCANCE-ACTUAL.md` y el baseline de estado actual.
 
 ## Pre-deploy
 
-- [x] main limpio
-- [ ] remote GitHub configurado (`git remote add origin <URL>`)
-- [x] npm run lint OK
-- [x] npm run build OK — 356.31 kB / 790ms
-- [x] dist/ generado
-- [ ] Render conectado al repo GitHub
-- [ ] Auto-deploy activado para branch `main`
+- [ ] `main` limpio.
+- [ ] `npm run lint` OK.
+- [ ] `npm run build` OK.
+- [ ] `dist/` generado.
+- [ ] Remote configurado y branch listo para publicar.
 
-## Render Static Site (render.yaml)
+## Checklist de despliegue
 
-```yaml
-rootDir: lab-mvp
-buildCommand: npm install && npm run build
-staticPublishPath: dist
-```
-
-## React Router Rewrite (ya en render.yaml)
-
-```yaml
-routes:
-  - type: rewrite
-    source: /*
-    destination: /index.html
-```
-
-## Deploy
-
-- [ ] `git push origin main`
-- [ ] Render detecta push automáticamente
-- [ ] Render build pasa (ver logs en Dashboard)
-- [ ] URL pública responde
+- [ ] El proveedor de hosting elegido sigue siendo el destino activo del repo.
+- [ ] Las variables de entorno del entorno objetivo coinciden con el README y con la config del proyecto.
+- [ ] No se modificaron `src/` ni reglas de acceso como parte de este ticket.
 
 ## Smoke test post-deploy
 
 - [ ] `/login`
+- [ ] `/`
 - [ ] `/inicio`
+- [ ] `/catalogo-portadas`
 - [ ] `/inventario`
+- [ ] `/promociones`
 - [ ] `/herramientas`
-- [ ] `/salesforce`
 - [ ] `/capacitacion`
 - [ ] `/perfil`
-- [ ] Refrescar en rutas internas no da 404
-- [ ] Demo guiada (botón en Topbar)
+- [ ] `/youtube`
+- [ ] `/canal-youtube`
+- [ ] `/salesforce`
+- [ ] `/usuarios`
+- [ ] `/soporte/usuarios`
+- [ ] Refrescar rutas protegidas no da 404.
+- [ ] Cerrar sesion vuelve a `/login`.
+
+## Criterio de cierre
+
+El deploy se considera listo cuando lint y build pasan, el sitio responde en el host elegido y el smoke test anterior no encuentra 404 ni loops de autenticacion.
+

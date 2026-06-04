@@ -13,7 +13,12 @@ Este documento cubre:
 - cambio de rol;
 - cambio de sucursal;
 - controles minimos de seguridad;
-- preparacion para futuro panel admin.
+- preparacion para un eventual panel admin si el alcance se retoma.
+
+Nota de alcance:
+
+- Este documento describe operaciones vigentes y no redefine el roadmap.
+- Las referencias a "futuro" deben leerse como escenarios historicos, no como compromiso actual.
 
 ## Estado actual
 
@@ -79,7 +84,7 @@ Puede:
 
 - entrar a la app;
 - consultar herramientas permitidas por el MVP;
-- iniciar operaciones comerciales segun alcance futuro;
+- iniciar operaciones comerciales segun los permisos vigentes;
 - solicitar unidades de otras sucursales cuando exista el flujo.
 
 No debe:
@@ -98,7 +103,7 @@ Uso:
 Puede:
 
 - entrar a la app;
-- ver/gestionar informacion relacionada con su sucursal segun alcance futuro;
+- ver/gestionar informacion relacionada con su sucursal segun los permisos vigentes;
 - participar en solicitudes entre sucursales;
 - recibir notificaciones de solicitudes de unidades.
 
@@ -120,7 +125,7 @@ Puede:
 - apoyar en pruebas;
 - revisar configuracion operativa;
 - validar usuarios;
-- ver informacion global si el alcance futuro lo requiere.
+- ver informacion global si sus permisos vigentes lo permiten.
 
 No debe:
 
