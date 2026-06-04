@@ -40,7 +40,7 @@ Antes de desplegar, revisar `docs/LAB-ALCANCE-ACTUAL.md` y el baseline de estado
 - [ ] `/canal-youtube`
 - [ ] `/salesforce`
 - [ ] `/usuarios`
-- [ ] `/soporte/usuarios`
+- [ ] `/soporte/usuarios` solo permite rol `soporte`
 - [ ] Refrescar rutas protegidas no da 404.
 - [ ] Cerrar sesion vuelve a `/login`.
 - [ ] Si una ruta principal falla, no desplegar hasta corregirla.

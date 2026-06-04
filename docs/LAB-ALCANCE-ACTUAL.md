@@ -41,6 +41,12 @@ Resumen corto:
 - `/usuarios`
 - `/soporte/usuarios`
 
+## Permisos actuales
+
+- `/usuarios` queda protegido por sesion y se mantiene como directorio interno para usuarios autenticados.
+- `/soporte/usuarios` queda protegido por sesion y por rol existente `soporte`.
+- `/login` y `/unauthorized` siguen publicas.
+
 ## Roles actuales
 
 Demo:
