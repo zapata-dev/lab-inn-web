@@ -6,6 +6,10 @@ Proyecto base del MVP comercial interno de Zapata.
 
 El alcance actual del proyecto vive en [`docs/LAB-ALCANCE-ACTUAL.md`](docs/LAB-ALCANCE-ACTUAL.md). Este README solo resume la base tecnica y de arranque.
 
+## Flujo operativo
+
+El flujo actual de ramas, PR, CI, deploy y rollback esta documentado en [`docs/FLUJO_OPERATIVO_ACTUAL.md`](docs/FLUJO_OPERATIVO_ACTUAL.md).
+
 ## Stack
 
 - React 18
