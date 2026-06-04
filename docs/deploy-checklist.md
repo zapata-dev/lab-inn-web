@@ -46,6 +46,16 @@ Antes de desplegar, revisar `docs/LAB-ALCANCE-ACTUAL.md` y el baseline de estado
 - [ ] Cerrar sesion vuelve a `/login`.
 - [ ] Si una ruta principal falla, no desplegar hasta corregirla.
 
+## Seguridad de hosting
+
+- [ ] Ejecutar `curl -I https://TU-DOMINIO-ACTIVO`.
+- [ ] Confirmar presencia de `X-Content-Type-Options`.
+- [ ] Confirmar presencia de `Referrer-Policy`.
+- [ ] Confirmar presencia de `X-Frame-Options`.
+- [ ] Confirmar presencia de `Permissions-Policy`.
+- [ ] Confirmar presencia de `Content-Security-Policy-Report-Only`.
+- [ ] Si alguna cabecera falta, revisar `firebase.json` antes de redeploy.
+
 ## Criterio de cierre
 
 El deploy se considera listo cuando lint y build pasan, el sitio responde en el host elegido y el smoke test anterior no encuentra 404 ni loops de autenticacion.
