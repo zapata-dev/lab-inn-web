@@ -1,14 +1,15 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
   ArrowUpRight,
-  BookImage,
+  Bell,
   Building2,
-  Bus,
   Database,
   Heart,
   Home as HomeIcon,
   ImagePlus,
+  LayoutGrid,
   Mail,
+  MapPin,
   MessageCircle,
   Network,
   PlayCircle,
@@ -18,48 +19,69 @@ import {
   Tags,
   Truck,
   Users,
+  X,
 } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Badge, Card } from '../components/common'
 import UserMenu from '../components/layout/UserMenu'
 import { useAuth } from '../context/AuthContext'
 import { accessLinks } from '../data/accessLinks'
 import heroTruckImage from '../assets/home/truck-hero.png'
-import promocionesHeroImage from '../assets/promociones-hero.jpeg'
-import catalogoPublicidadHeroImage from '../assets/catalogo-publicidad-home.png'
-import salesforceHeroImage from '../assets/salesforce-hero.png'
-import krinoHeroImage from '../assets/krino-hero.png'
-import youtubeHeroImage from '../assets/youtube-hero.png'
-import whatsappHeroImage from '../assets/whatsapp-hero.png'
-import btpHeroImage from '../assets/btp-hero.png'
-import contactoHeroImage from '../assets/contacto-hero.png'
-import {
-  fetchInventoryFromCsv,
-  getInventoryCache,
-  saveInventoryCache,
-} from '../services/inventoryService'
-import {
-  countUniquePromotionCoverImages,
-  isPromotionFlagUnit,
-} from '../utils/advertisingCatalogUtils'
+import { fetchInventoryFromCsv, getInventoryCache, saveInventoryCache } from '../services/inventoryService'
+import { countUniquePromotionCoverImages, isPromotionFlagUnit } from '../utils/advertisingCatalogUtils'
+import useToast from '../hooks/useToast'
 
 const sidebarItems = [
-  { id: 'oficina', label: 'Mi Oficina', icon: HomeIcon },
-  { id: 'inventario', label: 'Inventario', icon: Truck },
-  { id: 'favoritos', label: 'Favoritos', icon: Heart },
-  { id: 'usuarios', label: 'Directorio', icon: Users, to: '/usuarios' },
+  { id: 'oficina', label: 'Mi Oficina', icon: HomeIcon, category: 'todas' },
+  { id: 'inventario', label: 'Inventario', icon: Truck, category: 'inventario' },
+  { id: 'plataformas', label: 'Plataformas', icon: Database, category: 'plataforma' },
+  { id: 'comunidad', label: 'Comunidad', icon: PlayCircle, category: 'comunidad' },
+  { id: 'soporte', label: 'Soporte', icon: Users, category: 'soporte' },
+  { id: 'favoritos', label: 'Favoritos', icon: Heart, category: 'favoritos' },
+  { id: 'directorio', label: 'Directorio', icon: Users, to: '/usuarios' },
 ]
 
-const categories = [
-  { id: 'todas', label: 'Todas' },
-  { id: 'inventario', label: 'Inventario' },
-  { id: 'plataforma', label: 'Plataformas' },
-  { id: 'comunidad', label: 'Comunidad' },
-  { id: 'soporte', label: 'Soporte' },
+const filterItems = [
+  { id: 'todas', label: 'Todo', icon: LayoutGrid },
+  { id: 'inventario', label: 'Inventario', icon: Truck },
+  { id: 'plataforma', label: 'Plataformas', icon: Database },
+  { id: 'comunidad', label: 'Comunidad', icon: PlayCircle },
+  { id: 'soporte', label: 'Soporte', icon: Users },
+  { id: 'favoritos', label: 'Favoritos', icon: Heart },
+]
+
+const sectionDefinitions = [
+  {
+    id: 'inventario',
+    title: 'Inventario y publicidad',
+    description: 'Unidades disponibles, promociones vigentes y piezas listas para compartir.',
+    icon: Truck,
+    accent: 'from-sky-500 via-cyan-500 to-blue-500',
+  },
+  {
+    id: 'plataforma',
+    title: 'Plataformas comerciales',
+    description: 'Herramientas oficiales para operar, revisar datos y seguir oportunidades.',
+    icon: Database,
+    accent: 'from-slate-700 via-slate-600 to-slate-500',
+  },
+  {
+    id: 'comunidad',
+    title: 'Comunidad y aprendizaje',
+    description: 'Contenido, video y mensajería para colaborar más rápido.',
+    icon: PlayCircle,
+    accent: 'from-emerald-500 via-teal-500 to-cyan-500',
+  },
+  {
+    id: 'soporte',
+    title: 'Soporte y directorio',
+    description: 'Canales de ayuda, contacto y administración interna.',
+    icon: Users,
+    accent: 'from-amber-500 via-orange-500 to-rose-500',
+  },
 ]
 
 const iconMap = {
-  Bus,
   Database,
   ImagePlus,
   Mail,
@@ -70,62 +92,7 @@ const iconMap = {
   Tags,
   Truck,
   Users,
-}
-
-const toolVisuals = {
-  inventario: {
-    image: heroTruckImage,
-    categoryLabel: 'Inventario',
-  },
-  promociones: {
-    image: promocionesHeroImage,
-    categoryLabel: 'Promociones',
-  },
-  'catalogo-portadas': {
-    image: catalogoPublicidadHeroImage,
-    categoryLabel: 'Publicidad',
-  },
-  directorioSeminuevos: {
-    image:
-      'https://images.unsplash.com/photo-1633605532054-ffc7136f7552?auto=format&fit=crop&w=1400&q=80',
-    categoryLabel: 'Seminuevos',
-  },
-  salesforce: {
-    image: salesforceHeroImage,
-    categoryLabel: 'Plataforma',
-  },
-  krino: {
-    image: krinoHeroImage,
-    categoryLabel: 'Datos',
-  },
-  btp: {
-    image: btpHeroImage,
-    categoryLabel: 'Sistemas',
-  },
-  youtube: {
-    image: youtubeHeroImage,
-    categoryLabel: 'Comunidad',
-  },
-  whatsapp: {
-    image: whatsappHeroImage,
-    categoryLabel: 'Comunidad',
-  },
-  contacto: {
-    image: contactoHeroImage,
-    categoryLabel: 'Soporte',
-  },
-}
-
-const defaultToolVisual = {
-  image:
-    'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1400&q=80',
-  categoryLabel: 'Herramienta',
-}
-
-const roleFeaturedToolIds = {
-  vendedor: ['inventario', 'promociones'],
-  coordinador: ['inventario', 'catalogo-portadas'],
-  soporte: ['soporte-usuarios', 'promociones'],
+  Building2,
 }
 
 function normalizeText(value) {
@@ -143,6 +110,7 @@ function getDisplayPhoto(user) {
 function getNameInitials(name) {
   const normalized = String(name || '').trim()
   if (!normalized) return 'US'
+
   const parts = normalized.split(/\s+/).filter(Boolean)
   if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
   return `${parts[0][0] || ''}${parts[1][0] || ''}`.toUpperCase()
@@ -188,112 +156,115 @@ function getGreetingByHour() {
   return 'Buenas noches'
 }
 
-function getToolVisual(toolId) {
-  return toolVisuals[toolId] || defaultToolVisual
+function getLinkIcon(link) {
+  return iconMap[link.icon] || Building2
 }
 
-function HomeToolCard({ tool, isFavorite, onToggleFavorite, onOpen }) {
-  const Icon = iconMap[tool.icon] || Building2
-  const visual = getToolVisual(tool.id)
+function getSectionVariant(category) {
+  if (category === 'inventario') return 'info'
+  if (category === 'plataforma') return 'default'
+  if (category === 'comunidad') return 'success'
+  if (category === 'soporte') return 'warning'
+  return 'default'
+}
+
+function getLinkSurfaceLabel(link) {
+  return link.to ? 'Ruta interna' : 'Recurso externo'
+}
+
+function LinkActionButton({ link, variant = 'dark', className = '', children }) {
+  if (!link) return null
+
+  const baseClasses =
+    'inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition duration-200 focus-visible:outline-none focus-visible:ring-2'
+
+  const variants = {
+    light:
+      'bg-white text-slate-950 hover:bg-slate-100 focus-visible:ring-white/70 focus-visible:ring-offset-0',
+    dark:
+      'bg-slate-950 text-white hover:bg-slate-800 focus-visible:ring-lab-primary/25 focus-visible:ring-offset-white',
+    glass:
+      'border border-white/20 bg-white/10 text-white hover:bg-white/15 focus-visible:ring-white/60 focus-visible:ring-offset-0',
+  }
+
+  const classes = `${baseClasses} ${variants[variant] || variants.dark} ${className}`.trim()
+  const content = (
+    <>
+      <span>{children}</span>
+      <ArrowUpRight className="size-4" aria-hidden="true" />
+    </>
+  )
+
+  if (link.to) {
+    return (
+      <Link to={link.to} className={classes}>
+        {content}
+      </Link>
+    )
+  }
 
   return (
-    <article className="group overflow-hidden rounded-3xl border border-white/70 bg-white/95 shadow-[0_12px_30px_rgba(15,23,42,0.07)] transition duration-300 hover:-translate-y-1 hover:shadow-xl">
-      <div className="relative h-[120px] overflow-hidden border-b border-slate-100">
-        <img src={visual.image} alt={tool.title} className="size-full object-cover transition duration-500 group-hover:scale-105" loading="lazy" />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/45 via-slate-900/10 to-transparent" />
-        <span className="absolute left-3 top-3 rounded-full border border-white/35 bg-white/15 px-2.5 py-1 text-[11px] font-semibold tracking-wide text-white backdrop-blur">
-          {visual.categoryLabel}
-        </span>
-        <button
-          type="button"
-          onClick={() => onToggleFavorite(tool.id)}
-          className={`absolute right-3 top-3 inline-flex size-8 items-center justify-center rounded-full border backdrop-blur transition ${
-            isFavorite
-              ? 'border-amber-300 bg-amber-100/85 text-amber-600'
-              : 'border-white/45 bg-white/20 text-white hover:bg-white/35'
-          }`}
-          aria-label={isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}
-        >
-          <Star className={`size-4 ${isFavorite ? 'fill-current' : ''}`} aria-hidden="true" />
-        </button>
-      </div>
-
-      <div className="space-y-3 p-4">
-        <div className="flex items-start gap-3">
-          <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-lab-primary/10 text-lab-primary">
-            <Icon className="size-4" aria-hidden="true" />
-          </span>
-          <div className="space-y-1">
-            <h3 className="text-sm font-semibold text-slate-900 sm:text-base">{tool.title}</h3>
-            <p className="text-xs leading-relaxed text-slate-600 sm:text-sm">{tool.description}</p>
-          </div>
-        </div>
-
-        <div className="flex items-center justify-between gap-2 border-t border-slate-100 pt-3">
-          <Badge className="capitalize">{tool.category || 'general'}</Badge>
-          <button
-            type="button"
-            onClick={() => onOpen(tool)}
-            className="inline-flex items-center gap-1 text-xs font-semibold text-lab-primary hover:text-lab-primary/80 sm:text-sm"
-          >
-            {tool.cta || 'Abrir'}
-            <ArrowUpRight className="size-3.5" aria-hidden="true" />
-          </button>
-        </div>
-      </div>
-    </article>
+    <a href={link.url} target="_blank" rel="noreferrer" className={classes}>
+      {content}
+    </a>
   )
 }
 
-function FeaturedToolCard({ tool, isFavorite, onToggleFavorite, onOpen }) {
-  const Icon = iconMap[tool.icon] || Building2
-  const visual = getToolVisual(tool.id)
+function AccessCard({ link, section, isFavorite, onToggleFavorite }) {
+  const Icon = getLinkIcon(link)
+  const sectionVariant = getSectionVariant(link.category)
 
   return (
-    <article className="group overflow-hidden rounded-3xl border border-white/70 bg-white/95 shadow-[0_14px_32px_rgba(15,23,42,0.08)] transition duration-300 hover:-translate-y-1 hover:shadow-xl">
-      <div className="grid min-h-[220px] grid-cols-1 lg:grid-cols-[1fr_44%]">
-        <div className="flex flex-col justify-between p-5">
-          <div className="space-y-3">
-            <div className="flex items-center justify-between gap-3">
-              <Badge className="bg-slate-100 text-slate-700">{visual.categoryLabel}</Badge>
-              <button
-                type="button"
-                onClick={() => onToggleFavorite(tool.id)}
-                className={`inline-flex size-8 items-center justify-center rounded-full border transition ${
-                  isFavorite
-                    ? 'border-amber-300 bg-amber-50 text-amber-600'
-                    : 'border-slate-200 bg-white text-slate-500 hover:text-lab-primary'
-                }`}
-                aria-label={isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}
-              >
-                <Star className={`size-4 ${isFavorite ? 'fill-current' : ''}`} aria-hidden="true" />
-              </button>
-            </div>
+    <article className="group overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-[0_10px_28px_rgba(15,23,42,0.08)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_18px_42px_rgba(15,23,42,0.14)]">
+      <div className={`h-1 bg-gradient-to-r ${section.accent}`} />
 
-            <div className="space-y-1">
-              <h3 className="text-xl font-semibold text-slate-900">{tool.title}</h3>
-              <p className="text-sm leading-relaxed text-slate-600">{tool.description}</p>
-            </div>
+      <div className="flex h-full flex-col p-5">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex min-w-0 items-start gap-3">
+            <span className="inline-flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-slate-950/5 text-lab-primary">
+              {link.logoUrl ? (
+                <img
+                  src={link.logoUrl}
+                  alt={link.logoAlt || link.title}
+                  className="size-8 object-contain"
+                  loading="lazy"
+                  decoding="async"
+                />
+              ) : (
+                <Icon className="size-5" aria-hidden="true" />
+              )}
+            </span>
 
-            <div className="inline-flex w-fit items-center gap-2 rounded-xl bg-lab-primary/10 px-3 py-2 text-xs font-semibold text-lab-primary">
-              <Icon className="size-4" aria-hidden="true" />
-              Herramienta destacada
+            <div className="min-w-0 space-y-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <h3 className="truncate text-base font-semibold text-slate-900">{link.title}</h3>
+                <Badge variant={sectionVariant}>{section.title}</Badge>
+              </div>
+              <p className="text-sm leading-relaxed text-slate-600">{link.description}</p>
             </div>
           </div>
 
           <button
             type="button"
-            onClick={() => onOpen(tool)}
-            className="mt-5 inline-flex w-fit items-center gap-2 rounded-full bg-lab-primary px-4 py-2 text-sm font-semibold text-white transition hover:bg-lab-primary/90"
+            onClick={() => onToggleFavorite(link.id)}
+            className={`inline-flex size-11 shrink-0 items-center justify-center rounded-full border transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lab-primary/25 ${
+              isFavorite
+                ? 'border-amber-300 bg-amber-50 text-amber-600 hover:bg-amber-100'
+                : 'border-slate-200 bg-white text-slate-500 hover:border-lab-primary/25 hover:text-lab-primary'
+            }`}
+            aria-label={isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}
           >
-            {tool.cta || 'Abrir'}
-            <ArrowUpRight className="size-4" aria-hidden="true" />
+            <Star className={`size-4 ${isFavorite ? 'fill-current' : ''}`} aria-hidden="true" />
           </button>
         </div>
 
-        <div className="relative h-[180px] lg:h-full">
-          <img src={visual.image} alt={tool.title} className="size-full object-cover transition duration-500 group-hover:scale-105" loading="lazy" />
-          <div className="absolute inset-0 bg-gradient-to-l from-slate-950/15 via-transparent to-slate-950/35 lg:bg-gradient-to-r" />
+        <div className="mt-5 flex items-center justify-between gap-3 border-t border-slate-100 pt-4">
+          <span className="text-xs font-medium uppercase tracking-[0.16em] text-slate-500">
+            {getLinkSurfaceLabel(link)}
+          </span>
+          <LinkActionButton link={link} variant="dark" className="px-4 py-2 text-xs">
+            {link.cta || 'Abrir'}
+          </LinkActionButton>
         </div>
       </div>
     </article>
@@ -302,6 +273,7 @@ function FeaturedToolCard({ tool, isFavorite, onToggleFavorite, onOpen }) {
 
 function Home() {
   const navigate = useNavigate()
+  const toast = useToast()
   const { user } = useAuth()
   const userRole = String(user?.rol || user?.role || '').trim().toLowerCase()
   const isSupportUser = userRole === 'soporte'
@@ -314,19 +286,12 @@ function Home() {
 
   const [query, setQuery] = useState('')
   const [activeCategory, setActiveCategory] = useState('todas')
-  const [favoritesOnly, setFavoritesOnly] = useState(false)
   const [homeMetrics, setHomeMetrics] = useState(() => buildHomeMetrics([]))
+  const [metricsStatus, setMetricsStatus] = useState('loading')
+  const [metricsRetryToken, setMetricsRetryToken] = useState(0)
 
   const favoritesStorageKey = `lab:v1:favorites:${getUserStorageKey(user)}`
-  const [favoriteIds, setFavoriteIds] = useState(() => {
-    try {
-      const raw = localStorage.getItem(favoritesStorageKey)
-      const parsed = JSON.parse(raw || '[]')
-      return Array.isArray(parsed) ? parsed : []
-    } catch {
-      return []
-    }
-  })
+  const [favoriteIds, setFavoriteIds] = useState([])
 
   const visibleAccessLinks = useMemo(
     () =>
@@ -338,17 +303,35 @@ function Home() {
     [isSupportUser]
   )
 
+  const visibleLinkMap = useMemo(
+    () => new Map(visibleAccessLinks.map((link) => [link.id, link])),
+    [visibleAccessLinks]
+  )
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(favoritesStorageKey)
+      const parsed = JSON.parse(raw || '[]')
+      setFavoriteIds(Array.isArray(parsed) ? parsed : [])
+    } catch {
+      setFavoriteIds([])
+    }
+  }, [favoritesStorageKey])
+
   useEffect(() => {
     let mounted = true
+    const cache = getInventoryCache()
 
     const applyMetrics = (items) => {
       if (!mounted) return
       setHomeMetrics(buildHomeMetrics(Array.isArray(items) ? items : []))
+      setMetricsStatus('ready')
     }
 
-    const cache = getInventoryCache()
     if (cache.items.length > 0) {
       applyMetrics(cache.items)
+    } else {
+      setMetricsStatus('loading')
     }
 
     const syncMetrics = async () => {
@@ -357,8 +340,11 @@ function Home() {
         saveInventoryCache(items)
         applyMetrics(items)
       } catch {
-        if (!cache.items.length) {
-          applyMetrics([])
+        if (!mounted) return
+        if (cache.items.length > 0) {
+          setMetricsStatus('ready')
+        } else {
+          setMetricsStatus('error')
         }
       }
     }
@@ -368,83 +354,80 @@ function Home() {
     return () => {
       mounted = false
     }
-  }, [])
+  }, [metricsRetryToken])
 
   const categoryCounts = useMemo(() => {
-    const counters = { todas: visibleAccessLinks.length }
+    const counts = {
+      todas: visibleAccessLinks.length,
+      inventario: 0,
+      plataforma: 0,
+      comunidad: 0,
+      soporte: 0,
+      favoritos: favoriteIds.length,
+    }
 
-    categories.forEach((category) => {
-      if (category.id === 'todas') return
-      counters[category.id] = visibleAccessLinks.filter((tool) => tool.category === category.id).length
+    visibleAccessLinks.forEach((link) => {
+      counts[link.category] = (counts[link.category] || 0) + 1
     })
 
-    return counters
-  }, [visibleAccessLinks])
+    return counts
+  }, [favoriteIds, visibleAccessLinks])
 
-  const filteredTools = useMemo(() => {
-    const normalizedQuery = normalizeText(query)
+  const activeViewCategory = activeCategory === 'favoritos' ? 'todas' : activeCategory
+  const normalizedQuery = normalizeText(query)
 
-    return visibleAccessLinks.filter((tool) => {
-      if (activeCategory !== 'todas' && tool.category !== activeCategory) return false
-      if (favoritesOnly && !favoriteIds.includes(tool.id)) return false
-      if (!normalizedQuery) return true
+  const filteredSections = useMemo(() => {
+    return sectionDefinitions
+      .map((section) => {
+        const links = visibleAccessLinks.filter((link) => {
+          if (activeViewCategory !== 'todas' && link.category !== activeViewCategory) return false
+          if (activeCategory === 'favoritos' && !favoriteIds.includes(link.id)) return false
+          if (!normalizedQuery) return true
 
-      const searchable = `${tool.title} ${tool.description} ${tool.category || ''}`.toLowerCase()
-      return searchable.includes(normalizedQuery)
-    })
-  }, [visibleAccessLinks, activeCategory, favoritesOnly, favoriteIds, query])
+          const searchable = `${link.title} ${link.description} ${link.category || ''}`.toLowerCase()
+          return searchable.includes(normalizedQuery)
+        })
 
-  const featuredTools = useMemo(() => {
-    const normalizedQuery = normalizeText(query)
-    const featuredIds =
-      roleFeaturedToolIds[userRole] ||
-      filteredTools.filter((tool) => tool.featured).map((tool) => tool.id)
+        return {
+          ...section,
+          links,
+        }
+      })
+      .filter((section) => section.links.length > 0)
+  }, [activeCategory, activeViewCategory, favoriteIds, normalizedQuery, visibleAccessLinks])
 
-    const roleToolPool = accessLinks.filter((tool) => {
-      if (tool.supportOnly && !isSupportUser) return false
-      if (tool.hiddenFromHome) return userRole === 'soporte'
-      return true
-    })
+  const filteredLinksCount = filteredSections.reduce((total, section) => total + section.links.length, 0)
+  const visibleSectionCount = filteredSections.length
 
-    const toolsWithUiFilters = roleToolPool.filter((tool) => {
-      if (activeCategory !== 'todas' && tool.category !== activeCategory) return false
-      if (favoritesOnly && !favoriteIds.includes(tool.id)) return false
-      if (!normalizedQuery) return true
+  const heroQuickLinkIds = isSupportUser
+    ? ['inventario', 'promociones', 'catalogo-portadas', 'soporte-usuarios']
+    : ['inventario', 'promociones', 'catalogo-portadas', 'contacto']
 
-      const searchable = `${tool.title} ${tool.description} ${tool.category || ''}`.toLowerCase()
-      return searchable.includes(normalizedQuery)
-    })
+  const heroQuickLinks = heroQuickLinkIds
+    .map((linkId) => visibleLinkMap.get(linkId))
+    .filter(Boolean)
 
-    return featuredIds
-      .map((toolId) => toolsWithUiFilters.find((tool) => tool.id === toolId))
-      .filter(Boolean)
-      .slice(0, 2)
-  }, [activeCategory, favoriteIds, favoritesOnly, filteredTools, isSupportUser, query, userRole])
-
-  const regularTools = useMemo(
-    () => filteredTools.filter((tool) => !featuredTools.some((featured) => featured.id === tool.id)),
-    [filteredTools, featuredTools]
-  )
+  const primaryHeroLink = visibleLinkMap.get('inventario') || heroQuickLinks[0]
+  const secondaryHeroLink = visibleLinkMap.get('promociones') || visibleLinkMap.get('catalogo-portadas')
 
   const handleToggleFavorite = (toolId) => {
     setFavoriteIds((previous) => {
       const next = previous.includes(toolId)
         ? previous.filter((id) => id !== toolId)
         : [...previous, toolId]
-      localStorage.setItem(favoritesStorageKey, JSON.stringify(next))
+
+      try {
+        localStorage.setItem(favoritesStorageKey, JSON.stringify(next))
+      } catch {
+        // Ignore localStorage failures in restricted environments.
+      }
+
       return next
     })
   }
 
-  const handleOpenTool = (tool) => {
-    if (tool.disabled) return
-    if (tool.to) {
-      navigate(tool.to)
-      return
-    }
-    if (tool.url) {
-      window.open(tool.url, '_blank', 'noopener,noreferrer')
-    }
+  const handleNotificationsClick = () => {
+    toast.info('No hay notificaciones nuevas por ahora.')
   }
 
   const handleSidebarAction = (item) => {
@@ -453,217 +436,450 @@ function Home() {
       return
     }
 
-    if (item.id === 'oficina') {
-      setFavoritesOnly(false)
-      setActiveCategory('todas')
-      return
-    }
-
-    if (item.id === 'inventario') {
-      setFavoritesOnly(false)
-      setActiveCategory('inventario')
-      return
-    }
-
-    if (item.id === 'favoritos') {
-      setFavoritesOnly(true)
-      setActiveCategory('todas')
-    }
+    setActiveCategory(item.category)
   }
 
-  const activeSidebarId = favoritesOnly
-    ? 'favoritos'
-    : activeCategory === 'inventario'
-      ? 'inventario'
-      : 'oficina'
+  const activeSidebarId = activeCategory === 'todas' ? 'oficina' : activeCategory
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/40 to-slate-100 text-lab-text">
-      <div className="mx-auto grid w-full max-w-[1320px] gap-5 p-4 lg:grid-cols-[240px_1fr] lg:p-6">
-        <aside className="hidden rounded-3xl border border-white/70 bg-white/90 p-4 shadow-[0_16px_34px_rgba(15,23,42,0.08)] backdrop-blur lg:sticky lg:top-6 lg:flex lg:h-[calc(100vh-3rem)] lg:flex-col">
-          <div className="mb-7 flex items-center gap-3 rounded-2xl bg-gradient-to-r from-lab-primary/15 via-sky-100 to-indigo-100 p-3">
-            <span className="inline-flex size-10 items-center justify-center rounded-xl bg-lab-primary text-sm font-bold text-white">
-              L
-            </span>
-            <div>
-              <p className="text-sm font-semibold text-lab-text">LAB Comercial</p>
-              <p className="text-xs text-lab-muted">Oficina Virtual</p>
-            </div>
-          </div>
+    <main className="relative min-h-dvh overflow-x-hidden bg-[radial-gradient(circle_at_top_right,_rgba(56,189,248,0.14),_transparent_28%),radial-gradient(circle_at_left_bottom,_rgba(15,23,42,0.08),_transparent_30%),linear-gradient(180deg,_#f8fafc_0%,_#eef4fb_42%,_#f8fafc_100%)] text-lab-text">
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -right-24 -top-24 size-80 rounded-full bg-sky-300/20 blur-3xl" />
+        <div className="absolute -bottom-0 -left-28 size-96 rounded-full bg-indigo-200/20 blur-3xl" />
+      </div>
 
-          <nav className="space-y-2">
-            {sidebarItems.map((item) => {
-              const Icon = item.icon
-              const isActive = item.id === activeSidebarId
-
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => handleSidebarAction(item)}
-                  className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition duration-300 ${
-                    isActive
-                      ? 'bg-gradient-to-r from-lab-primary to-blue-600 text-white shadow-lg shadow-blue-500/20'
-                      : 'text-slate-700 hover:bg-slate-100 hover:text-lab-primary'
-                  }`}
-                >
-                  <Icon className="size-4" aria-hidden="true" />
-                  {item.label}
-                </button>
-              )
-            })}
-          </nav>
-
-          <UserMenu variant="sidebar" className="mt-auto" />
-        </aside>
-
-        <div className="space-y-5">
-          <header className="rounded-3xl border border-white/70 bg-white/90 p-4 shadow-[0_10px_28px_rgba(15,23,42,0.07)] backdrop-blur">
-            <label className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-2.5 focus-within:border-lab-primary focus-within:ring-2 focus-within:ring-lab-primary/20">
-              <Search className="size-4 text-slate-500" aria-hidden="true" />
-              <input
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder="Buscar herramientas, accesos o recursos..."
-                className="w-full border-0 bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400"
-              />
-            </label>
-          </header>
-
-          <section className="relative overflow-hidden rounded-3xl border border-white/15 shadow-[0_22px_50px_rgba(15,23,42,0.22)]">
-            <img
-              src={heroTruckImage}
-              alt=""
-              aria-hidden="true"
-              className="absolute inset-0 size-full object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/55 to-black/35" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent" />
-
-            <div className="relative z-10 p-6 sm:p-7 lg:p-8">
-              <div className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/10 px-3 py-1 text-[11px] font-semibold tracking-[0.14em] text-white backdrop-blur">
-                <BookImage className="size-3.5" aria-hidden="true" />
-                TU OFICINA • EN VIVO
+      <div className="relative mx-auto flex min-h-dvh w-full max-w-[1600px]">
+        <aside className="hidden min-h-dvh w-[300px] shrink-0 border-r border-slate-800/70 bg-slate-950 text-slate-100 lg:flex lg:flex-col">
+          <div className="flex flex-1 flex-col px-5 py-6">
+            <div className="rounded-[1.75rem] border border-white/10 bg-white/5 p-4 shadow-[0_20px_40px_rgba(15,23,42,0.16)]">
+              <div className="flex items-center gap-3">
+                <span className="inline-flex size-12 items-center justify-center rounded-2xl bg-gradient-to-br from-lab-primary via-sky-500 to-cyan-500 text-base font-bold text-white shadow-lg shadow-lab-primary/20">
+                  L
+                </span>
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold text-white">LAB Comercial</p>
+                  <p className="truncate text-xs text-slate-300">Mi Oficina Virtual</p>
+                </div>
               </div>
 
-              <div className="mt-4 max-w-2xl space-y-3 text-white">
-                <h1 className="text-3xl font-semibold leading-tight sm:text-4xl">
-                  {greeting}, {displayName}.
-                  <br />
-                  Esta es tu oficina virtual.
-                </h1>
-              </div>
-
-              <div className="mt-4 flex flex-wrap items-center gap-2 text-sm">
-                {displayPhoto ? (
-                  <img
-                    src={displayPhoto}
-                    alt={`Foto de ${displayName}`}
-                    className="size-10 rounded-full border border-white/45 object-cover"
-                    referrerPolicy="no-referrer"
-                  />
-                ) : (
-                  <span className="inline-flex size-10 items-center justify-center rounded-full border border-white/45 bg-white/10 text-xs font-semibold text-white">
-                    {nameInitials}
+              <div className="mt-4 rounded-2xl border border-white/10 bg-slate-900/70 p-3">
+                <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Sesión actual</p>
+                <p className="mt-2 truncate text-sm font-semibold text-white">{displayName}</p>
+                <div className="mt-2 flex flex-wrap gap-2 text-xs text-slate-200">
+                  <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1">
+                    {displayRole}
                   </span>
-                )}
-                <Badge variant="info" className="border-white/30 bg-white/15 text-white backdrop-blur">
-                  Rol: {displayRole}
-                </Badge>
-                <Badge className="border-white/30 bg-white/15 text-white backdrop-blur">Sucursal: {displayBranch}</Badge>
+                  <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1">
+                    {displayBranch}
+                  </span>
+                </div>
               </div>
-
-              <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
-                <Card className="rounded-2xl border border-white/25 bg-white/[0.12] p-4 text-white shadow-lg backdrop-blur-md">
-                  <p className="text-2xl font-semibold">{formatCompactNumber(homeMetrics.totalUnits)}</p>
-                  <p className="text-xs text-slate-100">Unidades disponibles</p>
-                </Card>
-                <Card className="rounded-2xl border border-white/25 bg-white/[0.12] p-4 text-white shadow-lg backdrop-blur-md">
-                  <p className="text-2xl font-semibold">{formatCompactNumber(homeMetrics.activePromotions)}</p>
-                  <p className="text-xs text-slate-100">Promociones vigentes</p>
-                </Card>
-                <Card className="rounded-2xl border border-white/25 bg-white/[0.12] p-4 text-white shadow-lg backdrop-blur-md">
-                  <p className="text-2xl font-semibold">{formatCompactNumber(homeMetrics.availableAds)}</p>
-                  <p className="text-xs text-slate-100">Publicidades disponibles</p>
-                </Card>
-              </div>
-
             </div>
-          </section>
 
-          <section className="rounded-3xl border border-white/70 bg-white/90 p-4 shadow-[0_12px_30px_rgba(15,23,42,0.07)]">
-            <div className="flex flex-wrap gap-2">
-              {categories.map((category) => {
-                const isActive = activeCategory === category.id
-                const count = categoryCounts[category.id] ?? 0
+            <nav className="mt-6 space-y-2">
+              {sidebarItems.map((item) => {
+                const Icon = item.icon
+                const isActive = item.id === activeSidebarId
 
                 return (
                   <button
-                    key={category.id}
+                    key={item.id}
                     type="button"
-                    onClick={() => {
-                      setActiveCategory(category.id)
-                      setFavoritesOnly(false)
-                    }}
-                    className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition duration-300 sm:text-sm ${
+                    onClick={() => handleSidebarAction(item)}
+                    className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-semibold transition duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 ${
                       isActive
-                        ? 'border-lab-primary bg-lab-primary text-white shadow-md shadow-blue-500/20'
-                        : 'border-slate-200 bg-white text-slate-700 hover:border-lab-primary/40 hover:text-lab-primary'
+                        ? 'bg-gradient-to-r from-lab-primary via-sky-600 to-cyan-600 text-white shadow-[0_12px_24px_rgba(14,165,233,0.24)]'
+                        : 'text-slate-200 hover:bg-white/10 hover:text-white'
                     }`}
+                    aria-pressed={isActive}
                   >
-                    {category.label} ({count})
+                    <Icon className="size-4 shrink-0" aria-hidden="true" />
+                    <span className="truncate">{item.label}</span>
+                  </button>
+                )
+              })}
+            </nav>
+
+              <div className="mt-6 grid gap-3 rounded-3xl border border-white/10 bg-white/5 p-4">
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div className="rounded-2xl border border-white/10 bg-slate-900/65 p-3">
+                  <p className="text-xs text-slate-400">Unidades</p>
+                  <p className="mt-1 text-lg font-semibold text-white">
+                    {formatCompactNumber(homeMetrics.totalUnits)}
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-slate-900/65 p-3">
+                  <p className="text-xs text-slate-400">Promos</p>
+                  <p className="mt-1 text-lg font-semibold text-white">
+                    {formatCompactNumber(homeMetrics.activePromotions)}
+                  </p>
+                </div>
+              </div>
+              <p className="text-xs leading-relaxed text-slate-300">
+                {visibleAccessLinks.length} accesos visibles en esta sesión.
+              </p>
+            </div>
+
+            <UserMenu variant="sidebar" className="mt-6" />
+          </div>
+        </aside>
+
+        <div className="flex min-w-0 flex-1 flex-col">
+          <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/85 backdrop-blur-xl">
+            <div className="flex flex-wrap items-center gap-3 p-4 sm:px-6 lg:px-8">
+              <div className="flex min-w-0 flex-1 items-center gap-3">
+                <label className="flex min-h-11 flex-1 items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 shadow-sm transition focus-within:border-lab-primary focus-within:ring-2 focus-within:ring-lab-primary/15">
+                  <Search className="size-4 shrink-0 text-slate-500" aria-hidden="true" />
+                  <input
+                    value={query}
+                    onChange={(event) => setQuery(event.target.value)}
+                    placeholder="Buscar accesos, plataformas o soporte..."
+                    aria-label="Buscar accesos, plataformas o soporte"
+                    className="w-full border-0 bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400"
+                  />
+                  {query ? (
+                    <button
+                      type="button"
+                      onClick={() => setQuery('')}
+                      className="inline-flex size-8 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                      aria-label="Limpiar búsqueda"
+                    >
+                      <X className="size-4" aria-hidden="true" />
+                    </button>
+                  ) : null}
+                </label>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleNotificationsClick}
+                className="inline-flex size-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-lab-primary/25 hover:text-lab-primary hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lab-primary/20"
+                aria-label="Ver notificaciones"
+                title="Ver notificaciones"
+              >
+                <Bell className="size-4" aria-hidden="true" />
+              </button>
+
+              <div className="min-w-48">
+                <UserMenu variant="compact" />
+              </div>
+            </div>
+
+            <div className="flex gap-2 overflow-x-auto px-4 pb-4 sm:px-6 lg:px-8">
+              {filterItems.map((item) => {
+                const Icon = item.icon
+                const isActive = activeCategory === item.id
+                const count = categoryCounts[item.id] ?? 0
+
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => setActiveCategory(item.id)}
+                    className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lab-primary/20 ${
+                      isActive
+                        ? 'border-lab-primary bg-lab-primary text-white shadow-[0_10px_20px_rgba(14,165,233,0.18)]'
+                        : 'border-slate-200 bg-white text-slate-700 hover:border-lab-primary/35 hover:text-lab-primary'
+                    }`}
+                    aria-pressed={isActive}
+                  >
+                    <Icon className="size-4" aria-hidden="true" />
+                    <span>{item.label}</span>
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${
+                        isActive ? 'bg-white/15 text-white' : 'bg-slate-100 text-slate-500'
+                      }`}
+                    >
+                      {count}
+                    </span>
                   </button>
                 )
               })}
             </div>
-          </section>
+          </header>
 
-          {featuredTools.length > 0 ? (
-            <section className="space-y-3">
-              <div className="flex items-center justify-between gap-3 border-b border-slate-200 pb-2">
-                <h2 className="text-lg font-semibold text-slate-900">Destacados para ti</h2>
-                <span className="text-xs font-medium text-slate-500">{featuredTools.length} destacados</span>
-              </div>
-              <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                {featuredTools.map((tool) => (
-                  <FeaturedToolCard
-                    key={tool.id}
-                    tool={tool}
-                    isFavorite={favoriteIds.includes(tool.id)}
-                    onToggleFavorite={handleToggleFavorite}
-                    onOpen={handleOpenTool}
+          <div className="space-y-6 px-4 py-5 sm:px-6 lg:px-8">
+            <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-slate-950 text-white shadow-[0_24px_70px_rgba(15,23,42,0.24)]">
+              <div className="grid lg:grid-cols-[1.2fr_0.8fr]">
+                <div className="relative isolate overflow-hidden p-6 sm:p-8 lg:p-10">
+                  <img
+                    src={heroTruckImage}
+                    alt="Camión de carga de la marca sobre fondo corporativo"
+                    className="absolute inset-0 size-full object-cover object-center"
+                    loading="eager"
+                    decoding="async"
                   />
-                ))}
+                  <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/70 to-slate-950/40" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/35 via-transparent to-transparent" />
+
+                  <div className="relative z-10 max-w-2xl space-y-6">
+                    <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/90 backdrop-blur">
+                      <LayoutGrid className="size-3.5" aria-hidden="true" />
+                      Mi Oficina Virtual
+                    </div>
+
+                    <div className="space-y-3">
+                      <h1 className="text-3xl font-semibold leading-tight sm:text-4xl xl:text-[3.35rem]">
+                        {greeting}, {displayName}.
+                        <br />
+                        Tu operación comercial empieza aquí.
+                      </h1>
+                      <p className="max-w-xl text-sm leading-7 text-slate-200 sm:text-base">
+                        Centraliza inventario, promociones, plataformas, comunidad y soporte en una
+                        sola vista pensada para trabajar más rápido.
+                      </p>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2">
+                      {displayPhoto ? (
+                        <img
+                          src={displayPhoto}
+                          alt={`Foto de ${displayName}`}
+                          className="size-11 rounded-full border border-white/30 object-cover"
+                          referrerPolicy="no-referrer"
+                        />
+                      ) : (
+                        <span className="inline-flex size-11 items-center justify-center rounded-full border border-white/30 bg-white/10 text-sm font-semibold text-white">
+                          {nameInitials}
+                        </span>
+                      )}
+                      <Badge
+                        variant="info"
+                        className="border-white/20 bg-white/10 text-white backdrop-blur"
+                      >
+                        Rol: {displayRole}
+                      </Badge>
+                      <Badge className="border-white/20 bg-white/10 text-white backdrop-blur">
+                        <MapPin className="mr-1 size-3.5" aria-hidden="true" />
+                        Sucursal: {displayBranch}
+                      </Badge>
+                      <Badge className="border-white/20 bg-white/10 text-white backdrop-blur">
+                        Accesos visibles: {visibleAccessLinks.length}
+                      </Badge>
+                    </div>
+
+                    <div className="flex flex-wrap gap-3">
+                      <LinkActionButton link={primaryHeroLink} variant="light">
+                        {primaryHeroLink?.cta || 'Abrir inventario'}
+                      </LinkActionButton>
+                      <LinkActionButton link={secondaryHeroLink} variant="glass">
+                        {secondaryHeroLink?.cta || 'Ver promociones'}
+                      </LinkActionButton>
+                    </div>
+
+                    <p className="text-xs uppercase tracking-[0.18em] text-slate-300">
+                      Inventario, publicidad y accesos listos para responder desde escritorio o móvil.
+                    </p>
+
+                    {metricsStatus === 'loading' ? (
+                      <div
+                        role="status"
+                        className="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/10 px-4 py-3 text-sm text-slate-100"
+                      >
+                        <span className="inline-flex size-2 rounded-full bg-sky-300" />
+                        Actualizando indicadores de inventario...
+                      </div>
+                    ) : null}
+
+                    {metricsStatus === 'error' ? (
+                      <div
+                        role="alert"
+                        className="flex flex-col gap-3 rounded-2xl border border-rose-400/30 bg-rose-500/10 p-4 text-sm text-rose-100 sm:flex-row sm:items-center sm:justify-between"
+                      >
+                        <div>
+                          <p className="font-semibold">No pudimos actualizar las métricas de inventario.</p>
+                          <p className="mt-1 text-rose-100/90">
+                            Puedes reintentar o continuar con la vista actual usando la caché local.
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setMetricsRetryToken((value) => value + 1)}
+                          className="inline-flex min-h-11 items-center justify-center rounded-full border border-white/20 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-white/15"
+                        >
+                          Reintentar
+                        </button>
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+
+                <div className="border-t border-white/10 bg-white/[0.04] p-5 sm:p-6 lg:border-l lg:border-t-0">
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+                    <div className="rounded-3xl border border-white/10 bg-white/[0.07] p-4">
+                      <p className="text-xs uppercase tracking-[0.16em] text-slate-300">Unidades</p>
+                      <p className="mt-2 text-3xl font-semibold text-white">
+                        {formatCompactNumber(homeMetrics.totalUnits)}
+                      </p>
+                      <p className="mt-1 text-sm text-slate-300">Disponibles en la caché de inventario.</p>
+                    </div>
+                    <div className="rounded-3xl border border-white/10 bg-white/[0.07] p-4">
+                      <p className="text-xs uppercase tracking-[0.16em] text-slate-300">Promociones</p>
+                      <p className="mt-2 text-3xl font-semibold text-white">
+                        {formatCompactNumber(homeMetrics.activePromotions)}
+                      </p>
+                      <p className="mt-1 text-sm text-slate-300">Unidades con promociones vigentes.</p>
+                    </div>
+                    <div className="rounded-3xl border border-white/10 bg-white/[0.07] p-4">
+                      <p className="text-xs uppercase tracking-[0.16em] text-slate-300">Piezas publicitarias</p>
+                      <p className="mt-2 text-3xl font-semibold text-white">
+                        {formatCompactNumber(homeMetrics.availableAds)}
+                      </p>
+                      <p className="mt-1 text-sm text-slate-300">Material visual único disponible.</p>
+                    </div>
+                    <div className="rounded-3xl border border-white/10 bg-white/[0.07] p-4">
+                      <p className="text-xs uppercase tracking-[0.16em] text-slate-300">Accesos visibles</p>
+                      <p className="mt-2 text-3xl font-semibold text-white">
+                        {formatCompactNumber(visibleAccessLinks.length)}
+                      </p>
+                      <p className="mt-1 text-sm text-slate-300">Recursos activos en este rol.</p>
+                    </div>
+                  </div>
+
+              <div className="mt-5 rounded-3xl border border-white/10 bg-slate-900/45 p-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-semibold text-white">Accesos rápidos</p>
+                        <p className="mt-1 text-xs text-slate-300">Los más usados en esta oficina.</p>
+                      </div>
+                      <Badge className="border-white/10 bg-white/10 text-white">
+                        {formatCompactNumber(heroQuickLinks.length)} visibles
+                      </Badge>
+                    </div>
+
+                    <div className="mt-4 space-y-2">
+                      {heroQuickLinks.map((link) => {
+                        const Icon = getLinkIcon(link)
+                        return (
+                          <div
+                            key={link.id}
+                            className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-3"
+                          >
+                            <div className="flex min-w-0 items-center gap-3">
+                              <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-2xl bg-white/10 text-white">
+                                {link.logoUrl ? (
+                                  <img
+                                    src={link.logoUrl}
+                                    alt={link.logoAlt || link.title}
+                                    className="size-6 object-contain"
+                                    loading="lazy"
+                                    decoding="async"
+                                  />
+                                ) : (
+                                  <Icon className="size-4" aria-hidden="true" />
+                                )}
+                              </span>
+                              <div className="min-w-0">
+                                <p className="truncate text-sm font-semibold text-white">{link.title}</p>
+                                <p className="truncate text-xs text-slate-300">{link.cta || 'Abrir'}</p>
+                              </div>
+                            </div>
+                            <LinkActionButton link={link} variant="light" className="px-3 py-2 text-xs">
+                              Abrir
+                            </LinkActionButton>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                </div>
               </div>
             </section>
-          ) : null}
 
-          <section className="space-y-3">
-            <div className="flex items-center justify-between gap-3 border-b border-slate-200 pb-2">
-              <h2 className="text-lg font-semibold text-slate-900">
-                {favoritesOnly ? 'Favoritos' : 'Herramientas'}
-              </h2>
-              <span className="text-xs font-medium text-slate-500">{regularTools.length} resultados</span>
-            </div>
+            <section className="rounded-[1.75rem] border border-slate-200 bg-white/90 p-4 shadow-[0_12px_28px_rgba(15,23,42,0.07)]">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold text-slate-900">
+                    {activeCategory === 'favoritos' ? 'Favoritos guardados' : 'Vista actual'}
+                  </p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    {query ? `Filtrado por “${query}”. ` : ''}
+                    {visibleSectionCount > 0
+                      ? `${filteredLinksCount} accesos visibles en ${visibleSectionCount} secciones.`
+                      : 'No hay accesos que coincidan con los filtros actuales.'}
+                  </p>
+                </div>
 
-            {regularTools.length === 0 ? (
-              <Card className="rounded-3xl border border-dashed border-slate-300 bg-white/95 p-8 text-center text-sm text-slate-600">
-                No hay herramientas para los filtros seleccionados.
-              </Card>
-            ) : (
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                {regularTools.map((tool) => (
-                  <HomeToolCard
-                    key={tool.id}
-                    tool={tool}
-                    isFavorite={favoriteIds.includes(tool.id)}
-                    onToggleFavorite={handleToggleFavorite}
-                    onOpen={handleOpenTool}
-                  />
-                ))}
+                {(query || activeCategory !== 'todas') ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setQuery('')
+                      setActiveCategory('todas')
+                    }}
+                    className="inline-flex min-h-11 items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-lab-primary/30 hover:text-lab-primary"
+                  >
+                    Limpiar filtros
+                  </button>
+                ) : null}
               </div>
+            </section>
+
+            {filteredSections.length > 0 ? (
+              filteredSections.map((section) => {
+                const SectionIcon = section.icon
+                return (
+                  <section key={section.id} className="space-y-4">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div className="flex items-start gap-3">
+                        <span
+                          className={`inline-flex size-11 items-center justify-center rounded-2xl bg-gradient-to-br ${section.accent} text-white shadow-[0_12px_28px_rgba(15,23,42,0.16)]`}
+                        >
+                          <SectionIcon className="size-5" aria-hidden="true" />
+                        </span>
+                        <div>
+                          <h2 className="text-lg font-semibold text-slate-900 sm:text-xl">{section.title}</h2>
+                          <p className="mt-1 max-w-3xl text-sm leading-relaxed text-slate-600">
+                            {section.description}
+                          </p>
+                        </div>
+                      </div>
+
+                      <Badge variant={getSectionVariant(section.id)}>
+                        {formatCompactNumber(section.links.length)} accesos
+                      </Badge>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+                      {section.links.map((link) => (
+                        <AccessCard
+                          key={link.id}
+                          link={link}
+                          section={section}
+                          isFavorite={favoriteIds.includes(link.id)}
+                          onToggleFavorite={handleToggleFavorite}
+                        />
+                      ))}
+                    </div>
+                  </section>
+                )
+              })
+            ) : (
+              <Card className="border-dashed border-slate-300 bg-white/90 p-8 text-center shadow-none">
+                <div className="mx-auto flex max-w-md flex-col items-center gap-4">
+                  <span className="inline-flex size-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-500">
+                    <Search className="size-6" aria-hidden="true" />
+                  </span>
+                  <div className="space-y-1">
+                    <h2 className="text-lg font-semibold text-slate-900">No encontramos accesos para estos filtros.</h2>
+                    <p className="text-sm leading-relaxed text-slate-600">
+                      Prueba con otra búsqueda o vuelve a la vista general para revisar todos los recursos.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setQuery('')
+                      setActiveCategory('todas')
+                    }}
+                    className="inline-flex min-h-11 items-center justify-center rounded-full bg-lab-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-lab-primary/90"
+                  >
+                    Limpiar búsqueda
+                  </button>
+                </div>
+              </Card>
             )}
-          </section>
+          </div>
         </div>
       </div>
     </main>
@@ -671,4 +887,3 @@ function Home() {
 }
 
 export default Home
-

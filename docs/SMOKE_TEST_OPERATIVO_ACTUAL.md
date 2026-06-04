@@ -40,6 +40,18 @@ npm run preview
 
 Si alguna ruta no aplica por permisos, documentar el resultado esperado.
 
+## Home / Inicio
+
+- `/` y `/inicio` muestran la misma pantalla de "Mi Oficina Virtual".
+- La sidebar corporativa oscura se ve en escritorio y la navegación por secciones responde.
+- La barra superior muestra búsqueda, notificaciones y menú de usuario.
+- El hero principal carga la imagen del camión, el saludo, los chips de rol/sucursal y los KPIs.
+- Las tarjetas de acceso rápido abren las rutas internas o enlaces externos esperados.
+- Las secciones de inventario, plataformas, comunidad y soporte se filtran correctamente por búsqueda y chips.
+- El acceso de soporte para `/soporte/usuarios` sigue visible solo para el rol `soporte`.
+- La vista responde bien en desktop, laptop, tablet y móvil sin scroll horizontal.
+- Si no cargan métricas de inventario, debe verse un estado `status` o `alert` claro, no una pantalla rota.
+
 ## Checklist manual
 
 ### Acceso
