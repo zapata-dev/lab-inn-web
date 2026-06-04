@@ -3,6 +3,7 @@
 ## Fuente de verdad
 
 Antes de desplegar, revisar `docs/LAB-ALCANCE-ACTUAL.md` y el baseline de estado actual.
+Tambien revisar `docs/FLUJO_OPERATIVO_ACTUAL.md` para confirmar el flujo de ramas, PR, merge y rollback.
 
 ## Pre-deploy
 
