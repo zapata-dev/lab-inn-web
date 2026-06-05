@@ -226,7 +226,7 @@ function AccessCard({ link, isFavorite, onToggleFavorite, toneKey = 'blue' }) {
           event.stopPropagation()
           onToggleFavorite(link.id)
         }}
-        className={`absolute right-4 top-4 inline-flex size-8 items-center justify-center rounded-full border transition focus-visible:outline-none focus-visible:ring-2 ${
+        className={`absolute right-3 top-3 inline-flex size-8 items-center justify-center rounded-full border transition focus-visible:outline-none focus-visible:ring-2 ${
           isFavorite
             ? 'border-amber-300 bg-amber-100 text-amber-500'
             : 'border-slate-200 bg-white text-slate-400 hover:text-slate-600'
@@ -237,27 +237,27 @@ function AccessCard({ link, isFavorite, onToggleFavorite, toneKey = 'blue' }) {
       </button>
 
       <div className="flex items-start gap-4">
-        <div className={`flex size-16 shrink-0 items-center justify-center rounded-[1.2rem] ${tone.box}`}>
+        <div className={`flex size-12 shrink-0 items-center justify-center rounded-[1rem] ${tone.box}`}>
           {link.logoUrl ? (
             <img
               src={link.logoUrl}
               alt={link.logoAlt || link.title}
-              className="size-8 object-contain"
+              className="size-7 object-contain"
               loading="lazy"
               decoding="async"
             />
           ) : (
-            <Icon className="size-7" aria-hidden="true" />
+            <Icon className="size-6" aria-hidden="true" />
           )}
         </div>
 
         <div className="min-w-0 flex-1 pr-10">
-          <h3 className="truncate text-xl font-semibold text-slate-950">{link.title}</h3>
-          <p className="mt-1 text-sm leading-6 text-slate-500">{link.description}</p>
+          <h3 className="truncate text-lg font-semibold text-slate-950">{link.title}</h3>
+          <p className="mt-0.5 text-sm leading-5 text-slate-500">{link.description}</p>
         </div>
       </div>
 
-      <div className={`mt-5 inline-flex items-center gap-2 text-sm font-semibold ${tone.cta}`}>
+      <div className={`mt-3 inline-flex items-center gap-2 text-sm font-semibold ${tone.cta}`}>
         <span>{link.cta || 'Abrir'}</span>
         <ArrowRight className="size-4" aria-hidden="true" />
       </div>
@@ -268,7 +268,7 @@ function AccessCard({ link, isFavorite, onToggleFavorite, toneKey = 'blue' }) {
     return (
       <Link
         to={link.to}
-        className="group relative block rounded-[2rem] border border-slate-200 bg-white p-5 shadow-[0_1px_0_rgba(15,23,42,0.02),0_12px_24px_rgba(15,23,42,0.04)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(15,23,42,0.08)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lab-primary/20"
+        className="group relative block rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-[0_1px_0_rgba(15,23,42,0.02),0_12px_24px_rgba(15,23,42,0.04)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(15,23,42,0.08)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lab-primary/20"
       >
         {cardContent}
       </Link>
@@ -280,7 +280,7 @@ function AccessCard({ link, isFavorite, onToggleFavorite, toneKey = 'blue' }) {
       href={link.url}
       target="_blank"
       rel="noreferrer"
-      className="group relative block rounded-[2rem] border border-slate-200 bg-white p-5 shadow-[0_1px_0_rgba(15,23,42,0.02),0_12px_24px_rgba(15,23,42,0.04)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(15,23,42,0.08)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lab-primary/20"
+      className="group relative block rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-[0_1px_0_rgba(15,23,42,0.02),0_12px_24px_rgba(15,23,42,0.04)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(15,23,42,0.08)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lab-primary/20"
     >
       {cardContent}
     </a>
@@ -294,22 +294,22 @@ function PlatformCard({ link }) {
   const cardContent = (
     <>
       <div className="flex min-w-0 items-center gap-4">
-        <div className={`flex size-16 shrink-0 items-center justify-center rounded-[1.2rem] ${sectionTheme.box}`}>
+        <div className={`flex size-12 shrink-0 items-center justify-center rounded-[1rem] ${sectionTheme.box}`}>
           {link.logoUrl ? (
             <img
               src={link.logoUrl}
               alt={link.logoAlt || link.title}
-              className="size-8 object-contain"
+              className="size-7 object-contain"
               loading="lazy"
               decoding="async"
             />
           ) : (
-            <Icon className="size-7" aria-hidden="true" />
+            <Icon className="size-6" aria-hidden="true" />
           )}
         </div>
 
         <div className="min-w-0">
-          <h3 className="truncate text-xl font-semibold text-slate-950">{link.title}</h3>
+          <h3 className="truncate text-lg font-semibold text-slate-950">{link.title}</h3>
           <p className="mt-1 inline-flex items-center gap-1 text-sm font-medium text-slate-500">
             Ir ahora
             <ExternalLink className="size-3.5" aria-hidden="true" />
@@ -325,7 +325,7 @@ function PlatformCard({ link }) {
     return (
       <Link
         to={link.to}
-        className="group flex items-center justify-between gap-4 rounded-[2rem] border border-slate-200 bg-white p-5 shadow-[0_1px_0_rgba(15,23,42,0.02),0_12px_24px_rgba(15,23,42,0.04)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(15,23,42,0.08)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lab-primary/20"
+        className="group flex items-center justify-between gap-4 rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-[0_1px_0_rgba(15,23,42,0.02),0_12px_24px_rgba(15,23,42,0.04)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(15,23,42,0.08)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lab-primary/20"
       >
         {cardContent}
       </Link>
@@ -337,7 +337,7 @@ function PlatformCard({ link }) {
       href={link.url}
       target="_blank"
       rel="noreferrer"
-      className="group flex items-center justify-between gap-4 rounded-[2rem] border border-slate-200 bg-white p-5 shadow-[0_1px_0_rgba(15,23,42,0.02),0_12px_24px_rgba(15,23,42,0.04)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(15,23,42,0.08)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lab-primary/20"
+      className="group flex items-center justify-between gap-4 rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-[0_1px_0_rgba(15,23,42,0.02),0_12px_24px_rgba(15,23,42,0.04)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(15,23,42,0.08)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lab-primary/20"
     >
       {cardContent}
     </a>
@@ -351,7 +351,7 @@ function StackRowCard({ link }) {
   const rowContent = (
     <>
       <div className="flex min-w-0 items-center gap-4">
-        <div className={`flex size-14 shrink-0 items-center justify-center rounded-[1.15rem] ${sectionTheme.box}`}>
+        <div className={`flex size-11 shrink-0 items-center justify-center rounded-[1rem] ${sectionTheme.box}`}>
           {link.logoUrl ? (
             <img
               src={link.logoUrl}
@@ -366,7 +366,7 @@ function StackRowCard({ link }) {
         </div>
 
         <div className="min-w-0">
-          <h3 className="truncate text-xl font-semibold text-slate-950">{link.title}</h3>
+          <h3 className="truncate text-lg font-semibold text-slate-950">{link.title}</h3>
           <p className="mt-1 truncate text-sm text-slate-500">{link.description}</p>
         </div>
       </div>
@@ -379,7 +379,7 @@ function StackRowCard({ link }) {
     return (
       <Link
         to={link.to}
-        className="group flex items-center justify-between gap-4 p-5 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lab-primary/20"
+        className="group flex items-center justify-between gap-4 p-4 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lab-primary/20"
       >
         {rowContent}
       </Link>
@@ -391,7 +391,7 @@ function StackRowCard({ link }) {
       href={link.url}
       target="_blank"
       rel="noreferrer"
-      className="group flex items-center justify-between gap-4 p-5 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lab-primary/20"
+      className="group flex items-center justify-between gap-4 p-4 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lab-primary/20"
     >
       {rowContent}
     </a>
@@ -621,7 +621,7 @@ function Home() {
             </div>
           </header>
 
-          <div className="space-y-6 px-4 py-5 sm:px-6 lg:px-8 lg:py-6">
+          <div className="space-y-4 px-4 py-4 sm:px-6 lg:px-8 lg:py-5">
             <section className="relative overflow-hidden rounded-[2.15rem] bg-[#111f44] text-white shadow-[0_22px_60px_rgba(8,15,34,0.18)]">
               <img
                 src={heroTruckImage}
@@ -693,7 +693,7 @@ function Home() {
               </div>
             </section>
 
-            <section className="space-y-4">
+            <section className="space-y-3">
               <div className="flex items-center gap-3">
                 <Zap className="size-5 text-slate-500" aria-hidden="true" />
                 <h2 className="font-mono text-[0.8rem] font-semibold uppercase tracking-[0.3em] text-slate-700">
@@ -701,7 +701,7 @@ function Home() {
                 </h2>
               </div>
 
-              <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
+              <div className="grid grid-cols-1 gap-3 xl:grid-cols-3">
                 {heroQuickLinks.map((link) => (
                   <AccessCard
                     key={link.id}
@@ -714,7 +714,7 @@ function Home() {
               </div>
             </section>
 
-            <section className="space-y-4">
+            <section className="space-y-3">
               <div className="flex items-center gap-3">
                 <Server className="size-5 text-slate-500" aria-hidden="true" />
                 <h2 className="font-mono text-[0.8rem] font-semibold uppercase tracking-[0.3em] text-slate-700">
@@ -722,7 +722,7 @@ function Home() {
                 </h2>
               </div>
 
-              <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
+              <div className="grid grid-cols-1 gap-3 xl:grid-cols-3">
                 {visibleAccessLinks
                   .filter((link) => link.category === 'plataforma')
                   .map((link) => (
@@ -731,8 +731,8 @@ function Home() {
               </div>
             </section>
 
-            <section className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-              <div className="space-y-4">
+            <section className="grid grid-cols-1 gap-3 xl:grid-cols-2">
+              <div className="space-y-3">
                 <div className="flex items-center gap-3">
                   <Users className="size-5 text-slate-500" aria-hidden="true" />
                   <h2 className="font-mono text-[0.8rem] font-semibold uppercase tracking-[0.3em] text-slate-700">
@@ -740,7 +740,7 @@ function Home() {
                   </h2>
                 </div>
 
-                <div className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_1px_0_rgba(15,23,42,0.02),0_12px_24px_rgba(15,23,42,0.04)]">
+                <div className="overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-[0_1px_0_rgba(15,23,42,0.02),0_12px_24px_rgba(15,23,42,0.04)]">
                   {visibleAccessLinks
                     .filter((link) => link.category === 'comunidad')
                     .map((link, index, rows) => (
@@ -751,7 +751,7 @@ function Home() {
                 </div>
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-3">
                 <div className="flex items-center gap-3">
                   <Headphones className="size-5 text-slate-500" aria-hidden="true" />
                   <h2 className="font-mono text-[0.8rem] font-semibold uppercase tracking-[0.3em] text-slate-700">
@@ -759,7 +759,7 @@ function Home() {
                   </h2>
                 </div>
 
-                <div className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_1px_0_rgba(15,23,42,0.02),0_12px_24px_rgba(15,23,42,0.04)]">
+                <div className="overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-[0_1px_0_rgba(15,23,42,0.02),0_12px_24px_rgba(15,23,42,0.04)]">
                   {visibleAccessLinks
                     .filter((link) => link.category === 'soporte')
                     .map((link, index, rows) => (
@@ -772,7 +772,7 @@ function Home() {
             </section>
 
             {query ? (
-              <section className="space-y-4">
+              <section className="space-y-3">
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <p className="font-mono text-[0.8rem] font-semibold uppercase tracking-[0.3em] text-slate-700">
@@ -804,7 +804,7 @@ function Home() {
                             {section.meta?.label || section.key}
                           </h3>
                         </div>
-                        <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
+                        <div className="grid grid-cols-1 gap-3 xl:grid-cols-3">
                           {section.links.map((link) => {
                             if (section.key === 'plataforma') {
                               return <PlatformCard key={link.id} link={link} />
@@ -814,7 +814,7 @@ function Home() {
                               return (
                                 <div
                                   key={link.id}
-                                  className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_1px_0_rgba(15,23,42,0.02),0_12px_24px_rgba(15,23,42,0.04)]"
+                                  className="overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-[0_1px_0_rgba(15,23,42,0.02),0_12px_24px_rgba(15,23,42,0.04)]"
                                 >
                                   <StackRowCard link={link} />
                                 </div>
