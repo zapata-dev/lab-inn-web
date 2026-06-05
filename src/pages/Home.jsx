@@ -593,15 +593,15 @@ function Home() {
 
         <div className="min-w-0 flex-1">
           <header className="border-b border-slate-200 bg-[#f6f8fc]/90 backdrop-blur-xl">
-          <div className="flex items-center gap-4 p-4 sm:px-6 lg:p-8">
-              <label className="flex min-h-14 w-full max-w-[660px] items-center gap-3 rounded-[1.2rem] border border-slate-200 bg-white px-4 shadow-[0_10px_25px_rgba(15,23,42,0.04)]">
+          <div className="flex items-center gap-3 p-4 pr-24 sm:px-6 sm:pr-28 lg:px-8 lg:py-5 lg:pr-32">
+              <label className="flex min-h-12 w-full flex-1 items-center gap-3 rounded-[1.1rem] border border-slate-200 bg-white px-4 shadow-[0_10px_25px_rgba(15,23,42,0.04)]">
                 <Search className="size-5 shrink-0 text-slate-400" aria-hidden="true" />
                 <input
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
                   placeholder="Buscar herramientas, accesos o recursos..."
                   aria-label="Buscar herramientas, accesos o recursos"
-                  className="min-w-0 flex-1 border-0 bg-transparent text-[0.98rem] text-slate-700 outline-none placeholder:text-slate-400"
+                  className="min-w-0 flex-1 border-0 bg-transparent text-[0.95rem] text-slate-700 outline-none placeholder:text-slate-400"
                 />
                 <kbd className="hidden rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs text-slate-500 sm:inline-flex">
                   /
@@ -611,17 +611,17 @@ function Home() {
               <button
                 type="button"
                 onClick={handleNotificationsClick}
-                className="relative ml-auto inline-flex size-14 items-center justify-center rounded-[1.15rem] border border-slate-200 bg-white text-slate-700 shadow-[0_10px_25px_rgba(15,23,42,0.04)] transition hover:border-slate-300 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lab-primary/20"
+                className="relative inline-flex size-12 shrink-0 items-center justify-center rounded-[1.1rem] border border-slate-200 bg-white text-slate-700 shadow-[0_10px_25px_rgba(15,23,42,0.04)] transition hover:border-slate-300 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lab-primary/20"
                 aria-label="Ver notificaciones"
                 title="Ver notificaciones"
               >
                 <Bell className="size-5" aria-hidden="true" />
-                <span className="absolute right-4 top-4 size-2 rounded-full bg-orange-400" />
+                <span className="absolute right-3 top-3 size-2 rounded-full bg-orange-400" />
               </button>
             </div>
           </header>
 
-          <div className="space-y-8 px-4 py-6 sm:px-6 lg:p-8">
+          <div className="space-y-6 px-4 py-5 sm:px-6 lg:px-8 lg:py-6">
             <section className="relative overflow-hidden rounded-[2.15rem] bg-[#111f44] text-white shadow-[0_22px_60px_rgba(8,15,34,0.18)]">
               <img
                 src={heroTruckImage}
@@ -633,61 +633,61 @@ function Home() {
               <div className="absolute inset-0 bg-gradient-to-r from-[#0b1430]/95 via-[#0b1430]/85 to-[#0b1430]/30" />
               <div className="absolute inset-0 bg-gradient-to-t from-[#0b1430]/45 via-transparent to-transparent" />
 
-              <div className="relative z-10 p-5 sm:p-6 lg:p-8">
-                <div className="max-w-[57%] space-y-5 xl:max-w-[48%]">
-                  <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-[0.8rem] font-semibold uppercase tracking-[0.3em] text-white/90">
-                    <span className="size-3 rounded-full bg-emerald-400 shadow-[0_0_0_4px_rgba(74,222,128,0.15)]" />
+              <div className="relative z-10 p-4 sm:p-5 lg:p-6">
+                <div className="max-w-[57%] space-y-4 xl:max-w-[48%]">
+                  <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[0.7rem] font-semibold uppercase tracking-[0.3em] text-white/90">
+                    <span className="size-2.5 rounded-full bg-emerald-400 shadow-[0_0_0_4px_rgba(74,222,128,0.15)]" />
                     Tu oficina · en vivo
                   </div>
 
-                  <h1 className="text-[2.1rem] font-semibold leading-[1.02] tracking-tight sm:text-[2.75rem] xl:text-[3.6rem]">
+                  <h1 className="text-[1.5rem] font-semibold leading-[1.05] tracking-tight sm:text-[1.95rem] xl:text-[2.5rem]">
                     {greeting}, {displayName}.
                     <br />
                     Esta es tu <span className="text-sky-300">oficina virtual</span>.
                   </h1>
 
-                  <div className="flex flex-wrap items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-2.5">
                     {displayPhoto ? (
                       <img
                         src={displayPhoto}
                         alt={`Foto de ${displayName}`}
-                        className="size-9 rounded-full border border-white/20 object-cover"
+                        className="size-8 rounded-full border border-white/20 object-cover"
                         referrerPolicy="no-referrer"
                       />
                     ) : (
-                      <span className="inline-flex size-9 items-center justify-center rounded-full bg-orange-400 text-sm font-bold text-white">
+                      <span className="inline-flex size-8 items-center justify-center rounded-full bg-orange-400 text-xs font-bold text-white">
                         {nameInitials}
                       </span>
                     )}
 
-                    <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-semibold text-white/95">
-                      <span className="size-3 rounded-full bg-orange-400" />
+                    <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white/95">
+                      <span className="size-2.5 rounded-full bg-orange-400" />
                       Rol: {displayRole}
                     </span>
 
-                    <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-semibold text-white/95">
-                      <MapPin className="size-4" aria-hidden="true" />
+                    <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white/95">
+                      <MapPin className="size-3.5" aria-hidden="true" />
                       Sucursal: {displayBranch}
                     </span>
                   </div>
                 </div>
 
-                <div className="mt-6 grid gap-3 sm:grid-cols-3 lg:absolute lg:bottom-6 lg:right-6 lg:mt-0 lg:w-[52%] xl:w-[44%]">
-                  <div className="rounded-3xl border border-white/15 bg-white/[0.12] p-5 backdrop-blur-sm">
-                    <p className="text-[2rem] font-semibold leading-none">{formatCompactNumber(homeMetrics.totalUnits)}</p>
-                    <p className="mt-1 text-sm text-sky-200">Unidades disponibles</p>
+                <div className="mt-5 grid gap-2.5 sm:grid-cols-3 lg:absolute lg:bottom-5 lg:right-5 lg:mt-0 lg:w-[52%] xl:w-[44%]">
+                  <div className="rounded-2xl border border-white/15 bg-white/[0.12] p-4 backdrop-blur-sm">
+                    <p className="text-[1.32rem] font-semibold leading-none">{formatCompactNumber(homeMetrics.totalUnits)}</p>
+                    <p className="mt-1 text-[0.94rem] leading-tight text-sky-200">Unidades disponibles</p>
                   </div>
-                  <div className="rounded-3xl border border-white/15 bg-white/[0.12] p-5 backdrop-blur-sm">
-                    <p className="text-[2rem] font-semibold leading-none">
+                  <div className="rounded-2xl border border-white/15 bg-white/[0.12] p-4 backdrop-blur-sm">
+                    <p className="text-[1.32rem] font-semibold leading-none">
                       {formatCompactNumber(homeMetrics.activePromotions)}
                     </p>
-                    <p className="mt-1 text-sm text-sky-200">Promociones vigentes</p>
+                    <p className="mt-1 text-[0.94rem] leading-tight text-sky-200">Promociones vigentes</p>
                   </div>
-                  <div className="rounded-3xl border border-white/15 bg-white/[0.12] p-5 backdrop-blur-sm">
-                    <p className="text-[2rem] font-semibold leading-none">
+                  <div className="rounded-2xl border border-white/15 bg-white/[0.12] p-4 backdrop-blur-sm">
+                    <p className="text-[1.32rem] font-semibold leading-none">
                       {formatCompactNumber(homeMetrics.availableAds)}
                     </p>
-                    <p className="mt-1 text-sm text-sky-200">Publicidades disponibles</p>
+                    <p className="mt-1 text-[0.94rem] leading-tight text-sky-200">Publicidades disponibles</p>
                   </div>
                 </div>
               </div>
