@@ -126,7 +126,7 @@ function Unauthorized() {
     setRequestError('')
     setRequestSuccess('')
 
-  if (!authIdentity?.uid || !authIdentity?.email) {
+    if (!authIdentity?.uid || !authIdentity?.email) {
       setRequestError('No encontramos una sesión válida. Vuelve a iniciar sesión con Google Zapata.')
       return
     }
@@ -202,9 +202,21 @@ function Unauthorized() {
         ) : null}
 
         {noValidSession ? (
-          <p className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-            No encontramos una sesión válida. Vuelve a iniciar sesión con Google Zapata.
-          </p>
+          <section className="space-y-3 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3">
+            <p className="text-sm font-semibold text-rose-700">
+              Para solicitar acceso primero inicia sesión con Google Zapata.
+            </p>
+            <p className="text-sm text-rose-700/90">
+              No pudimos confirmar tu identidad de Google, así que todavía no podemos mostrar el formulario de solicitud.
+            </p>
+            <button
+              type="button"
+              onClick={() => navigate('/login', { replace: true })}
+              className="inline-flex items-center justify-center rounded-lg bg-rose-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-rose-700"
+            >
+              Volver a login
+            </button>
+          </section>
         ) : (
           <section className="space-y-3 rounded-lg border border-lab-border bg-slate-50 px-4 py-3">
             <h2 className="text-sm font-semibold text-lab-text">Datos de tu cuenta</h2>

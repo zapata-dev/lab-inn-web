@@ -2,14 +2,14 @@ import { LogOut } from 'lucide-react'
 import { useState } from 'react'
 import { Navigate, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { AUTH_PUBLIC_ERROR_CODES } from '../utils/authMessages'
 
 const AUTHORIZATION_CODES = new Set([
-  'authorization/domain-not-allowed',
-  'authorization/user-not-found',
-  'authorization/user-inactive',
-  'authorization/role-invalid',
-  'authorization/permission-denied',
-  'authorization/validation-timeout',
+  AUTH_PUBLIC_ERROR_CODES.ACCESS,
+  AUTH_PUBLIC_ERROR_CODES.PENDING,
+  AUTH_PUBLIC_ERROR_CODES.DISABLED,
+  AUTH_PUBLIC_ERROR_CODES.NETWORK,
+  AUTH_PUBLIC_ERROR_CODES.UNKNOWN,
 ])
 
 function normalizeRole(role) {
@@ -29,7 +29,7 @@ function ProtectedRoute({ children, allowedRoles }) {
   const navigate = useNavigate()
   const [logoutError, setLogoutError] = useState('')
   const [loggingOut, setLoggingOut] = useState(false)
-  const { user, loading, authErrorCode, logout } = useAuth()
+  const { user, authIdentity, loading, authErrorCode, logout } = useAuth()
 
   if (loading) {
     return (
@@ -39,7 +39,7 @@ function ProtectedRoute({ children, allowedRoles }) {
     )
   }
 
-  if (!user && authErrorCode && AUTHORIZATION_CODES.has(authErrorCode)) {
+  if (!user && authIdentity?.uid && authErrorCode && AUTHORIZATION_CODES.has(authErrorCode)) {
     return <Navigate to="/unauthorized" replace />
   }
 
