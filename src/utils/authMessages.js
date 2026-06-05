@@ -4,6 +4,7 @@ const AUTH_PUBLIC_ERROR_CODES = Object.freeze({
   PENDING: 'AUTH-PENDING',
   DISABLED: 'AUTH-DISABLED',
   DOMAIN: 'AUTH-DOMAIN',
+  POPUP: 'AUTH-POPUP',
   NETWORK: 'AUTH-NETWORK',
   UNKNOWN: 'AUTH-UNKNOWN',
 })
@@ -19,6 +20,8 @@ const AUTH_PUBLIC_ERROR_MESSAGES = Object.freeze({
     'Tu acceso esta desactivado. Contacta a soporte LAB.',
   [AUTH_PUBLIC_ERROR_CODES.DOMAIN]:
     'Usa tu cuenta corporativa autorizada para entrar a LAB.',
+  [AUTH_PUBLIC_ERROR_CODES.POPUP]:
+    'No pudimos completar el inicio de sesion con Google. Revisa que el dominio este autorizado o intenta de nuevo.',
   [AUTH_PUBLIC_ERROR_CODES.NETWORK]:
     'No pudimos validar tu acceso por un problema de conexion. Intenta de nuevo.',
   [AUTH_PUBLIC_ERROR_CODES.UNKNOWN]:
@@ -28,6 +31,12 @@ const AUTH_PUBLIC_ERROR_MESSAGES = Object.freeze({
 const AUTH_RAW_TO_PUBLIC_CODE = Object.freeze({
   'auth-config': AUTH_PUBLIC_ERROR_CODES.CONFIG,
   'firebase-not-configured': AUTH_PUBLIC_ERROR_CODES.CONFIG,
+  'auth/unauthorized-domain': AUTH_PUBLIC_ERROR_CODES.DOMAIN,
+  'auth/popup-blocked': AUTH_PUBLIC_ERROR_CODES.POPUP,
+  'auth/popup-closed-by-user': AUTH_PUBLIC_ERROR_CODES.POPUP,
+  'auth/cancelled-popup-request': AUTH_PUBLIC_ERROR_CODES.POPUP,
+  'auth/operation-not-supported-in-this-environment': AUTH_PUBLIC_ERROR_CODES.POPUP,
+  'auth/network-request-failed': AUTH_PUBLIC_ERROR_CODES.NETWORK,
   'authorization/user-not-found': AUTH_PUBLIC_ERROR_CODES.ACCESS,
   'authorization/role-invalid': AUTH_PUBLIC_ERROR_CODES.ACCESS,
   'authorization/user-inactive': AUTH_PUBLIC_ERROR_CODES.DISABLED,

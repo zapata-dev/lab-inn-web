@@ -1,8 +1,23 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { Badge, Card } from '../components/common'
 import { useAuth } from '../context/AuthContext'
-import { getPublicAuthMessage } from '../utils/authMessages'
+import { AUTH_PUBLIC_ERROR_CODES, getPublicAuthMessage } from '../utils/authMessages'
+
+const AUTHORIZATION_CODES = new Set([
+  AUTH_PUBLIC_ERROR_CODES.ACCESS,
+  AUTH_PUBLIC_ERROR_CODES.PENDING,
+  AUTH_PUBLIC_ERROR_CODES.DISABLED,
+  AUTH_PUBLIC_ERROR_CODES.NETWORK,
+  AUTH_PUBLIC_ERROR_CODES.UNKNOWN,
+])
+
+const LOGIN_FAILURE_CODES = new Set([
+  AUTH_PUBLIC_ERROR_CODES.DOMAIN,
+  AUTH_PUBLIC_ERROR_CODES.POPUP,
+  AUTH_PUBLIC_ERROR_CODES.NETWORK,
+  AUTH_PUBLIC_ERROR_CODES.UNKNOWN,
+])
 
 function Login() {
   const navigate = useNavigate()
@@ -12,23 +27,42 @@ function Login() {
     isAuthenticated,
     isFirebaseMode,
     loginWithGoogle,
+    user,
+    authIdentity,
     authErrorCode,
     authConfigBlocked,
     error,
     clearError,
     loading,
   } = useAuth()
+  const [googleLoginPending, setGoogleLoginPending] = useState(false)
 
   const errorMessage = useMemo(() => {
     const source = authErrorCode || error
     return source ? getPublicAuthMessage(source) : ''
   }, [authErrorCode, error])
 
+  const loginHintMessage = useMemo(() => {
+    if (!authErrorCode) return ''
+    if (!LOGIN_FAILURE_CODES.has(authErrorCode)) return ''
+
+    return 'No pudimos completar el inicio de sesion con Google. Revisa que el dominio este autorizado o intenta de nuevo.'
+  }, [authErrorCode])
+
+  useEffect(() => {
+    if (loading) return
+
+    if (authIdentity?.uid && !user && authErrorCode && AUTHORIZATION_CODES.has(authErrorCode)) {
+      navigate('/unauthorized', { replace: true })
+    }
+  }, [authErrorCode, authIdentity?.uid, loading, navigate, user])
+
   if (isAuthenticated) {
     return <Navigate to="/" replace />
   }
 
   const isAuthConfigBlocked = Boolean(authConfigBlocked || authErrorCode === 'AUTH-CONFIG')
+  const visibleErrorMessage = loginHintMessage || errorMessage
 
   const handleDemoLogin = (userId) => {
     clearError()
@@ -40,12 +74,15 @@ function Login() {
 
   const handleFirebaseLogin = async () => {
     clearError()
+    setGoogleLoginPending(true)
 
     try {
       await loginWithGoogle()
       navigate('/', { replace: true })
     } catch {
       // El error se maneja en AuthContext para mantener el login limpio.
+    } finally {
+      setGoogleLoginPending(false)
     }
   }
 
@@ -83,13 +120,13 @@ function Login() {
               </p>
             </Card>
           </div>
-        ) : errorMessage ? (
+        ) : visibleErrorMessage ? (
           <div
             role="alert"
             aria-live="polite"
             className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700"
           >
-            {errorMessage}
+            {visibleErrorMessage}
           </div>
         ) : null}
 
@@ -102,10 +139,10 @@ function Login() {
             <button
               type="button"
               onClick={handleFirebaseLogin}
-              disabled={loading}
+              disabled={loading || googleLoginPending}
               className="w-full rounded-lg bg-lab-primary px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {loading ? 'Validando acceso...' : 'Entrar con Google Zapata'}
+              {googleLoginPending || loading ? 'Validando acceso...' : 'Entrar con Google Zapata'}
             </button>
           </Card>
         ) : null}
