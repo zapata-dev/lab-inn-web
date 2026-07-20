@@ -13,6 +13,7 @@ const titleByPath = {
   '/capacitacion': 'Capacitación y Soporte',
   '/soporte/usuarios': 'Soporte de usuarios',
   '/salesforce': 'Salesforce',
+  '/favoritos': 'Favoritos',
   '/perfil': 'Perfil',
 }
 

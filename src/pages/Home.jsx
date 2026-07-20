@@ -28,6 +28,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import UserMenu from '../components/layout/UserMenu'
 import { useAuth } from '../context/AuthContext'
 import { accessLinks } from '../data/accessLinks'
+import useFavorites from '../hooks/useFavorites'
 import heroTruckImage from '../assets/home/truck-hero.png'
 import { fetchInventoryFromCsv, getInventoryCache, saveInventoryCache } from '../services/inventoryService'
 import {
@@ -37,10 +38,10 @@ import {
 import useToast from '../hooks/useToast'
 
 const sidebarItems = [
-  { id: 'oficina', label: 'Mi Oficina', icon: HomeIcon, section: 'todas' },
-  { id: 'inventario', label: 'Inventario', icon: Truck, section: 'inventario' },
+  { id: 'oficina', label: 'Mi Oficina', icon: HomeIcon, section: 'todas', to: '/inicio' },
+  { id: 'inventario', label: 'Inventario', icon: Truck, to: '/inventario' },
+  { id: 'favoritos', label: 'Favoritos', icon: Heart, to: '/favoritos' },
   { id: 'directorio', label: 'Directorio', icon: Users, to: '/usuarios' },
-  { id: 'favoritos', label: 'Favoritos', icon: Heart, section: 'favoritos' },
 ]
 
 const sectionMeta = {
@@ -155,10 +156,6 @@ function getDisplayRole(user, normalizedRole) {
 
 function getDisplayBranch(user) {
   return String(user?.sucursalNombre || user?.sucursal || user?.branchName || 'Sin sucursal asignada').trim()
-}
-
-function getUserStorageKey(user) {
-  return String(user?.uid || user?.email || user?.id || 'anon').trim().toLowerCase()
 }
 
 function formatCompactNumber(value) {
@@ -414,9 +411,7 @@ function Home() {
   const [query, setQuery] = useState('')
   const [activeSection, setActiveSection] = useState('todas')
   const [homeMetrics, setHomeMetrics] = useState(() => buildHomeMetrics([]))
-
-  const favoritesStorageKey = `lab:v1:favorites:${getUserStorageKey(user)}`
-  const [favoriteIds, setFavoriteIds] = useState([])
+  const { favoriteIds, toggleFavorite } = useFavorites(user)
 
   const visibleAccessLinks = useMemo(
     () =>
@@ -432,16 +427,6 @@ function Home() {
     () => new Map(visibleAccessLinks.map((link) => [link.id, link])),
     [visibleAccessLinks]
   )
-
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(favoritesStorageKey)
-      const parsed = JSON.parse(raw || '[]')
-      setFavoriteIds(Array.isArray(parsed) ? parsed : [])
-    } catch {
-      setFavoriteIds([])
-    }
-  }, [favoritesStorageKey])
 
   useEffect(() => {
     let mounted = true
@@ -475,29 +460,14 @@ function Home() {
 
   const activeSidebarId = activeSection === 'todas' ? 'oficina' : activeSection
 
-  const handleToggleFavorite = (toolId) => {
-    setFavoriteIds((previous) => {
-      const next = previous.includes(toolId)
-        ? previous.filter((id) => id !== toolId)
-        : [...previous, toolId]
-
-      try {
-        localStorage.setItem(favoritesStorageKey, JSON.stringify(next))
-      } catch {
-        // Ignore localStorage failures in restricted environments.
-      }
-
-      return next
-    })
-  }
-
   const handleSidebarAction = (item) => {
-    if (item.to) {
-      navigate(item.to)
-      return
+    if (item.section) {
+      setActiveSection(item.section)
     }
 
-    setActiveSection(item.section)
+    if (item.to) {
+      navigate(item.to)
+    }
   }
 
   const handleNotificationsClick = () => {
@@ -707,7 +677,7 @@ function Home() {
                     key={link.id}
                     link={link}
                     isFavorite={favoriteIds.includes(link.id)}
-                    onToggleFavorite={handleToggleFavorite}
+                    onToggleFavorite={toggleFavorite}
                     toneKey="blue"
                   />
                 ))}
@@ -826,7 +796,7 @@ function Home() {
                                 key={link.id}
                                 link={link}
                                 isFavorite={favoriteIds.includes(link.id)}
-                                onToggleFavorite={handleToggleFavorite}
+                                onToggleFavorite={toggleFavorite}
                                 toneKey={getSectionTheme(section.key)}
                               />
                             )

@@ -1,9 +1,10 @@
-import { Calculator, Cloud, GraduationCap, LayoutDashboard, Truck } from 'lucide-react'
+import { Calculator, Cloud, GraduationCap, Heart, LayoutDashboard, Truck } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 
 const mainItems = [
   { label: 'Inicio', to: '/inicio', icon: LayoutDashboard },
   { label: 'Inventario Nacional', to: '/inventario', icon: Truck },
+  { label: 'Favoritos', to: '/favoritos', icon: Heart },
   { label: 'Herramientas Comerciales', to: '/herramientas', icon: Calculator },
   { label: 'Capacitacion y Soporte', to: '/capacitacion', icon: GraduationCap },
   { label: 'Salesforce', to: '/salesforce', icon: Cloud },
