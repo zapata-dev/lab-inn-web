@@ -5,6 +5,10 @@ module.exports = {
     es2022: true,
     node: true,
   },
+  globals: {
+    __BUILD_SHA__: 'readonly',
+    __BUILD_TIME__: 'readonly',
+  },
   extends: ['eslint:recommended', 'plugin:react/recommended', 'plugin:tailwindcss/recommended'],
   parserOptions: {
     ecmaVersion: 'latest',

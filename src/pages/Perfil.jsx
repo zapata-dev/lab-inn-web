@@ -172,6 +172,10 @@ function Perfil() {
           Volver a Mi Oficina
         </Link>
       </div>
+
+      <p className="text-center text-[10px] text-lab-muted" title={__BUILD_TIME__}>
+        build {__BUILD_SHA__.slice(0, 7)}
+      </p>
     </main>
   )
 }
