@@ -6,6 +6,7 @@ import { AuthProvider } from '../context/AuthContext'
 import HerramientasComerciales from '../pages/HerramientasComerciales'
 import Home from '../pages/Home'
 import Inventario from '../pages/Inventario'
+import Favoritos from '../pages/Favoritos'
 import Login from '../pages/Login'
 import Perfil from '../pages/Perfil'
 import Promociones from '../pages/Promociones'
@@ -29,6 +30,7 @@ function AppRoutes() {
           <Route path="/herramientas" element={<HerramientasComerciales />} />
           <Route path="/capacitacion" element={<CapacitacionSoporte />} />
           <Route path="/inventario" element={<Inventario />} />
+          <Route path="/favoritos" element={<Favoritos />} />
           <Route path="/promociones" element={<Promociones />} />
           <Route path="/perfil" element={<Perfil />} />
           <Route path="/youtube" element={<CanalYoutube />} />
