@@ -433,7 +433,6 @@ function Inventario() {
     if (cache.items.length > 0) {
       setInventory(cache.items)
       setLastUpdated(cache.lastUpdated)
-      return
     }
 
     refreshInventory(false)
