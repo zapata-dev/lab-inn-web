@@ -21,6 +21,12 @@ const BRANCH_OPTIONS = [
   { id: 'suc-cdmx', nombre: 'Ciudad de Mexico' },
   { id: 'suc-mty', nombre: 'Monterrey' },
   { id: 'suc-default', nombre: 'Sin asignar' },
+  { id: 'suc-tlalnepantla', nombre: 'Tlalnepantla' },
+  { id: 'suc-aeropuerto', nombre: 'Aeropuerto' },
+  { id: 'suc-celaya', nombre: 'Celaya' },
+  { id: 'suc-tampico', nombre: 'Tampico' },
+  { id: 'suc-occidente', nombre: 'Occidente' },
+  { id: 'suc-corporativo', nombre: 'Corporativo' },
 ]
 
 const ACCESS_REQUEST_STATUS = ['pendiente', 'aprobado', 'rechazado', 'cancelado']

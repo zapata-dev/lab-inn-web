@@ -137,17 +137,28 @@ No debe:
 
 Usar estos IDs de forma consistente.
 
-| sucursalId  | sucursalNombre   | Estado        |
-| ----------- | ---------------- | ------------- |
-| suc-qro     | Queretaro        | activo        |
-| suc-leon    | Leon             | sugerido      |
-| suc-gdl     | Guadalajara      | sugerido      |
-| suc-cdmx    | Ciudad de Mexico | sugerido      |
-| suc-mty     | Monterrey        | sugerido      |
-| suc-default | Sin asignar      | solo temporal |
+| sucursalId       | sucursalNombre   | Estado        |
+| ---------------- | ---------------- | ------------- |
+| suc-qro          | Queretaro        | activo        |
+| suc-leon         | Leon             | sugerido      |
+| suc-gdl          | Guadalajara      | sugerido      |
+| suc-cdmx         | Ciudad de Mexico | sugerido      |
+| suc-mty          | Monterrey        | sugerido      |
+| suc-default      | Sin asignar      | solo temporal |
+| suc-tlalnepantla | Tlalnepantla     | sugerido      |
+| suc-aeropuerto   | Aeropuerto       | sugerido      |
+| suc-celaya       | Celaya           | sugerido      |
+| suc-tampico      | Tampico          | sugerido      |
+| suc-occidente    | Occidente        | sugerido      |
+| suc-corporativo  | Corporativo      | sugerido      |
 
 Nota:
 Si no se conoce todavia la sucursal exacta, usar temporalmente `suc-default`, pero corregir antes de produccion amplia.
+
+Nota sobre Guadalajara:
+El valor `CAMIONES GUADALAJARA OTERO` que aparece en la columna `Centro` del CSV de
+inventario corresponde a la misma sucursal `suc-gdl` (Guadalajara), no a una sucursal
+distinta. No crear un id nuevo para "Otero".
 
 ## Procedimiento de alta manual
 
