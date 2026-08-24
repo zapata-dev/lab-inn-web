@@ -1,6 +1,7 @@
 import { ArrowLeft, ChevronLeft, ChevronRight, RefreshCw, Search } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { Badge } from '../components/common'
 import ExportInventoryCatalogPdfButton from '../features/inventory/ExportInventoryCatalogPdfButton'
 import InventoryDetailModal from '../features/inventory/InventoryDetailModal'
 import InventoryFilters from '../features/inventory/InventoryFilters'
@@ -11,6 +12,7 @@ import {
   INVENTORY_FILTER_FIELDS,
   saveInventoryCache,
 } from '../services/inventoryService'
+import { formatLastUpdated, getCacheFreshness } from '../utils/inventoryFreshness'
 import { getUnitFieldValue } from '../utils/inventoryUnitUtils'
 import { mixInventoryForDisplay } from '../utils/inventoryMixUtils'
 
@@ -197,18 +199,6 @@ function getActiveChips(search, filters) {
   return chips
 }
 
-function formatLastUpdated(dateString) {
-  if (!dateString) return 'Sin registro de actualizacion'
-
-  const date = new Date(dateString)
-  if (Number.isNaN(date.getTime())) return 'Sin registro de actualizacion'
-
-  return new Intl.DateTimeFormat('es-MX', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  }).format(date)
-}
-
 function buildCopyText(unit) {
   return [
     `Marca: ${unit.marca || 'No especificado'}`,
@@ -322,6 +312,7 @@ function Inventario() {
     [filteredUnits]
   )
   const activeChips = useMemo(() => getActiveChips(search, filters), [search, filters])
+  const freshness = useMemo(() => getCacheFreshness(lastUpdated), [lastUpdated])
 
   const totalPages = useMemo(
     () => Math.max(1, Math.ceil(displayUnits.length / pageSize)),
@@ -428,7 +419,7 @@ function Inventario() {
       } else {
         setMessage({
           type: 'error',
-          text: 'No fue posible cargar inventario. Verifica la URL CSV publica e intenta de nuevo.',
+          text: 'No se pudo cargar el inventario en este equipo. Intenta de nuevo en unos minutos; si el problema continua, reportalo a soporte tecnico.',
         })
       }
     } finally {
@@ -442,7 +433,6 @@ function Inventario() {
     if (cache.items.length > 0) {
       setInventory(cache.items)
       setLastUpdated(cache.lastUpdated)
-      return
     }
 
     refreshInventory(false)
@@ -491,9 +481,14 @@ function Inventario() {
                 Volver a Mi Oficina
               </Link>
               <h1 className="text-3xl font-bold text-lab-text">Marketplace de inventario nacional</h1>
-              <p className="text-sm text-lab-muted">
-                Última actualización: {formatLastUpdated(lastUpdated)}
-              </p>
+              <div className="flex flex-wrap items-center gap-2 text-sm text-lab-muted">
+                <span>Última actualización: {formatLastUpdated(lastUpdated)}</span>
+                {freshness.isStale ? (
+                  <Badge variant="danger">
+                    Datos de hace {freshness.ageInDays} {freshness.ageInDays === 1 ? 'día' : 'días'}
+                  </Badge>
+                ) : null}
+              </div>
             </div>
 
             <div className="flex flex-col items-end gap-2">

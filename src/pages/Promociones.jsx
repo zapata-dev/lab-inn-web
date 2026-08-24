@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import promotionsHeroImage from '../assets/promociones-hero.jpeg'
+import { Badge } from '../components/common'
 import InventoryDetailModal from '../features/inventory/InventoryDetailModal'
 import InventoryFilters from '../features/inventory/InventoryFilters'
 import ExportPromotionsPdfButton from '../features/promotions/ExportPromotionsPdfButton'
@@ -16,6 +17,7 @@ import {
   INVENTORY_FILTER_FIELDS,
   saveInventoryCache,
 } from '../services/inventoryService'
+import { formatLastUpdated, getCacheFreshness } from '../utils/inventoryFreshness'
 import { groupPromotionUnits, hasPromotion } from '../utils/promotionUtils'
 import { getUnitAgency, getUnitFieldValue } from '../utils/inventoryUnitUtils'
 
@@ -226,18 +228,6 @@ function applyAgencySelection(units, selectedAgency) {
   return units.filter((unit) => normalizeText(getUnitAgency(unit)) === normalizedSelectedAgency)
 }
 
-function formatLastUpdated(dateString) {
-  if (!dateString) return 'Sin registro de actualización'
-
-  const date = new Date(dateString)
-  if (Number.isNaN(date.getTime())) return 'Sin registro de actualización'
-
-  return new Intl.DateTimeFormat('es-MX', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  }).format(date)
-}
-
 function buildCopyText(unit) {
   return [
     `Marca: ${unit.marca || 'No especificado'}`,
@@ -436,6 +426,7 @@ function Promociones() {
   const groupedPromotions = useMemo(() => groupPromotionUnits(filteredPromotionUnits), [filteredPromotionUnits])
 
   const activeChips = useMemo(() => getActiveChips(search, filters), [search, filters])
+  const freshness = useMemo(() => getCacheFreshness(lastUpdated), [lastUpdated])
   const exportChips = useMemo(() => {
     const allowedKeys = new Set(['search', 'marca', 'anio', 'ubicacion', 'rodada', 'precioMin', 'precioMax'])
     const chips = activeChips.filter((chip) => allowedKeys.has(chip.key))
@@ -562,7 +553,7 @@ function Promociones() {
       } else {
         setMessage({
           type: 'error',
-          text: 'No fue posible cargar promociones. Verifica la URL CSV pública e intenta de nuevo.',
+          text: 'No se pudo cargar promociones en este equipo. Intenta de nuevo en unos minutos; si el problema continúa, repórtalo a soporte técnico.',
         })
       }
     } finally {
@@ -707,6 +698,11 @@ function Promociones() {
                   <div className="rounded-2xl border border-white/10 bg-black/20 p-3">
                     <p className="text-xs uppercase tracking-[0.28em] text-white/60">Última actualización</p>
                     <p className="mt-1 text-sm font-semibold text-white">{formatLastUpdated(lastUpdated)}</p>
+                    {freshness.isStale ? (
+                      <Badge variant="danger" className="mt-2">
+                        Datos de hace {freshness.ageInDays} {freshness.ageInDays === 1 ? 'día' : 'días'}
+                      </Badge>
+                    ) : null}
                   </div>
 
                   <div className="rounded-2xl border border-white/10 bg-white/10 p-3">
