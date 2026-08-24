@@ -2,11 +2,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import catalogHeroImage from '../assets/catalogo-publicidad-hero.png'
+import { Badge } from '../components/common'
 import {
   fetchInventoryFromCsv,
   getInventoryCache,
   saveInventoryCache,
 } from '../services/inventoryService'
+import { formatLastUpdated, getCacheFreshness } from '../utils/inventoryFreshness'
 import { getCodigo, getUnitAgency } from '../utils/inventoryUnitUtils'
 
 const PAGE_SIZE = 24
@@ -53,17 +55,6 @@ function toSafeIdToken(value, fallback = 'otro') {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
   return token || fallback
-}
-
-function formatLastUpdated(dateString) {
-  if (!dateString) return 'Sin registro de actualizacion'
-  const date = new Date(dateString)
-  if (Number.isNaN(date.getTime())) return 'Sin registro de actualizacion'
-
-  return new Intl.DateTimeFormat('es-MX', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  }).format(date)
 }
 
 function getCoverFromPortadaColumn(unit) {
@@ -323,6 +314,8 @@ function CatalogoPortadas() {
     }
   }, [uniqueCoverUnits.length, lastUpdated])
 
+  const freshness = useMemo(() => getCacheFreshness(lastUpdated), [lastUpdated])
+
   const rangeStart = filteredUnits.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1
   const rangeEnd = filteredUnits.length === 0 ? 0 : Math.min(currentPage * PAGE_SIZE, filteredUnits.length)
 
@@ -364,7 +357,7 @@ function CatalogoPortadas() {
       } else {
         setMessage({
           type: 'error',
-          text: 'No fue posible cargar el Catálogo de Publicidad. Verifica el CSV e intenta de nuevo.',
+          text: 'No se pudo cargar el Catálogo de Publicidad en este equipo. Intenta de nuevo en unos minutos; si el problema continúa, repórtalo a soporte técnico.',
         })
       }
     } finally {
@@ -497,6 +490,11 @@ function CatalogoPortadas() {
                     <div className="rounded-2xl border border-white/10 bg-black/20 p-3">
                       <dt className="text-white/60">Última actualización</dt>
                       <dd className="mt-1 text-sm font-semibold text-white">{formatLastUpdated(lastUpdated)}</dd>
+                      {freshness.isStale ? (
+                        <Badge variant="danger" className="mt-2">
+                          Datos de hace {freshness.ageInDays} {freshness.ageInDays === 1 ? 'día' : 'días'}
+                        </Badge>
+                      ) : null}
                     </div>
                   </dl>
                 </div>

@@ -1,5 +1,7 @@
-export const INVENTORY_CSV_URL =
-  'https://docs.google.com/spreadsheets/d/e/2PACX-1vTynebu-ZV4N2ehHI_Zktji7CVhT49C8_j5X0BQ0J0wQ5Vj8RmmaFvA-jqWBMMSA1kn7L12Aq-OASUy/pub?output=csv'
+const INVENTORY_CSV_FALLBACK_URL =
+  'https://docs.google.com/spreadsheets/d/e/2PACX-1vQB7hm0hpZ8MOQM7TB7PaxpLAJXUOcsHXlIT2DWhHxdu_1PlDLzr0_fnV3uVijsdieST-30hpkq_l6b/pub?output=csv'
+
+export const INVENTORY_CSV_URL = import.meta.env.VITE_INVENTORY_CSV_URL || INVENTORY_CSV_FALLBACK_URL
 export const INVENTORY_CACHE_KEY = 'lab:v1:inventory_cache'
 export const INVENTORY_LAST_UPDATED_KEY = 'lab:v1:inventory_last_updated'
 
@@ -45,6 +47,7 @@ const BASE_HEADER_MAP = {
   color: 'color',
   colorInterior: 'colorInterior',
   ano: 'anio',
+  anoModelo: 'anio',
   precioSugDeVenta: 'precioRaw',
   kilometros: 'kilometrosRaw',
   motor: 'motor',
